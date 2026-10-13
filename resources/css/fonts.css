@@ -6,3 +6,19 @@
     font-style: normal;
     font-display: swap;
 }
+
+/* Secciones de invitación a pantalla completa en móvil (estilo Canva con altura fija svh) */
+.invitation-section {
+    min-height: 100vh;
+    min-height: 100svh;
+    height: 100vh;
+    height: 100svh;
+}
+
+@media (min-width: 640px) {
+    .invitation-section {
+        min-height: 890px;
+        height: 890px;
+    }
+}
+
