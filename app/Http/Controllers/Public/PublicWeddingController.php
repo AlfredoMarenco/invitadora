@@ -12,9 +12,14 @@ class PublicWeddingController extends Controller
 {
     public function show()
     {
-        $wedding = Wedding::with(['galleryImages' => function ($q) {
-                $q->where('is_active', true)->orderBy('order');
-            }])
+        $wedding = Wedding::with([
+                'galleryImages' => function ($q) {
+                    $q->where('is_active', true)->orderBy('order');
+                },
+                'hotels' => function ($q) {
+                    $q->where('is_active', true)->orderBy('order');
+                }
+            ])
             ->firstOrFail();
 
         return Inertia::render('invitation', [
@@ -25,9 +30,14 @@ class PublicWeddingController extends Controller
 
     public function showWithToken($token)
     {
-        $wedding = Wedding::with(['galleryImages' => function ($q) {
-                $q->where('is_active', true)->orderBy('order');
-            }])
+        $wedding = Wedding::with([
+                'galleryImages' => function ($q) {
+                    $q->where('is_active', true)->orderBy('order');
+                },
+                'hotels' => function ($q) {
+                    $q->where('is_active', true)->orderBy('order');
+                }
+            ])
             ->firstOrFail();
 
         $invitation = Invitation::where('token', $token)

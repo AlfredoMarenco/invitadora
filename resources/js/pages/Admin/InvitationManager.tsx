@@ -1,6 +1,6 @@
-﻿import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Plus, Users, User, Phone, CheckCircle2, MessageCircle, Send, X, Trash2, Edit } from 'lucide-react';
+import { Plus, Users, User, Phone, CheckCircle2, MessageCircle, Send, X, Trash2, Edit, Sparkles, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -96,39 +96,118 @@ export default function InvitationManager({ wedding, invitations }: InvitationMa
         }
     };
 
+    // Reloj en vivo para ambiente de gala
+    const [currentTime, setCurrentTime] = useState<string>('');
+    useEffect(() => {
+        const updateTime = () => {
+            const now = new Date();
+            setCurrentTime(now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        };
+        updateTime();
+        const timer = setInterval(updateTime, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Cálculo de estadísticas rápidas
+    const totalInvitations = invitations.length;
+    const totalGuests = invitations.reduce((acc, inv) => acc + (inv.guests?.length || 0), 0);
+    const confirmedGuests = invitations.reduce((acc, inv) => {
+        return acc + (inv.guests?.filter((g: any) => g.is_attending === true).length || 0);
+    }, 0);
+    const percentConfirmed = totalGuests > 0 ? Math.round((confirmedGuests / totalGuests) * 100) : 0;
+
     return (
-        <div className="flex-1 space-y-6 px-4 md:px-8 py-8 w-full">
+        <div className="flex-1 space-y-6 px-4 md:px-8 py-6 w-full">
             <Head title={`Invitaciones - ${wedding.bride_name} & ${wedding.groom_name}`} />
             
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                        Lista de Invitados
-                    </h2>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                        Administra quiénes asisten a la boda de {wedding.bride_name} y {wedding.groom_name}.
-                        {isPlanner && " (Modo Lectura)"}
+            {/* ========================================================= */}
+            {/* 1. HERO HEADER: PROTOCOLO & LISTA DE INVITADOS            */}
+            {/* ========================================================= */}
+            <header className="bg-gradient-to-r from-[#28362e] via-[#33443a] to-[#28362e] text-white rounded-2xl p-5 sm:p-6 shadow-xl border border-[#405448] flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative overflow-hidden">
+                {/* Monograma decorativo de fondo */}
+                <div className="absolute -right-8 -bottom-10 opacity-10 pointer-events-none w-48 h-48">
+                    <img 
+                        src="/resources_canvas/images/15.svg" 
+                        alt="Monograma" 
+                        className="w-full h-full object-contain filter invert" 
+                    />
+                </div>
+
+                <div className="space-y-1 z-10">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-serif uppercase tracking-widest bg-[#698175]/40 text-[#d8e2dc] border border-[#698175]/50">
+                            <Sparkles className="w-3 h-3 text-[#e6d0aa]" />
+                            {isPlanner ? 'Modo Wedding Planner (Lectura)' : 'Protocolo & Recepción'}
+                        </span>
+                        <div className="flex items-center gap-1 text-[11px] font-mono text-[#a2b5aa] bg-black/30 px-2 py-0.5 rounded-md">
+                            <Clock className="w-3 h-3 text-[#a2b5aa]" />
+                            <span>{currentTime || 'Lista de Invitados'}</span>
+                        </div>
+                    </div>
+
+                    <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
+                        Lista de Invitados • Control de Asistencia
+                    </h1>
+                    <p className="text-xs sm:text-sm text-[#c8d4cc] font-light max-w-xl">
+                        {wedding ? `${wedding.bride_name} & ${wedding.groom_name} — ` : ''}Administra las familias, asignación de mesas y confirmaciones RSVP de su evento.
                     </p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" asChild className="flex items-center gap-2 bg-white">
-                        <a href="/admin/invitations/export">
-                            <Send className="w-4 h-4" /> Exportar CSV
-                        </a>
-                    </Button>
-                    {!isPlanner && (
-                        <Button onClick={() => setShowModal(true)} className="flex items-center gap-2">
-                            <Plus className="w-4 h-4" />
-                            Nueva Invitación
-                        </Button>
-                    )}
-                </div>
-            </div>
 
-            <Card className="shadow-sm border-gray-200 dark:border-gray-800">
+                {/* Métricas y Acciones Rápidas */}
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end z-10">
+                    {/* Tarjeta de Métricas */}
+                    <div className="bg-black/30 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 flex flex-col items-end min-w-[150px]">
+                        <span className="text-[10px] uppercase font-serif tracking-widest text-[#a2b5aa]">
+                            Afluencia Confirmada
+                        </span>
+                        <div className="flex items-baseline gap-1.5 mt-0.5">
+                            <span className="text-2xl font-bold font-serif text-[#f4ecd8]">
+                                {confirmedGuests}
+                            </span>
+                            <span className="text-xs text-[#a2b5aa] font-sans">
+                                / {totalGuests} pases
+                            </span>
+                        </div>
+                        <div className="w-full bg-white/15 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                            <div 
+                                className="bg-gradient-to-r from-[#d4af37] to-[#e6d0aa] h-full transition-all duration-500 rounded-full"
+                                style={{ width: `${percentConfirmed}%` }}
+                            />
+                        </div>
+                        <span className="text-[9.5px] font-mono text-[#e6d0aa] mt-1">
+                            {totalInvitations} familias • {percentConfirmed}% confirmado
+                        </span>
+                    </div>
+
+                    {/* Botones de Acción */}
+                    <div className="flex items-center gap-2">
+                        <Button 
+                            variant="outline" 
+                            asChild 
+                            className="bg-white/10 hover:bg-white/20 text-white border-white/20 font-serif text-xs uppercase tracking-wider font-semibold px-3.5 py-2.5 h-11 rounded-xl shadow-sm transition-all cursor-pointer"
+                        >
+                            <a href="/admin/invitations/export">
+                                <Send className="w-4 h-4 mr-1.5 text-[#e6d0aa]" /> 
+                                Exportar CSV
+                            </a>
+                        </Button>
+                        {!isPlanner && (
+                            <Button 
+                                onClick={() => setShowModal(true)} 
+                                className="bg-gradient-to-r from-[#698175] to-[#556c7d] hover:from-[#586e63] hover:to-[#475b6a] text-white font-serif text-xs uppercase tracking-wider font-semibold px-4 py-2.5 h-11 rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center gap-2 border border-white/10"
+                            >
+                                <Plus className="w-4 h-4 text-[#e6d0aa]" />
+                                Nueva Invitación
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </header>
+
+            <Card className="shadow-sm border-[#ded8cd] bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-gray-500 font-medium border-b border-gray-200 dark:border-gray-800">
+                        <thead className="bg-[#f5f2eb]/70 dark:bg-muted/40 text-muted-foreground text-xs uppercase font-medium border-b border-[#ded8cd]">
                             <tr>
                                 <th className="px-6 py-4 font-medium">Familia / Nombre</th>
                                 <th className="px-6 py-4 font-medium">Estado</th>
@@ -136,9 +215,9 @@ export default function InvitationManager({ wedding, invitations }: InvitationMa
                                 <th className="px-6 py-4 font-medium text-right">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                        <tbody className="divide-y divide-[#f0ede6] dark:divide-border/40">
                             {invitations.map((inv: any) => (
-                                <tr key={inv.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors group">
+                                <tr key={inv.id} className="hover:bg-[#fbf9f4]/80 dark:hover:bg-muted/20 transition-colors group">
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col items-start gap-1">
                                             <span className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -396,6 +475,7 @@ export default function InvitationManager({ wedding, invitations }: InvitationMa
 
 InvitationManager.layout = {
     breadcrumbs: [
+        { title: 'Dashboard', href: '/dashboard' },
         { title: 'Invitados', href: '/admin/invitations' }
     ],
 };

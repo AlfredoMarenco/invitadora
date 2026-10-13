@@ -17,6 +17,7 @@ class GalleryController extends Controller
         }])->firstOrFail();
         
         return \Inertia\Inertia::render('Admin/GalleryManager', [
+            'wedding' => $wedding,
             'images' => $wedding->galleryImages
         ]);
     }

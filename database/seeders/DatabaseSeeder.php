@@ -81,5 +81,41 @@ class DatabaseSeeder extends Seeder
             'full_name' => 'Roberto Gómez',
             'type' => 'adult',
         ]);
+
+        // 4. Hoteles recomendados de prueba
+        $wedding->hotels()->createMany([
+            [
+                'name' => 'Hacienda Misné',
+                'location' => 'Calle 19 No. 172 x 6-B, Chichí Suárez, Mérida, Yuc.',
+                'image_path' => '/images/hotels/hotel_1.jpg',
+                'url' => 'https://www.haciendamisne.com.mx/',
+                'order' => 0,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Hotel Casa Lucia',
+                'location' => 'Calle 60 No. 474-A x 55, Parque Santa Lucía, Centro, Mérida',
+                'image_path' => '/images/hotels/hotel_2.jpg',
+                'url' => 'https://casalucia.com.mx/',
+                'order' => 1,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Mansión Mérida',
+                'location' => 'Calle 59 No. 498 entre 58 y 60, Centro Histórico, Mérida',
+                'image_path' => '/images/hotels/hotel_3.jpg',
+                'url' => 'https://mansionmerida.com/',
+                'order' => 2,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Villa Mercedes Curio',
+                'location' => 'Av. Colón 500, García Ginerés, Mérida, Yuc.',
+                'image_path' => '/images/hotels/hotel_4.jpg',
+                'url' => 'https://www.hilton.com/',
+                'order' => 3,
+                'is_active' => true,
+            ],
+        ]);
     }
 }

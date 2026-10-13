@@ -32,4 +32,9 @@ class Wedding extends Model
     {
         return $this->hasMany(Invitation::class);
     }
+
+    public function hotels(): HasMany
+    {
+        return $this->hasMany(Hotel::class)->orderBy('order');
+    }
 }

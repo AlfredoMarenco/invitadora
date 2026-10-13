@@ -20,3 +20,8 @@ Route::put('guests/{guest}', [GuestController::class, 'update'])->name('admin.gu
 use App\Http\Controllers\Admin\CheckInController;
 Route::get('checkin', [CheckInController::class, 'index'])->name('admin.checkin.index');
 Route::put('guests/{guest}/checkin', [CheckInController::class, 'toggle'])->name('admin.checkin.toggle');
+Route::put('invitations/{invitation}/checkin', [CheckInController::class, 'toggleInvitation'])->name('admin.checkin.toggle-invitation');
+use App\Http\Controllers\Admin\HotelController;
+Route::put('hotels/reorder', [HotelController::class, 'reorder'])->name('hotels.reorder');
+Route::put('hotels/{hotel}/toggle', [HotelController::class, 'toggle'])->name('hotels.toggle');
+Route::resource('hotels', HotelController::class);

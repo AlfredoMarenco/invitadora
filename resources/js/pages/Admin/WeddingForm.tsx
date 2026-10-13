@@ -62,12 +62,12 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Nombre de la Novia</label>
-                                <input type="text" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.bride_name} onChange={e => setData('bride_name', e.target.value)} required />
+                                <input type="text" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.bride_name} onChange={e => setData('bride_name', e.target.value)} required />
                                 {errors.bride_name && <p className="text-red-500 text-sm mt-1">{errors.bride_name}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Nombre del Novio</label>
-                                <input type="text" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.groom_name} onChange={e => setData('groom_name', e.target.value)} required />
+                                <input type="text" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.groom_name} onChange={e => setData('groom_name', e.target.value)} required />
                                 {errors.groom_name && <p className="text-red-500 text-sm mt-1">{errors.groom_name}</p>}
                             </div>
                         </div>
@@ -79,12 +79,12 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Fecha del Evento</label>
-                                <input type="date" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.wedding_date} onChange={e => setData('wedding_date', e.target.value)} required />
+                                <input type="date" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.wedding_date} onChange={e => setData('wedding_date', e.target.value)} required />
                                 {errors.wedding_date && <p className="text-red-500 text-sm mt-1">{errors.wedding_date}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Fecha Límite Confirmación (Opcional)</label>
-                                <input type="date" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.rsvp_deadline} onChange={e => setData('rsvp_deadline', e.target.value)} />
+                                <input type="date" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.rsvp_deadline} onChange={e => setData('rsvp_deadline', e.target.value)} />
                                 {errors.rsvp_deadline && <p className="text-red-500 text-sm mt-1">{errors.rsvp_deadline}</p>}
                                 <p className="text-xs text-zinc-500 mt-1">Si se llena, el formulario se cerrará esta fecha.</p>
                             </div>
@@ -92,32 +92,32 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-700 mb-1">Lugar de Ceremonia</label>
-                                    <input type="text" placeholder="Ej: Parroquia San José" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.locations.ceremony} onChange={e => setData('locations', { ...data.locations, ceremony: e.target.value })} />
+                                    <input type="text" placeholder="Ej: Parroquia San José" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.locations.ceremony} onChange={e => setData('locations', { ...data.locations, ceremony: e.target.value })} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
                                         <label className="block text-xs font-medium text-zinc-500 mb-1">Link Google Maps</label>
-                                        <input type="url" placeholder="https://maps.app.goo.gl/..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black text-sm" value={data.locations.ceremony_maps || ''} onChange={e => setData('locations', { ...data.locations, ceremony_maps: e.target.value })} />
+                                        <input type="url" placeholder="https://maps.app.goo.gl/..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm" value={data.locations.ceremony_maps || ''} onChange={e => setData('locations', { ...data.locations, ceremony_maps: e.target.value })} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-zinc-500 mb-1">Link Waze</label>
-                                        <input type="url" placeholder="https://waze.com/ul/..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black text-sm" value={data.locations.ceremony_waze || ''} onChange={e => setData('locations', { ...data.locations, ceremony_waze: e.target.value })} />
+                                        <input type="url" placeholder="https://waze.com/ul/..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm" value={data.locations.ceremony_waze || ''} onChange={e => setData('locations', { ...data.locations, ceremony_waze: e.target.value })} />
                                     </div>
                                 </div>
                             </div>
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-700 mb-1">Lugar de Recepción</label>
-                                    <input type="text" placeholder="Ej: Jardín Los Pinos" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.locations.reception} onChange={e => setData('locations', { ...data.locations, reception: e.target.value })} />
+                                    <input type="text" placeholder="Ej: Jardín Los Pinos" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.locations.reception} onChange={e => setData('locations', { ...data.locations, reception: e.target.value })} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
                                         <label className="block text-xs font-medium text-zinc-500 mb-1">Link Google Maps</label>
-                                        <input type="url" placeholder="https://maps.app.goo.gl/..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black text-sm" value={data.locations.reception_maps || ''} onChange={e => setData('locations', { ...data.locations, reception_maps: e.target.value })} />
+                                        <input type="url" placeholder="https://maps.app.goo.gl/..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm" value={data.locations.reception_maps || ''} onChange={e => setData('locations', { ...data.locations, reception_maps: e.target.value })} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-zinc-500 mb-1">Link Waze</label>
-                                        <input type="url" placeholder="https://waze.com/ul/..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black text-sm" value={data.locations.reception_waze || ''} onChange={e => setData('locations', { ...data.locations, reception_waze: e.target.value })} />
+                                        <input type="url" placeholder="https://waze.com/ul/..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm" value={data.locations.reception_waze || ''} onChange={e => setData('locations', { ...data.locations, reception_waze: e.target.value })} />
                                     </div>
                                 </div>
                             </div>
@@ -130,19 +130,19 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Padres de la Novia</label>
-                                <input type="text" placeholder="Ej: Juan Pérez, María López" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.bride_parents} onChange={e => setData('bride_parents', e.target.value)} />
+                                <input type="text" placeholder="Ej: Juan Pérez, María López" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.bride_parents} onChange={e => setData('bride_parents', e.target.value)} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Padres del Novio</label>
-                                <input type="text" placeholder="Ej: Roberto Gómez, Laura Torres" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.groom_parents} onChange={e => setData('groom_parents', e.target.value)} />
+                                <input type="text" placeholder="Ej: Roberto Gómez, Laura Torres" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.groom_parents} onChange={e => setData('groom_parents', e.target.value)} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Padrinos de la Novia</label>
-                                <input type="text" placeholder="Ej: Carlos Silva, Ana Martínez" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.bride_godparents} onChange={e => setData('bride_godparents', e.target.value)} />
+                                <input type="text" placeholder="Ej: Carlos Silva, Ana Martínez" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.bride_godparents} onChange={e => setData('bride_godparents', e.target.value)} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Padrinos del Novio</label>
-                                <input type="text" placeholder="Ej: Luis Fernando, Carmen Vega" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.groom_godparents} onChange={e => setData('groom_godparents', e.target.value)} />
+                                <input type="text" placeholder="Ej: Luis Fernando, Carmen Vega" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.groom_godparents} onChange={e => setData('groom_godparents', e.target.value)} />
                             </div>
                         </div>
                     </div>
@@ -153,21 +153,21 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Código de Vestimenta (Dress Code)</label>
-                                <input type="text" placeholder="Ej: Formal, Etiqueta Rigurosa, Cóctel..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.dress_code} onChange={e => setData('dress_code', e.target.value)} />
+                                <input type="text" placeholder="Ej: Formal, Etiqueta Rigurosa, Cóctel..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.dress_code} onChange={e => setData('dress_code', e.target.value)} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Enlace a Mesa de Regalos</label>
-                                <input type="url" placeholder="https://..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.gift_registry_url} onChange={e => setData('gift_registry_url', e.target.value)} />
+                                <input type="url" placeholder="https://..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.gift_registry_url} onChange={e => setData('gift_registry_url', e.target.value)} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Música de Fondo (MP3, WAV)</label>
-                                <input type="file" accept="audio/*" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" onChange={e => setData('background_audio', e.target.files[0])} />
+                                <input type="file" accept="audio/*" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" onChange={e => setData('background_audio', e.target.files[0])} />
                                 {wedding?.background_audio_path && <p className="text-sm text-green-600 mt-1">✓ Audio actual cargado</p>}
                                 {errors.background_audio && <p className="text-red-500 text-sm mt-1">{errors.background_audio}</p>}
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Información de Transferencia Bancaria (Mesa de regalos en efectivo)</label>
-                                <textarea rows="3" placeholder="Banco: BBVA&#10;Cuenta: 1234567890&#10;CLABE: 012345678901234567" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black" value={data.bank_transfer_info} onChange={e => setData('bank_transfer_info', e.target.value)}></textarea>
+                                <textarea rows="3" placeholder="Banco: BBVA&#10;Cuenta: 1234567890&#10;CLABE: 012345678901234567" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.bank_transfer_info} onChange={e => setData('bank_transfer_info', e.target.value)}></textarea>
                             </div>
                         </div>
                     </div>
@@ -190,7 +190,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                                     <div key={index} className="flex flex-col md:flex-row gap-4 items-start p-4 bg-zinc-50 border rounded-md relative group">
                                         <div className="w-full md:w-32 flex-shrink-0">
                                             <label className="block text-xs font-medium text-zinc-500 mb-1">Hora</label>
-                                            <input type="time" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black text-sm" value={event.time} onChange={e => {
+                                            <input type="time" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm" value={event.time} onChange={e => {
                                                 const newTimeline = [...data.timeline];
                                                 newTimeline[index].time = e.target.value;
                                                 setData('timeline', newTimeline);
@@ -199,7 +199,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                                         <div className="flex-1 space-y-3 w-full">
                                             <div>
                                                 <label className="block text-xs font-medium text-zinc-500 mb-1">Título</label>
-                                                <input type="text" placeholder="Ej: Cóctel de Bienvenida" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black text-sm" value={event.title} onChange={e => {
+                                                <input type="text" placeholder="Ej: Cóctel de Bienvenida" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm" value={event.title} onChange={e => {
                                                     const newTimeline = [...data.timeline];
                                                     newTimeline[index].title = e.target.value;
                                                     setData('timeline', newTimeline);
@@ -207,7 +207,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-zinc-500 mb-1">Descripción (Opcional)</label>
-                                                <input type="text" placeholder="Disfruta de unos canapés y bebidas..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-black focus:border-black text-sm" value={event.description} onChange={e => {
+                                                <input type="text" placeholder="Disfruta de unos canapés y bebidas..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm" value={event.description} onChange={e => {
                                                     const newTimeline = [...data.timeline];
                                                     newTimeline[index].description = e.target.value;
                                                     setData('timeline', newTimeline);
@@ -230,7 +230,11 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
 
                     {!isPlanner && (
                         <div className="pt-6 flex justify-end gap-3">
-                            <button type="submit" disabled={processing} className="bg-black text-white px-8 py-3 rounded-md hover:bg-zinc-800 disabled:opacity-50 transition font-medium">
+                            <button 
+                                type="submit" 
+                                disabled={processing} 
+                                className="bg-[#698175] text-white px-8 py-3 rounded-lg hover:bg-[#586e63] disabled:opacity-50 transition font-medium shadow-sm ring-1 ring-[#5a7064]/20"
+                            >
                                 {processing ? 'Guardando...' : 'Guardar Configuración'}
                             </button>
                         </div>
@@ -241,9 +245,9 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
     );
 }
 
-WeddingForm.layout = ({ wedding }) => ({
+WeddingForm.layout = () => ({
     breadcrumbs: [
-        { title: 'Bodas', href: '/admin/weddings' },
-        { title: wedding ? 'Editar Boda' : 'Nueva Boda', href: '#' }
+        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'Configuración de la Boda', href: '/admin/settings' }
     ],
 });

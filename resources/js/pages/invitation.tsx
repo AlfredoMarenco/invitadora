@@ -1,11 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 
 interface GalleryImageItem {
     id: number;
     image_path: string;
     order?: number;
     is_active?: boolean;
+}
+
+interface HotelItem {
+    id?: number;
+    name: string;
+    location?: string;
+    description?: string;
+    url?: string | null;
+    image?: string;
+    image_path?: string;
+    order?: number;
+    is_active?: boolean;
+}
+
+interface GuestItem {
+    id: number;
+    full_name: string;
+    type?: 'adult' | 'child';
+    is_attending?: boolean | null;
+    allergies?: string | null;
+}
+
+interface InvitationData {
+    id: number;
+    name: string;
+    phone?: string;
+    token: string;
+    status: 'pending' | 'viewed' | 'responded';
+    category?: string;
+    message_to_couple?: string;
+    guests?: GuestItem[];
 }
 
 interface WeddingProps {
@@ -21,6 +52,7 @@ interface WeddingProps {
         groom_godparents?: string[];
         gallery_images?: GalleryImageItem[];
         galleryImages?: GalleryImageItem[];
+        hotels?: HotelItem[];
         locations?: {
             ceremony?: string;
             ceremony_maps?: string;
@@ -31,9 +63,10 @@ interface WeddingProps {
         };
         gift_registry_url?: string;
     };
+    invitation?: InvitationData | null;
 }
 
-export default function Invitation({ wedding }: WeddingProps) {
+export default function Invitation({ wedding, invitation }: WeddingProps) {
     const brideName = wedding?.bride_name || 'Adriana';
     const groomName = wedding?.groom_name || 'Joaquín';
     const dateText = wedding?.wedding_date
@@ -234,6 +267,16 @@ export default function Invitation({ wedding }: WeddingProps) {
         },
     ];
 
+    const rawHotels = wedding?.hotels || [];
+    const hotelList = rawHotels.length > 0
+        ? rawHotels.map((h) => ({
+            name: h.name,
+            description: h.location || h.description || '',
+            image: h.image_path || h.image || '/images/hotels/hotel_1.jpg',
+            url: h.url || (h.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.name + ' ' + h.location)}` : '#'),
+        }))
+        : defaultHotels;
+
     const [activeHotelIndex, setActiveHotelIndex] = useState(0);
     const hotelScrollRef = useRef<HTMLDivElement | null>(null);
     const isHotelPausedRef = useRef(false);
@@ -252,7 +295,7 @@ export default function Invitation({ wedding }: WeddingProps) {
         const scrollLeft = hotelScrollRef.current.scrollLeft;
         const cardStep = 186; // Ancho tarjeta + gap
         const index = Math.round(Math.max(0, scrollLeft - 50) / cardStep);
-        setActiveHotelIndex(Math.min(Math.max(index, 0), defaultHotels.length - 1));
+        setActiveHotelIndex(Math.min(Math.max(index, 0), hotelList.length - 1));
     };
 
     const scrollToHotel = (index: number) => {
@@ -279,7 +322,7 @@ export default function Invitation({ wedding }: WeddingProps) {
 
     // Auto-deslizamiento continuo de hoteles
     useEffect(() => {
-        if (defaultHotels.length <= 1) return;
+        if (hotelList.length <= 1) return;
 
         const autoSlideTimer = setInterval(() => {
             if (isHotelPausedRef.current || !hotelScrollRef.current) return;
@@ -297,27 +340,131 @@ export default function Invitation({ wedding }: WeddingProps) {
         }, 3600);
 
         return () => clearInterval(autoSlideTimer);
-    }, [defaultHotels.length]);
+    }, [hotelList.length]);
 
     // Estado del Formulario de Asistencia (RSVP / ¿Nos acompañas?)
-    const [rsvpName, setRsvpName] = useState('');
-    const [rsvpAttending, setRsvpAttending] = useState<'yes' | 'no' | null>(null);
-    const [rsvpMessage, setRsvpMessage] = useState('');
-    const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
+    const [rsvpName, setRsvpName] = useState(invitation?.name || '');
+    
+    // Determinar respuesta inicial si ya respondió previamente
+    const getInitialAttending = (): 'yes' | 'no' | null => {
+        if (!invitation?.guests || invitation.guests.length === 0) return null;
+        const allYes = invitation.guests.every(g => g.is_attending === true);
+        const allNo = invitation.guests.every(g => g.is_attending === false);
+        if (allYes) return 'yes';
+        if (allNo) return 'no';
+        return null;
+    };
+
+    const [rsvpAttending, setRsvpAttending] = useState<'yes' | 'no' | null>(getInitialAttending());
+
+    // Mapa de asistencia individual por invitado
+    const [guestAttendingMap, setGuestAttendingMap] = useState<Record<number, boolean>>(() => {
+        const map: Record<number, boolean> = {};
+        if (invitation?.guests) {
+            invitation.guests.forEach(g => {
+                if (g.is_attending !== null && g.is_attending !== undefined) {
+                    map[g.id] = g.is_attending;
+                }
+            });
+        }
+        return map;
+    });
+
+    const [guestAllergiesMap, setGuestAllergiesMap] = useState<Record<number, string>>(() => {
+        const map: Record<number, string> = {};
+        if (invitation?.guests) {
+            invitation.guests.forEach(g => {
+                map[g.id] = g.allergies || '';
+            });
+        }
+        return map;
+    });
+
+    const [rsvpMessage, setRsvpMessage] = useState(invitation?.message_to_couple || '');
+    const [rsvpSubmitted, setRsvpSubmitted] = useState(invitation?.status === 'responded');
+    const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
     const [rsvpError, setRsvpError] = useState('');
 
     const handleRsvpSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!rsvpName.trim()) {
-            setRsvpError('Por favor ingresa tu nombre');
+
+        if (!invitation && !rsvpName.trim()) {
+            setRsvpError('Por favor ingresa tu nombre completo');
             return;
         }
-        if (!rsvpAttending) {
-            setRsvpError('Por favor confirma si asistirás');
-            return;
+
+        const hasMultipleGuests = !!(invitation && invitation.guests && invitation.guests.length > 1);
+
+        if (hasMultipleGuests) {
+            const hasAnySelection = Object.keys(guestAttendingMap).length > 0;
+            if (!hasAnySelection && !rsvpAttending) {
+                setRsvpError('Por favor confirma la asistencia de tus invitados');
+                return;
+            }
+        } else {
+            if (!rsvpAttending) {
+                setRsvpError('Por favor confirma si asistirás a nuestra boda');
+                return;
+            }
         }
+
         setRsvpError('');
-        setRsvpSubmitted(true);
+        setRsvpSubmitting(true);
+
+        if (invitation?.token) {
+            // Invitación personalizada con token
+            const payload = hasMultipleGuests
+                ? {
+                    guests: invitation.guests?.map(g => ({
+                        id: g.id,
+                        is_attending: guestAttendingMap[g.id] !== undefined 
+                            ? guestAttendingMap[g.id] 
+                            : (rsvpAttending === 'yes'),
+                        allergies: guestAllergiesMap[g.id] || null,
+                    })),
+                    message_to_couple: rsvpMessage,
+                }
+                : {
+                    is_attending: rsvpAttending === 'yes',
+                    guests: invitation.guests?.map(g => ({
+                        id: g.id,
+                        is_attending: rsvpAttending === 'yes',
+                        allergies: guestAllergiesMap[g.id] || null,
+                    })),
+                    message_to_couple: rsvpMessage,
+                };
+
+            router.put(`/public/rsvp/${invitation.token}`, payload, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setRsvpSubmitted(true);
+                },
+                onError: (err: any) => {
+                    setRsvpError(err?.rsvp || 'Ocurrió un error al guardar tu respuesta. Intenta de nuevo.');
+                },
+                onFinish: () => {
+                    setRsvpSubmitting(false);
+                }
+            });
+        } else {
+            // Confirmación abierta en la landing (sin token)
+            router.post('/public/rsvp/submit', {
+                name: rsvpName.trim(),
+                is_attending: rsvpAttending === 'yes',
+                message: rsvpMessage,
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setRsvpSubmitted(true);
+                },
+                onError: (err: any) => {
+                    setRsvpError(err?.name || err?.message || 'Ocurrió un error al guardar tu confirmación.');
+                },
+                onFinish: () => {
+                    setRsvpSubmitting(false);
+                }
+            });
+        }
     };
 
     return (
@@ -1223,7 +1370,7 @@ export default function Invitation({ wedding }: WeddingProps) {
                             className="w-full flex items-start gap-3.5 overflow-x-auto snap-x snap-mandatory no-scrollbar px-0 py-2"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
-                            {defaultHotels.map((hotel, idx) => (
+                            {hotelList.map((hotel, idx) => (
                                 <div
                                     key={idx}
                                     onClick={() => scrollToHotel(idx)}
@@ -1268,7 +1415,7 @@ export default function Invitation({ wedding }: WeddingProps) {
 
                         {/* Indicadores de paginación (Dots idénticos a galería) */}
                         <div className="flex items-center justify-center gap-1.5 mt-5 sm:mt-6 px-4">
-                            {defaultHotels.map((_, idx) => (
+                            {hotelList.map((_, idx) => (
                                 <button
                                     key={idx}
                                     type="button"
@@ -1305,10 +1452,10 @@ export default function Invitation({ wedding }: WeddingProps) {
                                         ✓
                                     </div>
                                     <h4 className="font-script text-3xl text-[#788e80] mb-2">
-                                        ¡Muchas Gracias, {rsvpName}!
+                                        ¡Muchas Gracias, {rsvpName || invitation?.name}!
                                     </h4>
                                     <p className="font-serif text-[12px] sm:text-[13px] text-stone-600 tracking-wide mb-4 leading-relaxed">
-                                        {rsvpAttending === 'yes'
+                                        {rsvpAttending === 'yes' || Object.values(guestAttendingMap).some(Boolean)
                                             ? '¡Nos emociona muchísimo contar con tu presencia en nuestro gran día!'
                                             : 'Lamentamos que no puedas acompañarnos físicamente, ¡te llevaremos en el corazón!'}
                                     </p>
@@ -1320,82 +1467,147 @@ export default function Invitation({ wedding }: WeddingProps) {
                                     <button
                                         type="button"
                                         onClick={() => setRsvpSubmitted(false)}
-                                        className="font-serif text-[11px] tracking-wider uppercase text-[#788a80] underline hover:text-[#556c7d]"
+                                        className="font-serif text-[11px] tracking-wider uppercase text-[#788a80] underline hover:text-[#556c7d] cursor-pointer"
                                     >
                                         Modificar respuesta
                                     </button>
                                 </div>
                             ) : (
                                 <form onSubmit={handleRsvpSubmit} className="flex flex-col space-y-4 sm:space-y-5">
-                                    {/* Campo: Nombre */}
-                                    <div>
-                                        <label className="font-serif text-[11px] sm:text-[11.5px] tracking-[0.14em] text-[#556c7d] uppercase font-semibold block mb-1.5">
-                                            Nombre
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={rsvpName}
-                                            onChange={(e) => setRsvpName(e.target.value)}
-                                            placeholder="Escribe tu nombre completo"
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-[#b8c9d9] text-[13px] text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-[#788a80] focus:border-[#788a80] bg-[#fafbfc] transition-all"
-                                        />
-                                    </div>
-
-                                    {/* Campo: ¿Confirmas tu asistencia a nuestra boda? */}
-                                    <div>
-                                        <label className="font-serif text-[11px] sm:text-[11.5px] tracking-[0.12em] text-[#556c7d] uppercase font-semibold block mb-2 leading-snug">
-                                            ¿Confirmas tu asistencia a nuestra boda?
-                                        </label>
-                                        <div className="space-y-2">
-                                            {/* Opción 1: Acepto con mucho gusto */}
-                                            <button
-                                                type="button"
-                                                onClick={() => setRsvpAttending('yes')}
-                                                className={`w-full flex items-center px-3.5 py-2.5 rounded-xl border transition-all duration-200 text-left ${rsvpAttending === 'yes'
-                                                    ? 'bg-[#edf3f7] border-[#6f879a] text-[#3c5061] shadow-xs'
-                                                    : 'bg-[#fafbfc] border-[#b8c9d9] text-stone-600 hover:bg-stone-50'
-                                                    }`}
-                                            >
-                                                <span
-                                                    className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2.5 shrink-0 ${rsvpAttending === 'yes'
-                                                        ? 'border-[#6f879a] bg-[#6f879a]'
-                                                        : 'border-[#94a3b8] bg-white'
-                                                        }`}
-                                                >
-                                                    {rsvpAttending === 'yes' && (
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                                                    )}
-                                                </span>
-                                                <span className="text-[12.5px] sm:text-[13px] font-medium tracking-wide">
-                                                    Acepto con mucho gusto
-                                                </span>
-                                            </button>
-
-                                            {/* Opción 2: Lamentablemente no puedo asistir */}
-                                            <button
-                                                type="button"
-                                                onClick={() => setRsvpAttending('no')}
-                                                className={`w-full flex items-center px-3.5 py-2.5 rounded-xl border transition-all duration-200 text-left ${rsvpAttending === 'no'
-                                                    ? 'bg-[#edf3f7] border-[#6f879a] text-[#3c5061] shadow-xs'
-                                                    : 'bg-[#fafbfc] border-[#b8c9d9] text-stone-600 hover:bg-stone-50'
-                                                    }`}
-                                            >
-                                                <span
-                                                    className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2.5 shrink-0 ${rsvpAttending === 'no'
-                                                        ? 'border-[#6f879a] bg-[#6f879a]'
-                                                        : 'border-[#94a3b8] bg-white'
-                                                        }`}
-                                                >
-                                                    {rsvpAttending === 'no' && (
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                                                    )}
-                                                </span>
-                                                <span className="text-[12.5px] sm:text-[13px] font-medium tracking-wide">
-                                                    Lamentablemente no puedo asistir
-                                                </span>
-                                            </button>
+                                    {/* Si es una invitación personalizada recibida con token */}
+                                    {invitation ? (
+                                        <div className="bg-[#f0f4f2] border border-[#d2dfd7] rounded-xl p-3 text-center">
+                                            <span className="font-serif text-[10px] tracking-[0.2em] uppercase text-[#698175] font-semibold block mb-0.5">
+                                                {invitation.guests && invitation.guests.length > 1 ? 'Invitación Familiar' : 'Invitación Personal'}
+                                            </span>
+                                            <h3 className="font-serif font-bold text-stone-800 text-sm">
+                                                {invitation.name}
+                                            </h3>
+                                            <p className="font-serif text-[11px] text-stone-600 mt-0.5">
+                                                Hemos reservado <strong className="text-[#556c7d]">{invitation.guests?.length || 1} {invitation.guests?.length === 1 ? 'pase' : 'pases'}</strong> en su honor
+                                            </p>
                                         </div>
-                                    </div>
+                                    ) : (
+                                        /* Campo: Nombre (en caso de landing abierta sin token) */
+                                        <div>
+                                            <label className="font-serif text-[11px] sm:text-[11.5px] tracking-[0.14em] text-[#556c7d] uppercase font-semibold block mb-1.5">
+                                                Nombre
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={rsvpName}
+                                                onChange={(e) => setRsvpName(e.target.value)}
+                                                placeholder="Escribe tu nombre completo"
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-[#b8c9d9] text-[13px] text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-[#788a80] focus:border-[#788a80] bg-[#fafbfc] transition-all"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Si hay múltiples integrantes asignados a la invitación */}
+                                    {invitation?.guests && invitation.guests.length > 1 ? (
+                                        <div className="space-y-2">
+                                            <label className="font-serif text-[11px] sm:text-[11.5px] tracking-[0.12em] text-[#556c7d] uppercase font-semibold block mb-1">
+                                                Confirma la asistencia de cada persona:
+                                            </label>
+                                            <div className="space-y-2.5">
+                                                {invitation.guests.map((guest) => {
+                                                    const isAtt = guestAttendingMap[guest.id];
+                                                    return (
+                                                        <div key={guest.id} className="p-2.5 rounded-xl border border-[#b8c9d9] bg-[#fafbfc] flex items-center justify-between">
+                                                            <div className="pr-2">
+                                                                <p className="text-[12.5px] font-medium text-stone-800 leading-tight">
+                                                                    {guest.full_name}
+                                                                </p>
+                                                                <span className="text-[9.5px] text-stone-400">
+                                                                    {guest.type === 'child' ? 'Niño/a' : 'Adulto'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex gap-1.5 shrink-0">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setGuestAttendingMap(prev => ({ ...prev, [guest.id]: true }))}
+                                                                    className={`px-2.5 py-1 rounded-full text-[11px] font-serif transition-all cursor-pointer ${
+                                                                        isAtt === true 
+                                                                            ? 'bg-[#698175] text-white shadow-xs font-semibold' 
+                                                                            : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
+                                                                    }`}
+                                                                >
+                                                                    ✓ Sí
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setGuestAttendingMap(prev => ({ ...prev, [guest.id]: false }))}
+                                                                    className={`px-2.5 py-1 rounded-full text-[11px] font-serif transition-all cursor-pointer ${
+                                                                        isAtt === false 
+                                                                            ? 'bg-rose-600 text-white shadow-xs font-semibold' 
+                                                                            : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
+                                                                    }`}
+                                                                >
+                                                                    ✗ No
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* Campo: ¿Confirmas tu asistencia a nuestra boda? */
+                                        <div>
+                                            <label className="font-serif text-[11px] sm:text-[11.5px] tracking-[0.12em] text-[#556c7d] uppercase font-semibold block mb-2 leading-snug">
+                                                ¿Confirmas tu asistencia a nuestra boda?
+                                            </label>
+                                            <div className="space-y-2">
+                                                {/* Opción 1: Acepto con mucho gusto */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setRsvpAttending('yes')}
+                                                    className={`w-full flex items-center px-3.5 py-2.5 rounded-xl border transition-all duration-200 text-left cursor-pointer ${rsvpAttending === 'yes'
+                                                        ? 'bg-[#edf3f7] border-[#6f879a] text-[#3c5061] shadow-xs'
+                                                        : 'bg-[#fafbfc] border-[#b8c9d9] text-stone-600 hover:bg-stone-50'
+                                                        }`}
+                                                >
+                                                    <span
+                                                        className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2.5 shrink-0 ${rsvpAttending === 'yes'
+                                                            ? 'border-[#6f879a] bg-[#6f879a]'
+                                                            : 'border-[#94a3b8] bg-white'
+                                                            }`}
+                                                    >
+                                                        {rsvpAttending === 'yes' && (
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                        )}
+                                                    </span>
+                                                    <span className="text-[12.5px] sm:text-[13px] font-medium tracking-wide">
+                                                        Acepto con mucho gusto
+                                                    </span>
+                                                </button>
+
+                                                {/* Opción 2: Lamentablemente no puedo asistir */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setRsvpAttending('no')}
+                                                    className={`w-full flex items-center px-3.5 py-2.5 rounded-xl border transition-all duration-200 text-left cursor-pointer ${rsvpAttending === 'no'
+                                                        ? 'bg-[#edf3f7] border-[#6f879a] text-[#3c5061] shadow-xs'
+                                                        : 'bg-[#fafbfc] border-[#b8c9d9] text-stone-600 hover:bg-stone-50'
+                                                        }`}
+                                                >
+                                                    <span
+                                                        className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2.5 shrink-0 ${rsvpAttending === 'no'
+                                                            ? 'border-[#6f879a] bg-[#6f879a]'
+                                                            : 'border-[#94a3b8] bg-white'
+                                                            }`}
+                                                    >
+                                                        {rsvpAttending === 'no' && (
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                        )}
+                                                    </span>
+                                                    <span className="text-[12.5px] sm:text-[13px] font-medium tracking-wide">
+                                                        Lamentablemente no puedo asistir
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Campo: Escribe una dedicatoria a los novios */}
                                     <div>
@@ -1421,9 +1633,10 @@ export default function Invitation({ wedding }: WeddingProps) {
                                     {/* Botón Submit: Confirmar asistencia */}
                                     <button
                                         type="submit"
-                                        className="w-full py-3 px-6 rounded-full bg-[#6f879a] hover:bg-[#5c7385] active:scale-[0.99] text-white font-serif text-[12px] sm:text-[13px] tracking-[0.18em] uppercase font-medium shadow transition-all duration-300 mt-2"
+                                        disabled={rsvpSubmitting}
+                                        className="w-full py-3 px-6 rounded-full bg-[#6f879a] hover:bg-[#5c7385] active:scale-[0.99] text-white font-serif text-[12px] sm:text-[13px] tracking-[0.18em] uppercase font-medium shadow transition-all duration-300 mt-2 disabled:opacity-60 cursor-pointer"
                                     >
-                                        Confirmar asistencia
+                                        {rsvpSubmitting ? 'Guardando confirmación...' : 'Confirmar asistencia'}
                                     </button>
                                 </form>
                             )}

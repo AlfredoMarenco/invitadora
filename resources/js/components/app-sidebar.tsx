@@ -16,7 +16,7 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-import { Users, Image as ImageIcon, Settings } from 'lucide-react';
+import { Users, Image as ImageIcon, Settings, ExternalLink, Hotel } from 'lucide-react';
 
 const mainNavItems: NavItem[] = [
     {
@@ -35,6 +35,11 @@ const mainNavItems: NavItem[] = [
         icon: ImageIcon,
     },
     {
+        title: 'Hoteles',
+        href: '/admin/hotels',
+        icon: Hotel,
+    },
+    {
         title: 'Check-in (Puerta)',
         href: '/admin/checkin',
         icon: BookOpen,
@@ -47,16 +52,11 @@ const mainNavItems: NavItem[] = [
 ];
 
 const footerNavItems: NavItem[] = [
-/*     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    }, */
+        title: 'Ver Invitación Web',
+        href: '/',
+        icon: ExternalLink,
+    },
 ];
 
 export function AppSidebar() {
