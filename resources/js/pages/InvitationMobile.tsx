@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { Ticket } from 'lucide-react';
 import HotelCarousel from '../components/HotelCarousel';
