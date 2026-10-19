@@ -291,7 +291,7 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
                         <span className="p-1.5 rounded-lg bg-[#698175]/10 text-[#698175]">
                             <Building2 className="size-5" />
                         </span>
-                        <h1 className="font-serif text-2xl md:text-3xl font-bold tracking-tight text-[#28362e] dark:text-[#f3f6f4]">
+                        <h1 className="font-sans text-2xl md:text-3xl font-bold tracking-tight text-[#28362e] dark:text-[#f3f6f4]">
                             Hoteles Recomendados
                         </h1>
                     </div>
@@ -329,7 +329,7 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
                 <div className="p-4 rounded-xl border border-[#ded8cd] bg-card flex items-center justify-between">
                     <div>
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Registrados</p>
-                        <h3 className="text-2xl font-bold font-serif text-[#28362e] dark:text-[#f3f6f4] mt-0.5">
+                        <h3 className="text-2xl font-bold font-sans text-[#28362e] dark:text-[#f3f6f4] mt-0.5">
                             {hotels.length}
                         </h3>
                     </div>
@@ -341,7 +341,7 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
                 <div className="p-4 rounded-xl border border-[#ded8cd] bg-card flex items-center justify-between">
                     <div>
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Activos en Invitación</p>
-                        <h3 className="text-2xl font-bold font-serif text-[#698175] mt-0.5">
+                        <h3 className="text-2xl font-bold font-sans text-[#698175] mt-0.5">
                             {activeHotelsCount}
                         </h3>
                     </div>
@@ -353,7 +353,7 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
                 <div className="p-4 rounded-xl border border-[#ded8cd] bg-card flex items-center justify-between">
                     <div>
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Ocultos / Pausados</p>
-                        <h3 className="text-2xl font-bold font-serif text-stone-500 mt-0.5">
+                        <h3 className="text-2xl font-bold font-sans text-stone-500 mt-0.5">
                             {hotels.length - activeHotelsCount}
                         </h3>
                     </div>
@@ -369,7 +369,7 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
                     <div className="size-14 rounded-2xl bg-[#698175]/10 text-[#698175] flex items-center justify-center mb-4">
                         <Building2 className="size-7" />
                     </div>
-                    <h3 className="font-serif text-lg font-bold text-[#28362e] dark:text-[#f3f6f4]">
+                    <h3 className="font-sans text-lg font-bold text-[#28362e] dark:text-[#f3f6f4]">
                         Aún no tienes hoteles registrados
                     </h3>
                     <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-6">
@@ -430,7 +430,7 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
 
                                 {/* Nombre encima del degradado */}
                                 <div className="absolute bottom-2.5 inset-x-3 text-white">
-                                    <h4 className="font-serif font-bold text-base leading-snug drop-shadow-sm line-clamp-1">
+                                    <h4 className="font-sans font-bold text-base leading-snug drop-shadow-sm line-clamp-1">
                                         {hotel.name}
                                     </h4>
                                 </div>
@@ -541,7 +541,7 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                 <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="font-serif text-xl font-bold text-[#28362e] dark:text-[#f3f6f4] flex items-center gap-2">
+                        <DialogTitle className="font-sans text-xl font-bold text-[#28362e] dark:text-[#f3f6f4] flex items-center gap-2">
                             <Building2 className="size-5 text-[#698175]" />
                             <span>Agregar Hotel Recomendado</span>
                         </DialogTitle>
@@ -703,7 +703,7 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                 <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="font-serif text-xl font-bold text-[#28362e] dark:text-[#f3f6f4] flex items-center gap-2">
+                        <DialogTitle className="font-sans text-xl font-bold text-[#28362e] dark:text-[#f3f6f4] flex items-center gap-2">
                             <Pencil className="size-5 text-amber-600" />
                             <span>Editar Hotel Recomendado</span>
                         </DialogTitle>
@@ -858,7 +858,7 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
             <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle className="font-serif text-lg font-bold text-rose-700 flex items-center gap-2">
+                        <DialogTitle className="font-sans text-lg font-bold text-rose-700 flex items-center gap-2">
                             <AlertTriangle className="size-5 text-rose-600" />
                             <span>¿Eliminar este hotel?</span>
                         </DialogTitle>
@@ -875,7 +875,7 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
                                 className="size-12 rounded-lg object-cover"
                             />
                             <div className="overflow-hidden">
-                                <p className="font-serif font-bold text-xs truncate text-[#28362e] dark:text-[#f3f6f4]">
+                                <p className="font-sans font-bold text-xs truncate text-[#28362e] dark:text-[#f3f6f4]">
                                     {selectedHotel.name}
                                 </p>
                                 <p className="text-[11px] text-muted-foreground truncate">

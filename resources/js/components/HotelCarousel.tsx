@@ -95,11 +95,15 @@ export default function HotelCarousel({
 
     // Drag y Swipe interactivo
     const [isDragging, setIsDragging] = useState(false);
-    const [dragStartX, setDragStartX] = useState(0);
     const [dragOffset, setDragOffset] = useState(0);
     const hasDraggedRef = useRef(false);
     const isPausedRef = useRef(false);
     const pauseTimeoutRef = useRef<any>(null);
+
+    // Bloqueo direccional para gestos táctiles (evita colisiones con scroll vertical de la página)
+    const touchStartPosRef = useRef({ x: 0, y: 0, time: 0 });
+    const touchDirectionRef = useRef<'none' | 'horizontal' | 'vertical'>('none');
+    const mouseStartXRef = useRef(0);
 
     // Medición del ancho del contenedor
     useEffect(() => {
@@ -121,29 +125,29 @@ export default function HotelCarousel({
     }, []);
 
     // Pausar auto-slide temporalmente tras interacción del usuario
-    const pauseTemporarily = useCallback(() => {
+    const pauseTemporarily = useCallback((duration = 6000) => {
         isPausedRef.current = true;
         if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
         pauseTimeoutRef.current = setTimeout(() => {
             isPausedRef.current = false;
-        }, 5000);
+        }, duration);
     }, []);
 
     // Navegación siguiente / anterior
     const handleNext = useCallback(() => {
-        pauseTemporarily();
+        pauseTemporarily(6000);
         setIsTransitioning(true);
         setCurrentIndex((prev) => prev + 1);
     }, [pauseTemporarily]);
 
     const handlePrev = useCallback(() => {
-        pauseTemporarily();
+        pauseTemporarily(6000);
         setIsTransitioning(true);
         setCurrentIndex((prev) => prev - 1);
     }, [pauseTemporarily]);
 
     const handleDotClick = useCallback((targetOriginalIndex: number) => {
-        pauseTemporarily();
+        pauseTemporarily(6000);
         setIsTransitioning(true);
         const currentRelative = ((currentIndex % originalCount) + originalCount) % originalCount;
         let diff = targetOriginalIndex - currentRelative;
@@ -154,7 +158,11 @@ export default function HotelCarousel({
     }, [currentIndex, originalCount, pauseTemporarily]);
 
     // Reseteo silencioso al cruzar los límites del bloque central (efecto infinito sin cortes)
-    const handleTransitionEnd = () => {
+    const handleTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
+        // Filtrar transiciones que provengan de elementos hijos (cards, imágenes, hover)
+        if (e.target !== e.currentTarget) return;
+        if (e.propertyName !== 'transform') return;
+
         if (currentIndex >= baseCount * 2) {
             setIsTransitioning(false);
             setCurrentIndex((prev) => prev - baseCount);
@@ -178,53 +186,91 @@ export default function HotelCarousel({
         return () => clearInterval(timer);
     }, [autoPlayInterval, hotels.length, isDragging]);
 
-    // Touch Swipe
+    // Touch Swipe con detección precisa de dirección
     const onTouchStart = (e: React.TouchEvent) => {
-        pauseTemporarily();
-        setIsDragging(true);
-        setIsTransitioning(false);
+        pauseTemporarily(6000);
+        const touch = e.touches[0];
+        touchStartPosRef.current = {
+            x: touch.clientX,
+            y: touch.clientY,
+            time: Date.now(),
+        };
+        touchDirectionRef.current = 'none';
         hasDraggedRef.current = false;
-        setDragStartX(e.touches[0].clientX);
         setDragOffset(0);
     };
 
     const onTouchMove = (e: React.TouchEvent) => {
-        if (!isDragging) return;
-        const currentX = e.touches[0].clientX;
-        const delta = currentX - dragStartX;
-        if (Math.abs(delta) > 6) {
-            hasDraggedRef.current = true;
+        if (touchDirectionRef.current === 'vertical') {
+            // El usuario está haciendo scroll vertical en la página: no interferir
+            return;
         }
-        setDragOffset(delta);
+
+        const touch = e.touches[0];
+        const diffX = touch.clientX - touchStartPosRef.current.x;
+        const diffY = touch.clientY - touchStartPosRef.current.y;
+
+        if (touchDirectionRef.current === 'none') {
+            // Tolerancia mínima para detectar intención
+            if (Math.abs(diffX) < 6 && Math.abs(diffY) < 6) return;
+
+            if (Math.abs(diffY) > Math.abs(diffX)) {
+                touchDirectionRef.current = 'vertical';
+                return;
+            } else {
+                touchDirectionRef.current = 'horizontal';
+                setIsDragging(true);
+                setIsTransitioning(false);
+            }
+        }
+
+        if (touchDirectionRef.current === 'horizontal') {
+            hasDraggedRef.current = true;
+            setDragOffset(diffX);
+        }
     };
 
     const onTouchEnd = () => {
-        if (!isDragging) return;
+        const wasHorizontal = touchDirectionRef.current === 'horizontal';
+        touchDirectionRef.current = 'none';
+
+        if (!wasHorizontal) {
+            setIsDragging(false);
+            setDragOffset(0);
+            return;
+        }
+
         setIsDragging(false);
         setIsTransitioning(true);
 
-        const threshold = 40;
-        if (dragOffset < -threshold) {
-            handleNext();
-        } else if (dragOffset > threshold) {
-            handlePrev();
+        const timeElapsed = Date.now() - touchStartPosRef.current.time;
+        // Detección de flick rápido o superación de umbral
+        const isQuickFlick = timeElapsed < 280 && Math.abs(dragOffset) > 25;
+        const isThresholdPassed = Math.abs(dragOffset) > 40;
+
+        if (isQuickFlick || isThresholdPassed) {
+            if (dragOffset < 0) {
+                handleNext();
+            } else {
+                handlePrev();
+            }
         }
         setDragOffset(0);
     };
 
     // Mouse Drag
     const onMouseDown = (e: React.MouseEvent) => {
-        pauseTemporarily();
+        pauseTemporarily(6000);
         setIsDragging(true);
         setIsTransitioning(false);
         hasDraggedRef.current = false;
-        setDragStartX(e.clientX);
+        mouseStartXRef.current = e.clientX;
         setDragOffset(0);
     };
 
     const onMouseMove = (e: React.MouseEvent) => {
         if (!isDragging) return;
-        const delta = e.clientX - dragStartX;
+        const delta = e.clientX - mouseStartXRef.current;
         if (Math.abs(delta) > 6) {
             hasDraggedRef.current = true;
         }
@@ -304,6 +350,7 @@ export default function HotelCarousel({
                     transition: isTransitioning ? 'transform 420ms cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
                     gap: `${cardGap}px`,
                     touchAction: 'pan-y',
+                    overscrollBehaviorX: 'contain',
                 }}
                 onTransitionEnd={handleTransitionEnd}
                 onTouchStart={onTouchStart}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Head, router } from '@inertiajs/react';
+import { Ticket } from 'lucide-react';
 import HotelCarousel from '../components/HotelCarousel';
+import DigitalPassCard, { GuestPassData } from '../components/DigitalPassCard';
 
 interface GalleryImageItem {
     id: number;
@@ -27,6 +29,9 @@ interface GuestItem {
     type?: 'adult' | 'child';
     is_attending?: boolean | null;
     allergies?: string | null;
+    checkin_code?: string;
+    table_name?: string | null;
+    special_notes?: string | null;
 }
 
 interface InvitationData {
@@ -114,7 +119,7 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
 
     // Estado del reproductor de música
     const [isPlaying, setIsPlaying] = useState(false);
-    const [progress, setProgress] = useState(24); // 24% como en la imagen de referencia
+    const [progress, setProgress] = useState(0);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const togglePlay = () => {
@@ -125,23 +130,65 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
         } else {
             audioRef.current.play().then(() => {
                 setIsPlaying(true);
-            }).catch(() => {
-                // Si no hay archivo real aún o requiere interacción, simulamos
-                setIsPlaying(true);
+            }).catch((err) => {
+                console.warn('Audio playback requires interaction:', err);
             });
         }
     };
 
-    // Si está reproduciendo simulado o real, avanza el progreso
+    // Auto-reproducción al primer toque o interacción del usuario en la pantalla
     useEffect(() => {
-        let interval: any;
-        if (isPlaying) {
-            interval = setInterval(() => {
-                setProgress((prev) => (prev >= 100 ? 0 : prev + 0.5));
-            }, 500);
-        }
-        return () => clearInterval(interval);
-    }, [isPlaying]);
+        if (!wedding?.music_url) return;
+
+        const startAudioOnInteraction = () => {
+            if (audioRef.current && audioRef.current.paused) {
+                audioRef.current.play().then(() => {
+                    setIsPlaying(true);
+                }).catch(() => {});
+            }
+        };
+
+        window.addEventListener('click', startAudioOnInteraction, { once: true });
+        window.addEventListener('touchstart', startAudioOnInteraction, { once: true });
+        window.addEventListener('scroll', startAudioOnInteraction, { once: true });
+
+        return () => {
+            window.removeEventListener('click', startAudioOnInteraction);
+            window.removeEventListener('touchstart', startAudioOnInteraction);
+            window.removeEventListener('scroll', startAudioOnInteraction);
+        };
+    }, [wedding?.music_url]);
+
+    // Seguimiento del progreso real de la canción
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const handleTimeUpdate = () => {
+            if (audio.duration && !isNaN(audio.duration)) {
+                setProgress((audio.currentTime / audio.duration) * 100);
+            }
+        };
+
+        const handlePlay = () => setIsPlaying(true);
+        const handlePause = () => setIsPlaying(false);
+        const handleEnded = () => {
+            setIsPlaying(false);
+            setProgress(0);
+        };
+
+        audio.addEventListener('timeupdate', handleTimeUpdate);
+        audio.addEventListener('play', handlePlay);
+        audio.addEventListener('pause', handlePause);
+        audio.addEventListener('ended', handleEnded);
+
+        return () => {
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+            audio.removeEventListener('play', handlePlay);
+            audio.removeEventListener('pause', handlePause);
+            audio.removeEventListener('ended', handleEnded);
+        };
+    }, []);
 
     // Galería conectada al panel de administración (con fallback al template del canvas si aún no hay fotos)
     const defaultGalleryImages = [
@@ -160,39 +207,44 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
     const galleryScrollRef = useRef<HTMLDivElement | null>(null);
     const isPausedRef = useRef(false);
     const pauseTimeoutRef = useRef<any>(null);
+    const scrollRafRef = useRef<number | null>(null);
 
-    const handleUserInteraction = () => {
+    const handleUserInteraction = useCallback((duration = 7000) => {
         isPausedRef.current = true;
         if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
         pauseTimeoutRef.current = setTimeout(() => {
             isPausedRef.current = false;
-        }, 4000); // Reanuda el auto-deslizamiento tras 4 segundos de inactividad
-    };
+        }, duration);
+    }, []);
 
-    const handleGalleryScroll = () => {
-        if (!galleryScrollRef.current) return;
-        const container = galleryScrollRef.current;
-        const centerPoint = container.scrollLeft + container.clientWidth / 2;
-        const cards = Array.from(container.children) as HTMLElement[];
+    const handleGalleryScroll = useCallback(() => {
+        handleUserInteraction(7000);
+        if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = requestAnimationFrame(() => {
+            if (!galleryScrollRef.current) return;
+            const container = galleryScrollRef.current;
+            const centerPoint = container.scrollLeft + container.clientWidth / 2;
+            const cards = Array.from(container.children) as HTMLElement[];
 
-        let closestIndex = 0;
-        let minDistance = Infinity;
+            let closestIndex = 0;
+            let minDistance = Infinity;
 
-        cards.forEach((card, idx) => {
-            const cardCenter = card.offsetLeft + card.clientWidth / 2;
-            const dist = Math.abs(centerPoint - cardCenter);
-            if (dist < minDistance) {
-                minDistance = dist;
-                closestIndex = idx;
-            }
+            cards.forEach((card, idx) => {
+                const cardCenter = card.offsetLeft + card.clientWidth / 2;
+                const dist = Math.abs(centerPoint - cardCenter);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestIndex = idx;
+                }
+            });
+
+            setActiveImageIndex((prev) => (prev !== closestIndex ? closestIndex : prev));
         });
+    }, [handleUserInteraction]);
 
-        setActiveImageIndex(closestIndex);
-    };
-
-    const scrollToImage = (index: number) => {
+    const scrollToImage = useCallback((index: number) => {
         if (!galleryScrollRef.current) return;
-        handleUserInteraction();
+        handleUserInteraction(7000);
         const container = galleryScrollRef.current;
         const cards = container.children;
         if (!cards[index]) return;
@@ -203,7 +255,7 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
             behavior: 'smooth',
         });
         setActiveImageIndex(index);
-    };
+    }, [handleUserInteraction]);
 
     // Inicializa centrado en la imagen del medio (índice 1) para mostrar 3 imágenes (izq cortada, centro resaltada, der cortada)
     useEffect(() => {
@@ -234,7 +286,7 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
         };
     }, [galleryList]);
 
-    // Auto-deslizamiento continuo cada 3.5 segundos rotando por las imágenes
+    // Auto-deslizamiento continuo cada 4 segundos rotando por las imágenes solo si no hay interacción
     useEffect(() => {
         if (galleryList.length <= 1) return;
 
@@ -245,10 +297,10 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                 scrollToImage(nextIndex);
                 return nextIndex;
             });
-        }, 3500);
+        }, 4000);
 
         return () => clearInterval(autoSlideTimer);
-    }, [galleryList.length]);
+    }, [galleryList.length, scrollToImage]);
 
     // Cuenta regresiva hacia wedding_date (o 20 de febrero de 2027 por defecto)
     const [timeLeft, setTimeLeft] = useState({
@@ -369,6 +421,28 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
     const [rsvpSubmitted, setRsvpSubmitted] = useState(invitation?.status === 'responded');
     const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
     const [rsvpError, setRsvpError] = useState('');
+
+    // Lista de invitados que confirmaron asistencia para generar sus pases
+    const confirmedGuests = useMemo(() => {
+        if (!invitation?.guests || invitation.guests.length === 0) {
+            if (rsvpAttending === 'yes') {
+                return [{
+                    id: 0,
+                    full_name: rsvpName || 'Invitado de Honor',
+                    checkin_code: 'AJ-ACCESO',
+                    is_attending: true,
+                    type: 'adult' as const,
+                }];
+            }
+            return [];
+        }
+        return invitation.guests.filter((g) => {
+            if (guestAttendingMap[g.id] !== undefined) {
+                return guestAttendingMap[g.id] === true;
+            }
+            return g.is_attending === true;
+        });
+    }, [invitation?.guests, guestAttendingMap, rsvpAttending, rsvpName]);
 
     const handleRsvpSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -700,26 +774,37 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                 <div
                                     ref={galleryScrollRef}
                                     onScroll={handleGalleryScroll}
-                                    onTouchStart={handleUserInteraction}
-                                    onMouseDown={handleUserInteraction}
-                                    className="w-full flex items-center gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar py-3 px-[24%]"
-                                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                    onTouchStart={() => handleUserInteraction(7000)}
+                                    onTouchMove={() => handleUserInteraction(7000)}
+                                    onMouseDown={() => handleUserInteraction(7000)}
+                                    className="w-full flex items-center gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar py-2 px-[24%]"
+                                    style={{
+                                        scrollbarWidth: 'none',
+                                        msOverflowStyle: 'none',
+                                        WebkitOverflowScrolling: 'touch',
+                                        overscrollBehaviorX: 'contain',
+                                    }}
                                 >
                                     {galleryList.map((imageSrc, idx) => (
                                         <div
                                             key={idx}
                                             onClick={() => scrollToImage(idx)}
-                                            className={`w-[52%] max-w-[280px] h-[210px] sm:h-[260px] shrink-0 rounded-2xl overflow-hidden shadow-md bg-stone-100 snap-center border border-stone-200/60 cursor-pointer transition-all duration-300 ${activeImageIndex === idx
-                                                ? 'scale-105 shadow-2xl ring-2 ring-[#788a80] opacity-100 z-20'
-                                                : 'scale-90 opacity-60 hover:opacity-85 z-10'
-                                                }`}
+                                            className="w-[52%] max-w-[280px] h-[215px] sm:h-[260px] shrink-0 snap-center flex items-center justify-center cursor-pointer py-1"
                                         >
-                                            <img
-                                                src={imageSrc}
-                                                alt={`Foto galería ${idx + 1}`}
-                                                className="w-full h-full object-cover select-none pointer-events-none"
-                                                loading="lazy"
-                                            />
+                                            <div
+                                                className={`w-full h-full rounded-2xl overflow-hidden shadow-md bg-stone-100 border border-stone-200/60 transition-all duration-300 ${
+                                                    activeImageIndex === idx
+                                                        ? 'scale-105 shadow-2xl ring-2 ring-[#788a80] opacity-100 z-20'
+                                                        : 'scale-90 opacity-60 hover:opacity-85 z-10'
+                                                }`}
+                                            >
+                                                <img
+                                                    src={imageSrc}
+                                                    alt={`Foto galería ${idx + 1}`}
+                                                    className="w-full h-full object-cover select-none pointer-events-none"
+                                                    loading="lazy"
+                                                />
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -1372,63 +1457,123 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                             </p>
 
                             {/* Tarjeta del formulario con borde suave azul/gris */}
-                            <div className="w-full max-w-[390px] bg-white rounded-2xl border border-[#b8c9d9] shadow-sm p-6 sm:p-7">
+                            <div className="w-full max-w-[420px] bg-white rounded-2xl border border-[#b8c9d9] shadow-sm p-5 sm:p-7">
                                 {rsvpSubmitted ? (
-                                    <div className="flex flex-col items-center text-center py-6 animate-fadeIn">
-                                        <div className="w-12 h-12 rounded-full bg-[#edf4f0] text-[#788e80] flex items-center justify-center text-2xl mb-3">
+                                    <div className="flex flex-col items-center text-center py-4 animate-fadeIn">
+                                        <div className="w-12 h-12 rounded-full bg-[#edf4f0] text-[#788e80] flex items-center justify-center text-2xl mb-3 shadow-xs">
                                             ✓
                                         </div>
                                         <h4 className="font-script text-3xl md:text-4xl text-[#788e80] mb-2">
                                             ¡Muchas Gracias, {rsvpName || invitation?.name}!
                                         </h4>
-                                        <p className="font-serif text-[12px] sm:text-[13px] md:text-[14px] text-stone-600 tracking-wide mb-4 leading-relaxed">
-                                            {rsvpAttending === 'yes' || Object.values(guestAttendingMap).some(Boolean)
+                                        <p className="font-serif text-[12px] sm:text-[13px] md:text-[14px] text-stone-600 tracking-wide mb-3 leading-relaxed">
+                                            {confirmedGuests.length > 0
                                                 ? '¡Nos emociona muchísimo contar con tu presencia en nuestro gran día!'
                                                 : 'Lamentamos que no puedas acompañarnos físicamente, ¡te llevaremos en el corazón!'}
                                         </p>
                                         {rsvpMessage && (
-                                            <p className="text-[12px] md:text-[13px] italic text-stone-500 bg-[#fbf9f4] p-3.5 md:p-4 rounded-xl border border-stone-200/60 mb-5 max-w-[320px] md:max-w-md">
+                                            <p className="text-[12px] md:text-[13px] italic text-stone-500 bg-[#fbf9f4] p-3.5 md:p-4 rounded-xl border border-stone-200/60 mb-4 max-w-[340px]">
                                                 "{rsvpMessage}"
                                             </p>
                                         )}
-                                        <button
-                                            type="button"
-                                            onClick={() => setRsvpSubmitted(false)}
-                                            className="font-serif text-[11px] md:text-[12px] tracking-wider uppercase text-[#788a80] underline hover:text-[#556c7d] cursor-pointer"
-                                        >
-                                            Modificar respuesta
-                                        </button>
+
+                                        {/* ========================================================= */}
+                                        {/* PASES DE ACCESO INDIVIDUALES PARA CONFIRMADOS             */}
+                                        {/* ========================================================= */}
+                                        {confirmedGuests.length > 0 && (
+                                            <div className="w-full mt-4 pt-5 border-t border-[#ded8cd] space-y-4">
+                                                <div className="text-center px-1">
+                                                    <span className="font-serif text-[10px] tracking-[0.25em] text-[#698175] uppercase font-bold block mb-1">
+                                                        {confirmedGuests.length === 1 ? 'Tu Pase de Acceso Oficial' : `Pases Oficiales de Acceso (${confirmedGuests.length})`}
+                                                    </span>
+                                                    <p className="text-[11px] font-serif text-stone-500 leading-snug">
+                                                        Presenta tu código QR al llegar a la recepción. Cada pase es personal y no requiere esperas.
+                                                    </p>
+                                                </div>
+
+                                                <div className="space-y-6 pt-1">
+                                                    {confirmedGuests.map((cg) => (
+                                                        <DigitalPassCard
+                                                            key={cg.id || cg.checkin_code}
+                                                            guest={{
+                                                                id: cg.id,
+                                                                full_name: cg.full_name,
+                                                                checkin_code: cg.checkin_code || 'AJ-ACCESO',
+                                                                table_name: cg.table_name,
+                                                                type: cg.type,
+                                                                allergies: cg.allergies,
+                                                                special_notes: cg.special_notes,
+                                                            }}
+                                                            weddingName={`${brideName} & ${groomName}`}
+                                                            weddingDate={dateText}
+                                                            receptionLocation={wedding?.locations?.reception || 'Hacienda San Diego Cutz'}
+                                                            invitationName={invitation?.name}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="mt-6 pt-3 border-t border-stone-100 w-full text-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => setRsvpSubmitted(false)}
+                                                className="font-serif text-[11px] tracking-wider uppercase text-[#788a80] underline hover:text-[#556c7d] cursor-pointer"
+                                            >
+                                                Modificar respuesta
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : !invitation ? (
+                                    /* Si se visita la página general sin token de invitación privada */
+                                    <div className="flex flex-col items-center text-center py-5 px-2 animate-fadeIn space-y-4">
+                                        {/* Monograma de Gala */}
+                                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#28362e] via-[#33443a] to-[#28362e] text-[#f4ecd8] border-2 border-[#d4af37]/50 flex items-center justify-center font-serif font-bold text-lg shadow-lg">
+                                            A&amp;J
+                                        </div>
+
+                                        <div>
+                                            <span className="font-serif text-[10px] sm:text-[10.5px] tracking-[0.25em] text-[#698175] uppercase font-bold block mb-1">
+                                                CONFIRMACIÓN PRIVADA
+                                            </span>
+                                            <h3 className="font-serif font-bold text-stone-900 text-xl leading-tight">
+                                                Invitación Personal Requerida
+                                            </h3>
+                                        </div>
+
+                                        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#ded8cd] to-transparent my-1" />
+
+                                        <p className="font-serif text-[12.5px] text-stone-600 leading-relaxed max-w-[320px]">
+                                            Para confirmar tu asistencia y obtener tus <strong>pases de acceso oficiales</strong>, por favor ingresa únicamente a través del <strong>enlace personalizado</strong> que te compartieron directamente <strong>{brideName} &amp; {groomName}</strong>.
+                                        </p>
+
+                                        {/* Tarjeta explicativa con icono */}
+                                        <div className="bg-[#f7faf8] rounded-2xl border border-[#d2dfd7] p-3.5 text-stone-600 text-xs font-serif leading-relaxed w-full shadow-2xs">
+                                            <div className="flex items-center justify-center gap-1.5 text-[#28362e] font-bold text-[12px] mb-1">
+                                                <Ticket className="w-4 h-4 text-[#698175]" />
+                                                <span>Pases de Acceso Exclusivos</span>
+                                            </div>
+                                            Cada invitación cuenta con boletos y códigos QR individuales asignados a los integrantes de tu familia o pase.
+                                        </div>
+
+                                        <p className="text-[11px] font-serif text-stone-400 italic max-w-[280px]">
+                                            ¿No encuentras tu enlace privado? Comunícate con los novios para compartirte tu pase personalizado.
+                                        </p>
                                     </div>
                                 ) : (
                                     <form onSubmit={handleRsvpSubmit} className="flex flex-col space-y-4 sm:space-y-5">
-                                        {/* Si es una invitación personalizada recibida con token */}
-                                        {invitation ? (
-                                            <div className="bg-[#f0f4f2] border border-[#d2dfd7] rounded-xl p-3 text-center">
-                                                <span className="font-serif text-[10px] tracking-[0.2em] uppercase text-[#698175] font-semibold block mb-0.5">
-                                                    {invitation.guests && invitation.guests.length > 1 ? 'Invitación Familiar' : 'Invitación Personal'}
-                                                </span>
-                                                <h3 className="font-serif font-bold text-stone-800 text-sm">
-                                                    {invitation.name}
-                                                </h3>
-                                                <p className="font-serif text-[11px] text-stone-600 mt-0.5">
-                                                    Hemos reservado <strong className="text-[#556c7d]">{invitation.guests?.length || 1} {invitation.guests?.length === 1 ? 'pase' : 'pases'}</strong> en su honor
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            /* Campo: Nombre (en caso de landing abierta sin token) */
-                                            <div>
-                                                <label className="font-serif text-[11px] sm:text-[11.5px] tracking-[0.14em] text-[#556c7d] uppercase font-semibold block mb-1.5">
-                                                    Nombre
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={rsvpName}
-                                                    onChange={(e) => setRsvpName(e.target.value)}
-                                                    placeholder="Escribe tu nombre completo"
-                                                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#b8c9d9] text-[13px] text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-[#788a80] focus:border-[#788a80] bg-[#fafbfc] transition-all"
-                                                />
-                                            </div>
-                                        )}
+                                        {/* Encabezado de la invitación personalizada */}
+                                        <div className="bg-[#f0f4f2] border border-[#d2dfd7] rounded-xl p-3 text-center">
+                                            <span className="font-serif text-[10px] tracking-[0.2em] uppercase text-[#698175] font-semibold block mb-0.5">
+                                                {invitation.guests && invitation.guests.length > 1 ? 'Invitación Familiar' : 'Invitación Personal'}
+                                            </span>
+                                            <h3 className="font-serif font-bold text-stone-800 text-sm">
+                                                {invitation.name}
+                                            </h3>
+                                            <p className="font-serif text-[11px] text-stone-600 mt-0.5">
+                                                Hemos reservado <strong className="text-[#556c7d]">{invitation.guests?.length || 1} {invitation.guests?.length === 1 ? 'pase' : 'pases'}</strong> en su honor
+                                            </p>
+                                        </div>
 
                                         {/* Si hay múltiples integrantes asignados a la invitación */}
                                         {invitation?.guests && invitation.guests.length > 1 ? (
@@ -1600,6 +1745,36 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                         />
                     </footer>
 
+                    {/* Botón flotante de control musical */}
+                    {wedding?.music_url && (
+                        <aside className="fixed bottom-5 right-5 z-50 select-none pointer-events-auto">
+                            <button
+                                type="button"
+                                onClick={togglePlay}
+                                className={`flex items-center gap-2.5 px-3.5 py-2 rounded-full shadow-xl backdrop-blur-md transition-all duration-300 border cursor-pointer ${
+                                    isPlaying
+                                        ? 'bg-[#2c4537]/90 text-[#fcf8ed] border-[#cfbe95]/60 hover:bg-[#2c4537]'
+                                        : 'bg-white/95 text-stone-700 border-[#ded8cd] hover:border-[#cfbe95] animate-pulse'
+                                }`}
+                                title={isPlaying ? "Pausar música" : "Reproducir nuestra canción"}
+                            >
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isPlaying ? 'bg-[#cfbe95] text-[#2c4537] animate-spin' : 'bg-stone-200 text-stone-600'}`} style={{ animationDuration: '4s' }}>
+                                    <span className="text-xs">🎵</span>
+                                </div>
+                                <div className="flex flex-col text-left">
+                                    <span className="text-[9.5px] font-sans font-bold uppercase tracking-wider text-[#cfbe95] leading-none">
+                                        {isPlaying ? 'Sonando' : 'Música'}
+                                    </span>
+                                    <span className="text-[11px] font-sans font-medium truncate max-w-[110px] leading-tight">
+                                        {songTitle}
+                                    </span>
+                                </div>
+                                <span className="text-xs opacity-75 font-mono">
+                                    {isPlaying ? '⏸' : '▶'}
+                                </span>
+                            </button>
+                        </aside>
+                    )}
                 </div>
             </main>
         </>

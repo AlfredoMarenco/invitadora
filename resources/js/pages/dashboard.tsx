@@ -15,7 +15,8 @@ import {
     MessageCircle,
     Heart,
     Sparkles,
-    Hotel
+    Hotel,
+    UtensilsCrossed
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -33,6 +34,9 @@ interface DashboardProps {
         checked_in_guests: number;
         gallery_count: number;
         hotels_count?: number;
+        total_tables?: number;
+        tables_capacity?: number;
+        assigned_guests?: number;
     };
     recentInvitations?: any[];
 }
@@ -97,46 +101,46 @@ export default function Dashboard({
         <div className="flex-1 space-y-8 px-4 md:px-8 py-6 w-full">
             <Head title={`Panel de Boda - ${bride} & ${groom}`} />
 
-            {/* TOP HEADER / HERO BANNER DE GALA */}
-            <header className="bg-gradient-to-r from-[#28362e] via-[#33443a] to-[#28362e] text-white rounded-2xl p-5 sm:p-6 md:p-8 shadow-xl border border-[#405448] relative overflow-hidden">
+            {/* TOP HEADER / HERO BANNER EN TONO VERDE BOSQUE ELEGANTE */}
+            <header className="bg-gradient-to-r from-[#2c4537] via-[#385645] to-[#2c4537] dark:from-[#1b2b22] dark:via-[#24392d] dark:to-[#1b2b22] text-[#fcf8ed] rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm border border-[#486b55] dark:border-[#2d4234] relative overflow-hidden">
                 {/* Monograma decorativo de fondo */}
-                <div className="absolute right-0 top-0 -mt-6 -mr-6 w-64 h-64 opacity-10 pointer-events-none select-none">
+                <div className="absolute right-0 top-0 -mt-6 -mr-6 w-64 h-64 opacity-[0.14] pointer-events-none select-none brightness-150">
                     <img 
                         src="/resources_canvas/images/15.svg" 
                         alt="Monograma" 
-                        className="w-full h-full object-contain filter invert"
+                        className="w-full h-full object-contain"
                     />
                 </div>
 
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div className="space-y-2.5">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-serif uppercase tracking-widest bg-[#698175]/40 text-[#d8e2dc] border border-[#698175]/50">
-                                <Sparkles className="w-3 h-3 text-[#e6d0aa]" />
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-sans uppercase tracking-wider font-semibold bg-[#16271e]/75 backdrop-blur-sm text-[#f4ecd8] border border-[#cfbe95]/40 shadow-xs">
+                                <Sparkles className="w-3 h-3 text-[#cfbe95]" />
                                 Panel Central de Boda
                             </span>
-                            <div className="flex items-center gap-1 text-[11px] font-mono text-[#a2b5aa] bg-black/30 px-2 py-0.5 rounded-md">
-                                <Clock className="w-3 h-3 text-[#a2b5aa]" />
+                            <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#f4ecd8] bg-[#16271e]/75 backdrop-blur-sm px-3 py-1 rounded-full border border-[#cfbe95]/40 shadow-xs font-semibold">
+                                <Clock className="w-3 h-3 text-[#cfbe95]" />
                                 <span>{currentTime || 'En vivo'}</span>
                             </div>
                             {daysLeft !== null && (
-                                <Badge className="bg-[#e6d0aa]/15 text-[#e6d0aa] border border-[#e6d0aa]/30 hover:bg-[#e6d0aa]/25 font-serif text-[11px] tracking-wider uppercase px-2.5 py-0.5">
+                                <Badge className="bg-[#16271e]/75 backdrop-blur-sm text-[#f4ecd8] border border-[#cfbe95]/40 hover:bg-[#16271e] font-sans uppercase tracking-wider text-[11px] font-semibold px-3 py-1 rounded-full shadow-xs">
                                     {daysLeft > 0 ? `⏳ Faltan ${daysLeft} días` : daysLeft === 0 ? '¡El gran día es hoy! 🎉' : 'Celebrado'}
                                 </Badge>
                             )}
                         </div>
 
-                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-[#f4ecd8]">
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-bold tracking-tight text-[#fcf8ed]">
                             {bride} &amp; {groom}
                         </h1>
 
-                        <div className="flex flex-wrap items-center gap-3 text-stone-300 text-xs sm:text-sm font-sans">
-                            <span className="flex items-center gap-1.5 capitalize text-[#c8d4cc]">
-                                <Calendar className="w-4 h-4 text-[#e6d0aa]" />
+                        <div className="flex flex-wrap items-center gap-3 text-[#dfd4c0] text-xs sm:text-sm font-sans">
+                            <span className="flex items-center gap-1.5 capitalize text-[#e8dfcf] font-medium">
+                                <Calendar className="w-4 h-4 text-[#cfbe95]" />
                                 {formattedDate}
                             </span>
-                            <span className="text-white/30">•</span>
-                            <span>
+                            <span className="text-[#a89b80]">•</span>
+                            <span className="text-[#dfd4c0] font-medium">
                                 Coordinación en tiempo real de recepción, pases y confirmaciones.
                             </span>
                         </div>
@@ -144,25 +148,25 @@ export default function Dashboard({
 
                     <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-start sm:items-center lg:items-end xl:items-center gap-4">
                         {/* Tarjeta de Métricas de la Boda */}
-                        <div className="bg-black/30 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 flex flex-col items-end min-w-[170px] w-full sm:w-auto">
-                            <span className="text-[10px] uppercase font-serif tracking-widest text-[#a2b5aa]">
+                        <div className="bg-[#16271e]/75 backdrop-blur-md px-4 py-2.5 rounded-xl border border-[#cfbe95]/30 shadow-md flex flex-col items-end min-w-[170px] w-full sm:w-auto">
+                            <span className="text-[10.5px] uppercase font-sans font-semibold tracking-wider text-[#cfbe95]">
                                 Confirmaciones Totales
                             </span>
                             <div className="flex items-baseline gap-1.5 mt-0.5">
-                                <span className="text-2xl font-bold font-serif text-[#f4ecd8]">
+                                <span className="text-2xl font-bold font-sans text-[#fcf8ed]">
                                     {stats.confirmed_guests}
                                 </span>
-                                <span className="text-xs text-[#a2b5aa] font-sans">
+                                <span className="text-xs text-[#cfbe95]/85 font-sans font-medium">
                                     / {stats.total_guests} invitados
                                 </span>
                             </div>
-                            <div className="w-full bg-white/15 h-1.5 rounded-full mt-2 overflow-hidden">
+                            <div className="w-full bg-[#0f1c15] h-1.5 rounded-full mt-2 overflow-hidden border border-[#cfbe95]/20">
                                 <div 
-                                    className="bg-gradient-to-r from-[#d4af37] to-[#e6d0aa] h-full transition-all duration-500 rounded-full"
+                                    className="bg-gradient-to-r from-[#d4af37] via-[#e5cf97] to-[#d4af37] h-full transition-all duration-500 rounded-full"
                                     style={{ width: `${confirmedPercent}%` }}
                                 />
                             </div>
-                            <span className="text-[9.5px] font-mono text-[#e6d0aa] mt-1">
+                            <span className="text-[10px] font-mono text-[#e8d5aa] font-bold mt-1">
                                 {confirmedPercent}% de afluencia confirmada
                             </span>
                         </div>
@@ -172,20 +176,20 @@ export default function Dashboard({
                             <Button 
                                 asChild 
                                 variant="secondary" 
-                                className="bg-[#f4ecd8] text-[#28362e] hover:bg-white font-serif text-xs uppercase tracking-wider font-semibold shadow-md transition-all cursor-pointer h-11 px-4 rounded-xl border border-white/20"
+                                className="bg-[#fcf8ee] hover:bg-[#f3ebd9] text-[#24352a] font-sans font-bold text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer h-11 px-4 rounded-xl border border-[#e6dbc5]"
                             >
                                 <a href="/" target="_blank" rel="noreferrer" className="flex items-center gap-1.5">
-                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <ExternalLink className="w-3.5 h-3.5 text-[#24352a]" />
                                     <span>Ver Invitación</span>
                                 </a>
                             </Button>
                             <Button 
                                 asChild 
                                 variant="outline" 
-                                className="bg-white/10 hover:bg-white/20 text-white border-white/20 font-serif text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer h-11 px-4 rounded-xl"
+                                className="bg-white/5 hover:bg-white/10 text-[#fcf8ee] border border-white/25 font-sans font-semibold text-xs uppercase tracking-wider transition-all cursor-pointer h-11 px-4 rounded-xl shadow-xs"
                             >
                                 <Link href="/admin/settings" className="flex items-center gap-1.5">
-                                    <Settings className="w-3.5 h-3.5 text-[#e6d0aa]" />
+                                    <Settings className="w-3.5 h-3.5 text-[#cfbe95]" />
                                     <span>Configurar</span>
                                 </Link>
                             </Button>
@@ -207,7 +211,7 @@ export default function Dashboard({
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold font-serif text-[#28362e] dark:text-[#f3f6f4]">
+                        <div className="text-3xl font-bold font-sans text-[#70531c] dark:text-[#f4ecd8]">
                             {stats.total_invitations}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -227,7 +231,7 @@ export default function Dashboard({
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold font-serif text-[#28362e] dark:text-[#f3f6f4]">
+                        <div className="text-3xl font-bold font-sans text-[#70531c] dark:text-[#f4ecd8]">
                             {stats.total_guests}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -248,7 +252,7 @@ export default function Dashboard({
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-bold font-serif text-[#28362e] dark:text-[#f3f6f4]">
+                            <span className="text-3xl font-bold font-sans text-[#70531c] dark:text-[#f4ecd8]">
                                 {stats.confirmed_guests}
                             </span>
                             <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
@@ -278,14 +282,14 @@ export default function Dashboard({
                     <CardContent>
                         <div className="flex items-center gap-3">
                             <div>
-                                <span className="text-2xl font-bold font-serif text-amber-700 dark:text-amber-400">
+                                <span className="text-2xl font-bold font-sans text-amber-700 dark:text-amber-400">
                                     {stats.pending_guests}
                                 </span>
                                 <span className="text-xs text-muted-foreground block">Pendientes</span>
                             </div>
                             <div className="h-8 w-px bg-[#ded8cd]" />
                             <div>
-                                <span className="text-2xl font-bold font-serif text-rose-600 dark:text-rose-400">
+                                <span className="text-2xl font-bold font-sans text-rose-600 dark:text-rose-400">
                                     {stats.rejected_guests}
                                 </span>
                                 <span className="text-xs text-muted-foreground block">Declinados</span>
@@ -298,7 +302,7 @@ export default function Dashboard({
             {/* QUICK ACTIONS / ADMIN MODULES */}
             <div>
                 <div className="mb-4">
-                    <h2 className="text-xl font-bold font-serif text-[#28362e] dark:text-[#f3f6f4] tracking-tight">
+                    <h2 className="text-xl font-bold font-sans text-[#70531c] dark:text-[#f3f6f4] tracking-tight">
                         Módulos de Gestión
                     </h2>
                     <p className="text-xs text-muted-foreground">
@@ -306,7 +310,7 @@ export default function Dashboard({
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Modulo 1: Invitaciones */}
                     <Link 
                         href="/admin/invitations"
@@ -316,7 +320,7 @@ export default function Dashboard({
                             <div className="size-10 rounded-lg bg-[#698175]/10 text-[#698175] flex items-center justify-center mb-3 group-hover:bg-[#698175] group-hover:text-white transition-colors">
                                 <Users className="size-5" />
                             </div>
-                            <h3 className="font-serif font-bold text-base text-[#28362e] dark:text-[#f3f6f4] group-hover:text-[#698175] transition-colors">
+                            <h3 className="font-sans font-bold text-base text-[#70531c] dark:text-[#f3f6f4] group-hover:text-[#8a6721] transition-colors">
                                 Lista de Invitados
                             </h3>
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
@@ -325,6 +329,28 @@ export default function Dashboard({
                         </div>
                         <div className="flex items-center text-xs font-medium text-[#698175] mt-4 pt-3 border-t border-[#f0ede6]">
                             <span>Gestionar lista</span>
+                            <ArrowRight className="size-3.5 ml-1 transition-transform group-hover:translate-x-1" />
+                        </div>
+                    </Link>
+
+                    {/* Modulo 2: Mesas del Banquete */}
+                    <Link 
+                        href="/admin/invitations?tab=tables"
+                        className="group p-5 rounded-xl border border-[#ded8cd] bg-card hover:border-[#698175] hover:shadow-md transition-all flex flex-col justify-between"
+                    >
+                        <div>
+                            <div className="size-10 rounded-lg bg-[#698175]/10 text-[#698175] flex items-center justify-center mb-3 group-hover:bg-[#698175] group-hover:text-white transition-colors">
+                                <UtensilsCrossed className="size-5" />
+                            </div>
+                            <h3 className="font-sans font-bold text-base text-[#70531c] dark:text-[#f3f6f4] group-hover:text-[#8a6721] transition-colors">
+                                Mesas del Banquete
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                Crea mesas con cupos, asigna familias completas y visualiza la ocupación del salón ({stats.total_tables || 0} mesas • {stats.assigned_guests || 0} asignados).
+                            </p>
+                        </div>
+                        <div className="flex items-center text-xs font-medium text-[#698175] mt-4 pt-3 border-t border-[#f0ede6]">
+                            <span>Organizar mesas</span>
                             <ArrowRight className="size-3.5 ml-1 transition-transform group-hover:translate-x-1" />
                         </div>
                     </Link>
@@ -338,7 +364,7 @@ export default function Dashboard({
                             <div className="size-10 rounded-lg bg-[#698175]/10 text-[#698175] flex items-center justify-center mb-3 group-hover:bg-[#698175] group-hover:text-white transition-colors">
                                 <ImageIcon className="size-5" />
                             </div>
-                            <h3 className="font-serif font-bold text-base text-[#28362e] dark:text-[#f3f6f4] group-hover:text-[#698175] transition-colors">
+                            <h3 className="font-sans font-bold text-base text-[#70531c] dark:text-[#f3f6f4] group-hover:text-[#8a6721] transition-colors">
                                 Galería de Fotos
                             </h3>
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
@@ -360,7 +386,7 @@ export default function Dashboard({
                             <div className="size-10 rounded-lg bg-[#698175]/10 text-[#698175] flex items-center justify-center mb-3 group-hover:bg-[#698175] group-hover:text-white transition-colors">
                                 <UserCheck className="size-5" />
                             </div>
-                            <h3 className="font-serif font-bold text-base text-[#28362e] dark:text-[#f3f6f4] group-hover:text-[#698175] transition-colors">
+                            <h3 className="font-sans font-bold text-base text-[#70531c] dark:text-[#f3f6f4] group-hover:text-[#8a6721] transition-colors">
                                 Control de Acceso
                             </h3>
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
@@ -382,7 +408,7 @@ export default function Dashboard({
                             <div className="size-10 rounded-lg bg-[#698175]/10 text-[#698175] flex items-center justify-center mb-3 group-hover:bg-[#698175] group-hover:text-white transition-colors">
                                 <Settings className="size-5" />
                             </div>
-                            <h3 className="font-serif font-bold text-base text-[#28362e] dark:text-[#f3f6f4] group-hover:text-[#698175] transition-colors">
+                            <h3 className="font-sans font-bold text-base text-[#70531c] dark:text-[#f3f6f4] group-hover:text-[#8a6721] transition-colors">
                                 Configuración de Boda
                             </h3>
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
@@ -404,7 +430,7 @@ export default function Dashboard({
                             <div className="size-10 rounded-lg bg-[#698175]/10 text-[#698175] flex items-center justify-center mb-3 group-hover:bg-[#698175] group-hover:text-white transition-colors">
                                 <Hotel className="size-5" />
                             </div>
-                            <h3 className="font-serif font-bold text-base text-[#28362e] dark:text-[#f3f6f4] group-hover:text-[#698175] transition-colors">
+                            <h3 className="font-sans font-bold text-base text-[#70531c] dark:text-[#f3f6f4] group-hover:text-[#8a6721] transition-colors">
                                 Hoteles Recomendados
                             </h3>
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
@@ -423,7 +449,7 @@ export default function Dashboard({
             <Card className="border-[#ded8cd] shadow-sm bg-card">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
-                        <CardTitle className="text-lg font-serif font-bold text-[#28362e] dark:text-[#f3f6f4]">
+                        <CardTitle className="text-lg font-sans font-bold text-[#28362e] dark:text-[#f3f6f4]">
                             Actividad Reciente de Invitados
                         </CardTitle>
                         <CardDescription className="text-xs">

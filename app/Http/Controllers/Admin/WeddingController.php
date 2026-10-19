@@ -39,15 +39,29 @@ class WeddingController extends Controller
             'bank_transfer_info' => 'nullable|string',
             'dress_code' => 'nullable|string',
             'rsvp_deadline' => 'nullable|date',
-            'background_audio' => 'nullable|file|mimes:mp3,wav,m4a,aac,ogg|max:20480', // max 20mb
+            'song_title' => 'nullable|string|max:255',
+            'song_artist' => 'nullable|string|max:255',
+            'background_audio' => 'nullable|file|mimes:mp3,wav,m4a,aac,ogg|max:51200', // max 50mb
+            'delete_audio' => 'nullable|boolean',
         ]);
 
-        if ($request->hasFile('background_audio')) {
+        if (!empty($request->delete_audio)) {
+            if ($wedding->background_audio_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($wedding->background_audio_path);
+            }
+            $validated['background_audio_path'] = null;
+            $validated['background_music_path'] = null;
+        } elseif ($request->hasFile('background_audio')) {
+            if ($wedding->background_audio_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($wedding->background_audio_path);
+            }
             $path = $request->file('background_audio')->store('audio', 'public');
             $validated['background_audio_path'] = $path;
+            $validated['background_music_path'] = $path;
         }
 
         unset($validated['background_audio']);
+        unset($validated['delete_audio']);
         
         $wedding->update($validated);
         return redirect()->back()->with('success', 'Configuración de la boda actualizada exitosamente.');

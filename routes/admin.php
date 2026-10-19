@@ -13,12 +13,17 @@ Route::put('gallery/reorder', [GalleryController::class, 'reorder'])->name('admi
 Route::resource('gallery', GalleryController::class);
 Route::get('invitations/export', [InvitationController::class, 'export'])->name('admin.invitations.export');
 Route::resource('invitations', InvitationController::class);
+Route::put('invitations/{invitation}/assign-table', [InvitationController::class, 'assignTable'])->name('invitations.assign-table');
 
 use App\Http\Controllers\Admin\GuestController;
+use App\Http\Controllers\Admin\WeddingTableController;
+
+Route::resource('tables', WeddingTableController::class)->except(['create', 'show', 'edit']);
 Route::put('guests/{guest}', [GuestController::class, 'update'])->name('admin.guests.update');
 
 use App\Http\Controllers\Admin\CheckInController;
 Route::get('checkin', [CheckInController::class, 'index'])->name('admin.checkin.index');
+Route::post('checkin/scan', [CheckInController::class, 'scan'])->name('admin.checkin.scan');
 Route::put('guests/{guest}/checkin', [CheckInController::class, 'toggle'])->name('admin.checkin.toggle');
 Route::put('invitations/{invitation}/checkin', [CheckInController::class, 'toggleInvitation'])->name('admin.checkin.toggle-invitation');
 use App\Http\Controllers\Admin\HotelController;

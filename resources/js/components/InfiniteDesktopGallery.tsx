@@ -38,10 +38,14 @@ export default function InfiniteDesktopGallery({
 
     // Drag / Swipe interactivo
     const [isDragging, setIsDragging] = useState(false);
-    const [dragStartX, setDragStartX] = useState(0);
     const [dragOffset, setDragOffset] = useState(0);
     const isPausedRef = useRef(false);
     const pauseTimeoutRef = useRef<any>(null);
+
+    // Bloqueo direccional de touch
+    const touchStartPosRef = useRef({ x: 0, y: 0, time: 0 });
+    const touchDirectionRef = useRef<'none' | 'horizontal' | 'vertical'>('none');
+    const mouseStartXRef = useRef(0);
 
     // Medición del ancho del contenedor
     useEffect(() => {
@@ -63,29 +67,29 @@ export default function InfiniteDesktopGallery({
     }, []);
 
     // Pausar auto-slide temporalmente tras interacción del usuario
-    const pauseTemporarily = useCallback(() => {
+    const pauseTemporarily = useCallback((duration = 6000) => {
         isPausedRef.current = true;
         if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
         pauseTimeoutRef.current = setTimeout(() => {
             isPausedRef.current = false;
-        }, 4500);
+        }, duration);
     }, []);
 
     // Avance y retroceso
     const handleNext = useCallback(() => {
-        pauseTemporarily();
+        pauseTemporarily(6000);
         setIsTransitioning(true);
         setCurrentIndex((prev) => prev + 1);
     }, [pauseTemporarily]);
 
     const handlePrev = useCallback(() => {
-        pauseTemporarily();
+        pauseTemporarily(6000);
         setIsTransitioning(true);
         setCurrentIndex((prev) => prev - 1);
     }, [pauseTemporarily]);
 
     const handleDotClick = useCallback((targetOriginalIndex: number) => {
-        pauseTemporarily();
+        pauseTemporarily(6000);
         setIsTransitioning(true);
         const currentRelative = ((currentIndex % baseCount) + baseCount) % baseCount;
         const diff = targetOriginalIndex - currentRelative;
@@ -93,7 +97,10 @@ export default function InfiniteDesktopGallery({
     }, [baseCount, currentIndex, pauseTemporarily]);
 
     // Reseteo silencioso al cruzar los límites del bloque central (efecto infinito continuo)
-    const handleTransitionEnd = () => {
+    const handleTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.propertyName !== 'transform') return;
+
         if (currentIndex >= baseCount * 2) {
             setIsTransitioning(false);
             setCurrentIndex((prev) => prev - baseCount);
@@ -115,47 +122,83 @@ export default function InfiniteDesktopGallery({
         return () => clearInterval(timer);
     }, [autoPlayInterval, isDragging]);
 
-    // Manejo de eventos Touch / Mouse Drag
+    // Manejo de eventos Touch con detección direccional
     const onTouchStart = (e: React.TouchEvent) => {
-        pauseTemporarily();
-        setIsDragging(true);
-        setIsTransitioning(false);
-        setDragStartX(e.touches[0].clientX);
+        pauseTemporarily(6000);
+        const touch = e.touches[0];
+        touchStartPosRef.current = {
+            x: touch.clientX,
+            y: touch.clientY,
+            time: Date.now(),
+        };
+        touchDirectionRef.current = 'none';
         setDragOffset(0);
     };
 
     const onTouchMove = (e: React.TouchEvent) => {
-        if (!isDragging) return;
-        const currentX = e.touches[0].clientX;
-        setDragOffset(currentX - dragStartX);
+        if (touchDirectionRef.current === 'vertical') return;
+
+        const touch = e.touches[0];
+        const diffX = touch.clientX - touchStartPosRef.current.x;
+        const diffY = touch.clientY - touchStartPosRef.current.y;
+
+        if (touchDirectionRef.current === 'none') {
+            if (Math.abs(diffX) < 6 && Math.abs(diffY) < 6) return;
+
+            if (Math.abs(diffY) > Math.abs(diffX)) {
+                touchDirectionRef.current = 'vertical';
+                return;
+            } else {
+                touchDirectionRef.current = 'horizontal';
+                setIsDragging(true);
+                setIsTransitioning(false);
+            }
+        }
+
+        if (touchDirectionRef.current === 'horizontal') {
+            setDragOffset(diffX);
+        }
     };
 
     const onTouchEnd = () => {
-        if (!isDragging) return;
+        const wasHorizontal = touchDirectionRef.current === 'horizontal';
+        touchDirectionRef.current = 'none';
+
+        if (!wasHorizontal) {
+            setIsDragging(false);
+            setDragOffset(0);
+            return;
+        }
+
         setIsDragging(false);
         setIsTransitioning(true);
 
-        const threshold = 50;
-        if (dragOffset < -threshold) {
-            handleNext();
-        } else if (dragOffset > threshold) {
-            handlePrev();
+        const timeElapsed = Date.now() - touchStartPosRef.current.time;
+        const isQuickFlick = timeElapsed < 280 && Math.abs(dragOffset) > 25;
+        const isThresholdPassed = Math.abs(dragOffset) > 45;
+
+        if (isQuickFlick || isThresholdPassed) {
+            if (dragOffset < 0) {
+                handleNext();
+            } else {
+                handlePrev();
+            }
         }
         setDragOffset(0);
     };
 
     const onMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
-        pauseTemporarily();
+        pauseTemporarily(6000);
         setIsDragging(true);
         setIsTransitioning(false);
-        setDragStartX(e.clientX);
+        mouseStartXRef.current = e.clientX;
         setDragOffset(0);
     };
 
     const onMouseMove = (e: React.MouseEvent) => {
         if (!isDragging) return;
-        setDragOffset(e.clientX - dragStartX);
+        setDragOffset(e.clientX - mouseStartXRef.current);
     };
 
     const onMouseUp = () => {
@@ -163,7 +206,7 @@ export default function InfiniteDesktopGallery({
         setIsDragging(false);
         setIsTransitioning(true);
 
-        const threshold = 60;
+        const threshold = 55;
         if (dragOffset < -threshold) {
             handleNext();
         } else if (dragOffset > threshold) {
@@ -215,6 +258,8 @@ export default function InfiniteDesktopGallery({
                     transform: `translate3d(${currentTranslateX}px, 0, 0)`,
                     transition: isTransitioning ? 'transform 480ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
                     gap: `${cardGap}px`,
+                    touchAction: 'pan-y',
+                    overscrollBehaviorX: 'contain',
                 }}
                 onTransitionEnd={handleTransitionEnd}
                 onTouchStart={onTouchStart}

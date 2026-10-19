@@ -23,7 +23,10 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
         dress_code: wedding?.dress_code || '',
         timeline: wedding?.timeline || [],
         rsvp_deadline: wedding?.rsvp_deadline ? wedding.rsvp_deadline.split('T')[0] : '',
+        song_title: wedding?.song_title || '',
+        song_artist: wedding?.song_artist || '',
         background_audio: null,
+        delete_audio: false,
     });
 
     const submit = (e) => {
@@ -159,11 +162,86 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Enlace a Mesa de Regalos</label>
                                 <input type="url" placeholder="https://..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.gift_registry_url} onChange={e => setData('gift_registry_url', e.target.value)} />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700 mb-1">Música de Fondo (MP3, WAV)</label>
-                                <input type="file" accept="audio/*" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" onChange={e => setData('background_audio', e.target.files[0])} />
-                                {wedding?.background_audio_path && <p className="text-sm text-green-600 mt-1">✓ Audio actual cargado</p>}
-                                {errors.background_audio && <p className="text-red-500 text-sm mt-1">{errors.background_audio}</p>}
+                            {/* SECCIÓN MÚSICA DE FONDO */}
+                            <div className="md:col-span-2 bg-[#fbf9f4] border border-[#ded8cd] rounded-xl p-4 space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-base font-bold text-[#2c4537]">🎵 Música de Fondo de la Invitación</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-700 mb-1">Título de la Canción</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Ej: Resto de mi vida, A Thousand Years..." 
+                                            className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#2c4537] focus:border-[#2c4537] text-sm" 
+                                            value={data.song_title} 
+                                            onChange={e => setData('song_title', e.target.value)} 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-700 mb-1">Artista / Intérprete</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Ej: Camila, Il Divo, Christina Perri..." 
+                                            className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#2c4537] focus:border-[#2c4537] text-sm" 
+                                            value={data.song_artist} 
+                                            onChange={e => setData('song_artist', e.target.value)} 
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold text-zinc-700">Subir Archivo de Audio (MP3, WAV, M4A, OGG)</label>
+                                    <input 
+                                        type="file" 
+                                        accept="audio/mp3,audio/wav,audio/m4a,audio/aac,audio/ogg,audio/*" 
+                                        className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#2c4537] focus:border-[#2c4537] text-sm bg-white" 
+                                        onChange={e => {
+                                            setData(prev => ({
+                                                ...prev,
+                                                background_audio: e.target.files ? e.target.files[0] : null,
+                                                delete_audio: false
+                                            }));
+                                        }} 
+                                    />
+                                    {errors.background_audio && <p className="text-red-500 text-xs mt-1">{errors.background_audio}</p>}
+                                </div>
+
+                                {wedding?.music_url && !data.delete_audio && (
+                                    <div className="bg-white border border-[#e8dfcf] rounded-lg p-3 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-semibold text-emerald-800 flex items-center gap-1.5">
+                                                ✓ Canción actual activa: <strong>{wedding.song_title || 'Audio cargado'}</strong>
+                                                {wedding.song_artist && <span className="text-stone-500">({wedding.song_artist})</span>}
+                                            </span>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setData('delete_audio', true)}
+                                                className="text-xs text-rose-600 hover:text-rose-800 font-medium hover:underline cursor-pointer"
+                                            >
+                                                Quitar canción
+                                            </button>
+                                        </div>
+                                        <audio controls src={wedding.music_url} className="w-full h-8" />
+                                    </div>
+                                )}
+
+                                {data.delete_audio && (
+                                    <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-2.5 rounded-lg flex items-center justify-between">
+                                        <span>Se eliminará la canción actual al guardar los cambios.</span>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setData('delete_audio', false)}
+                                            className="text-xs text-stone-600 underline font-medium"
+                                        >
+                                            Deshacer
+                                        </button>
+                                    </div>
+                                )}
+
+                                <p className="text-[11px] text-stone-500">
+                                    💡 <strong>Reproducción:</strong> Al ingresar al sitio o tocar la pantalla, la canción comenzará a sonar con volumen equilibrado. Los invitados podrán pausarla o reactivarla en el reproductor de la invitación.
+                                </p>
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Información de Transferencia Bancaria (Mesa de regalos en efectivo)</label>

@@ -16,7 +16,7 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-import { Users, Image as ImageIcon, Settings, ExternalLink, Hotel } from 'lucide-react';
+import { Users, Image as ImageIcon, Settings, ExternalLink, Hotel, UtensilsCrossed } from 'lucide-react';
 
 const mainNavItems: NavItem[] = [
     {
@@ -28,6 +28,11 @@ const mainNavItems: NavItem[] = [
         title: 'Invitados',
         href: '/admin/invitations',
         icon: Users,
+    },
+    {
+        title: 'Mesas del Banquete',
+        href: '/admin/invitations?tab=tables',
+        icon: UtensilsCrossed,
     },
     {
         title: 'Galería',

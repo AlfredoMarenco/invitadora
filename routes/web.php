@@ -46,6 +46,12 @@ Route::middleware(['auth'])->group(function () {
             }
         }
 
+        $totalTables = $wedding ? $wedding->tables()->count() : 0;
+        $tablesCapacity = $wedding ? (int) $wedding->tables()->sum('capacity') : 0;
+        $assignedGuests = $wedding ? \App\Models\Guest::whereHas('invitation', function($q) use ($wedding) {
+            $q->where('wedding_id', $wedding->id);
+        })->whereNotNull('table_id')->count() : 0;
+
         return Inertia::render('dashboard', [
             'wedding' => $wedding,
             'stats' => [
@@ -57,6 +63,9 @@ Route::middleware(['auth'])->group(function () {
                 'checked_in_guests' => $checkedInGuests,
                 'gallery_count' => $wedding ? $wedding->galleryImages->count() : 0,
                 'hotels_count' => $wedding ? $wedding->hotels->count() : 0,
+                'total_tables' => $totalTables,
+                'tables_capacity' => $tablesCapacity,
+                'assigned_guests' => $assignedGuests,
             ],
             'recentInvitations' => $wedding 
                 ? $wedding->invitations()->with('guests')->latest()->take(6)->get() 
