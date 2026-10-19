@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Head, router } from '@inertiajs/react';
 import { Ticket } from 'lucide-react';
 import HotelCarousel from '../components/HotelCarousel';
+import MobileGalleryCarousel from '../components/MobileGalleryCarousel';
 import DigitalPassCard, { GuestPassData } from '../components/DigitalPassCard';
 
 interface GalleryImageItem {
@@ -202,105 +203,6 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
     const galleryList = rawGallery.length > 0
         ? rawGallery.map((img) => img.image_path)
         : defaultGalleryImages;
-
-    const [activeImageIndex, setActiveImageIndex] = useState(1);
-    const galleryScrollRef = useRef<HTMLDivElement | null>(null);
-    const isPausedRef = useRef(false);
-    const pauseTimeoutRef = useRef<any>(null);
-    const scrollRafRef = useRef<number | null>(null);
-
-    const handleUserInteraction = useCallback((duration = 7000) => {
-        isPausedRef.current = true;
-        if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
-        pauseTimeoutRef.current = setTimeout(() => {
-            isPausedRef.current = false;
-        }, duration);
-    }, []);
-
-    const handleGalleryScroll = useCallback(() => {
-        handleUserInteraction(7000);
-        if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
-        scrollRafRef.current = requestAnimationFrame(() => {
-            if (!galleryScrollRef.current) return;
-            const container = galleryScrollRef.current;
-            const centerPoint = container.scrollLeft + container.clientWidth / 2;
-            const cards = Array.from(container.children) as HTMLElement[];
-
-            let closestIndex = 0;
-            let minDistance = Infinity;
-
-            cards.forEach((card, idx) => {
-                const cardCenter = card.offsetLeft + card.clientWidth / 2;
-                const dist = Math.abs(centerPoint - cardCenter);
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    closestIndex = idx;
-                }
-            });
-
-            setActiveImageIndex((prev) => (prev !== closestIndex ? closestIndex : prev));
-        });
-    }, [handleUserInteraction]);
-
-    const scrollToImage = useCallback((index: number) => {
-        if (!galleryScrollRef.current) return;
-        handleUserInteraction(7000);
-        const container = galleryScrollRef.current;
-        const cards = container.children;
-        if (!cards[index]) return;
-        const card = cards[index] as HTMLElement;
-        const targetLeft = card.offsetLeft - (container.clientWidth - card.clientWidth) / 2;
-        container.scrollTo({
-            left: Math.max(0, targetLeft),
-            behavior: 'smooth',
-        });
-        setActiveImageIndex(index);
-    }, [handleUserInteraction]);
-
-    // Inicializa centrado en la imagen del medio (índice 1) para mostrar 3 imágenes (izq cortada, centro resaltada, der cortada)
-    useEffect(() => {
-        const centerMiddleImage = () => {
-            if (galleryScrollRef.current) {
-                const container = galleryScrollRef.current;
-                const initialIndex = galleryList.length >= 2 ? 1 : 0;
-                const cards = container.children;
-                if (cards[initialIndex]) {
-                    const card = cards[initialIndex] as HTMLElement;
-                    const targetLeft = card.offsetLeft - (container.clientWidth - card.clientWidth) / 2;
-                    container.scrollLeft = Math.max(0, targetLeft);
-                    setActiveImageIndex(initialIndex);
-                }
-            }
-        };
-
-        const t1 = setTimeout(centerMiddleImage, 60);
-        const t2 = setTimeout(centerMiddleImage, 250);
-        const t3 = setTimeout(centerMiddleImage, 600);
-
-        window.addEventListener('resize', centerMiddleImage);
-        return () => {
-            clearTimeout(t1);
-            clearTimeout(t2);
-            clearTimeout(t3);
-            window.removeEventListener('resize', centerMiddleImage);
-        };
-    }, [galleryList]);
-
-    // Auto-deslizamiento continuo cada 4 segundos rotando por las imágenes solo si no hay interacción
-    useEffect(() => {
-        if (galleryList.length <= 1) return;
-
-        const autoSlideTimer = setInterval(() => {
-            if (isPausedRef.current || !galleryScrollRef.current) return;
-            setActiveImageIndex((prevIndex) => {
-                const nextIndex = (prevIndex + 1) % galleryList.length;
-                scrollToImage(nextIndex);
-                return nextIndex;
-            });
-        }, 4000);
-
-        return () => clearInterval(autoSlideTimer);
-    }, [galleryList.length, scrollToImage]);
 
     // Cuenta regresiva hacia wedding_date (o 20 de febrero de 2027 por defecto)
     const [timeLeft, setTimeLeft] = useState({
@@ -770,60 +672,8 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                     GALERÍA
                                 </h2>
 
-                                {/* Contenedor del Carrusel Horizontal con snap touch scroll */}
-                                <div
-                                    ref={galleryScrollRef}
-                                    onScroll={handleGalleryScroll}
-                                    onTouchStart={() => handleUserInteraction(7000)}
-                                    onTouchMove={() => handleUserInteraction(7000)}
-                                    onMouseDown={() => handleUserInteraction(7000)}
-                                    className="w-full flex items-center gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar py-2 px-[24%]"
-                                    style={{
-                                        scrollbarWidth: 'none',
-                                        msOverflowStyle: 'none',
-                                        WebkitOverflowScrolling: 'touch',
-                                        overscrollBehaviorX: 'contain',
-                                    }}
-                                >
-                                    {galleryList.map((imageSrc, idx) => (
-                                        <div
-                                            key={idx}
-                                            onClick={() => scrollToImage(idx)}
-                                            className="w-[52%] max-w-[280px] h-[215px] sm:h-[260px] shrink-0 snap-center flex items-center justify-center cursor-pointer py-1"
-                                        >
-                                            <div
-                                                className={`w-full h-full rounded-2xl overflow-hidden shadow-md bg-stone-100 border border-stone-200/60 transition-all duration-300 ${
-                                                    activeImageIndex === idx
-                                                        ? 'scale-105 shadow-2xl ring-2 ring-[#788a80] opacity-100 z-20'
-                                                        : 'scale-90 opacity-60 hover:opacity-85 z-10'
-                                                }`}
-                                            >
-                                                <img
-                                                    src={imageSrc}
-                                                    alt={`Foto galería ${idx + 1}`}
-                                                    className="w-full h-full object-cover select-none pointer-events-none"
-                                                    loading="lazy"
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Indicadores de paginación (Dots) */}
-                                <div className="flex items-center justify-center gap-1.5 mt-2.5 sm:mt-3 px-4">
-                                    {galleryList.map((_, idx) => (
-                                        <button
-                                            key={idx}
-                                            type="button"
-                                            onClick={() => scrollToImage(idx)}
-                                            aria-label={`Ir a foto ${idx + 1}`}
-                                            className={`transition-all duration-300 rounded-full ${activeImageIndex === idx
-                                                ? 'w-5 h-1.5 bg-[#788a80]'
-                                                : 'w-1.5 h-1.5 bg-[#cbd5cc] hover:bg-[#a8b8ae]'
-                                                }`}
-                                        />
-                                    ))}
-                                </div>
+                                {/* Carrusel interactivo y fluido con soporte táctil, arrastre con dedo y cambio activo */}
+                                <MobileGalleryCarousel images={galleryList} />
                             </div>
 
                             {/* --- BLOQUE INFERIOR: CUENTA REGRESIVA SUBIDA Y COMPACTA --- */}
