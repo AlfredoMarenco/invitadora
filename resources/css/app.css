@@ -228,4 +228,126 @@
     font-style: italic;
 }
 
+/* ======================================================== */
+/* TRANSICIONES Y MICRO-ANIMACIONES DE BODA                */
+/* ======================================================== */
+
+html {
+    scroll-behavior: smooth;
+}
+
+@keyframes float-gentle {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-8px) rotate(1.5deg);
+    }
+}
+
+@keyframes float-gentle-reverse {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(7px) rotate(-1.5deg);
+    }
+}
+
+@keyframes pulse-subtle {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 2px 5px rgba(0,0,0,0.08));
+    }
+    50% {
+        transform: scale(1.04);
+        filter: drop-shadow(0 6px 14px rgba(0,0,0,0.15));
+    }
+}
+
+@keyframes glow-breathe {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(105, 129, 117, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 22px rgba(105, 129, 117, 0.45);
+    }
+}
+
+.animate-float-slow {
+    animation: float-gentle 7s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+    animation: float-gentle-reverse 8s ease-in-out infinite;
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 4s ease-in-out infinite;
+}
+
+.animate-glow-breathe {
+    animation: glow-breathe 3.5s ease-in-out infinite;
+}
+
+/* Transiciones de aparición al hacer scroll (Scroll Reveal) */
+[data-reveal] {
+    opacity: 0;
+    transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1), filter 0.85s ease-out;
+    will-change: opacity, transform;
+}
+
+[data-reveal="up"] {
+    transform: translateY(26px);
+}
+
+[data-reveal="down"] {
+    transform: translateY(-24px);
+}
+
+[data-reveal="left"] {
+    transform: translateX(-26px);
+}
+
+[data-reveal="right"] {
+    transform: translateX(26px);
+}
+
+[data-reveal="scale"] {
+    transform: scale(0.92);
+}
+
+[data-reveal="fade"] {
+    transform: none;
+}
+
+[data-reveal].is-revealed {
+    opacity: 1 !important;
+    transform: translateY(0) translateX(0) scale(1) !important;
+}
+
+[data-reveal-delay="50"]  { transition-delay: 50ms; }
+[data-reveal-delay="100"] { transition-delay: 100ms; }
+[data-reveal-delay="150"] { transition-delay: 150ms; }
+[data-reveal-delay="200"] { transition-delay: 200ms; }
+[data-reveal-delay="250"] { transition-delay: 250ms; }
+[data-reveal-delay="300"] { transition-delay: 300ms; }
+[data-reveal-delay="350"] { transition-delay: 350ms; }
+[data-reveal-delay="400"] { transition-delay: 400ms; }
+[data-reveal-delay="500"] { transition-delay: 500ms; }
+[data-reveal-delay="600"] { transition-delay: 600ms; }
+[data-reveal-delay="700"] { transition-delay: 700ms; }
+[data-reveal-delay="800"] { transition-delay: 800ms; }
+
+.hover-lift {
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-2.5px);
+    box-shadow: 0 8px 20px -3px rgba(0, 0, 0, 0.12), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+}
+.hover-lift:active {
+    transform: translateY(0);
+}
+
 

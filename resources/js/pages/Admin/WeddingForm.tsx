@@ -19,15 +19,80 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
         bride_godparents: wedding?.bride_godparents?.join(', ') || '',
         groom_godparents: wedding?.groom_godparents?.join(', ') || '',
         gift_registry_url: wedding?.gift_registry_url || '',
+        gift_registry_button_text: wedding?.gift_registry_button_text || 'LIVERPOOL',
+        gift_registry_url_2: wedding?.gift_registry_url_2 || '',
+        gift_registry_button_text_2: wedding?.gift_registry_button_text_2 || '',
         bank_transfer_info: wedding?.bank_transfer_info || '',
         dress_code: wedding?.dress_code || '',
-        timeline: wedding?.timeline || [],
+        timeline: (wedding?.timeline && wedding.timeline.length > 0) ? wedding.timeline : (wedding?.timeline_list || [
+            { time: '15:00', title: 'MISA', description: 'Ceremonia religiosa', icon_url: '/resources_canvas/images/5.svg' },
+            { time: '16:30', title: 'ROMPEHIELOS', description: 'Cóctel de bienvenida', icon_url: '/resources_canvas/images/6.svg' },
+            { time: '17:30', title: 'BRINDIS', description: 'Brindis con los novios', icon_url: '/resources_canvas/images/7.svg' },
+            { time: '18:30', title: 'CENA', description: 'Banquete de gala', icon_url: '/resources_canvas/images/8.svg' },
+            { time: '20:00', title: 'FIESTA', description: 'Música y baile', icon_url: '/resources_canvas/images/9.svg' },
+            { time: '02:00', title: 'CLAUSURA', description: 'Fin de la celebración', icon_url: '/resources_canvas/images/10.svg' },
+        ]),
         rsvp_deadline: wedding?.rsvp_deadline ? wedding.rsvp_deadline.split('T')[0] : '',
         song_title: wedding?.song_title || '',
         song_artist: wedding?.song_artist || '',
         background_audio: null,
         delete_audio: false,
     });
+
+    const [uploadingIndex, setUploadingIndex] = React.useState<number | null>(null);
+
+    const defaultIconPresets = [
+        { name: 'Misa', icon: '/resources_canvas/images/5.svg' },
+        { name: 'Rompehielos', icon: '/resources_canvas/images/6.svg' },
+        { name: 'Brindis', icon: '/resources_canvas/images/7.svg' },
+        { name: 'Cena', icon: '/resources_canvas/images/8.svg' },
+        { name: 'Fiesta', icon: '/resources_canvas/images/9.svg' },
+        { name: 'Clausura', icon: '/resources_canvas/images/10.svg' },
+    ];
+
+    const handleIconUpload = async (index: number, file: File) => {
+        if (!file) return;
+        setUploadingIndex(index);
+        try {
+            const formData = new FormData();
+            formData.append('icon', file);
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            const response = await fetch('/admin/timeline/upload-icon', {
+                method: 'POST',
+                headers: {
+                    ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+                    'Accept': 'application/json',
+                },
+                body: formData,
+            });
+
+            const result = await response.json();
+            if (result.success && result.url) {
+                const newTimeline = [...data.timeline];
+                newTimeline[index].icon_url = result.url;
+                setData('timeline', newTimeline);
+            } else {
+                alert(result.message || 'Error al subir el icono.');
+            }
+        } catch (err) {
+            console.error('Error uploading icon:', err);
+            alert('Hubo un error al subir el icono.');
+        } finally {
+            setUploadingIndex(null);
+        }
+    };
+
+    const moveTimelineItem = (index: number, direction: 'up' | 'down') => {
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= data.timeline.length) return;
+        const newTimeline = [...data.timeline];
+        const temp = newTimeline[index];
+        newTimeline[index] = newTimeline[targetIndex];
+        newTimeline[targetIndex] = temp;
+        setData('timeline', newTimeline);
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -95,7 +160,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-700 mb-1">Lugar de Ceremonia</label>
-                                    <input type="text" placeholder="Ej: Parroquia San José" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.locations.ceremony} onChange={e => setData('locations', { ...data.locations, ceremony: e.target.value })} />
+                                    <input type="text" placeholder="Ej: Parroquia San José" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.locations.ceremony || ''} onChange={e => setData('locations', { ...data.locations, ceremony: e.target.value })} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
@@ -111,7 +176,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-700 mb-1">Lugar de Recepción</label>
-                                    <input type="text" placeholder="Ej: Jardín Los Pinos" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.locations.reception} onChange={e => setData('locations', { ...data.locations, reception: e.target.value })} />
+                                    <input type="text" placeholder="Ej: Jardín Los Pinos" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.locations.reception || ''} onChange={e => setData('locations', { ...data.locations, reception: e.target.value })} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
@@ -156,11 +221,62 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">Código de Vestimenta (Dress Code)</label>
-                                <input type="text" placeholder="Ej: Formal, Etiqueta Rigurosa, Cóctel..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.dress_code} onChange={e => setData('dress_code', e.target.value)} />
+                                <input type="text" placeholder="Ej: Formal, Etiqueta Rigurosa, Cóctel..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.dress_code || ''} onChange={e => setData('dress_code', e.target.value)} />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700 mb-1">Enlace a Mesa de Regalos</label>
-                                <input type="url" placeholder="https://..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175]" value={data.gift_registry_url} onChange={e => setData('gift_registry_url', e.target.value)} />
+                            {/* SECCIÓN MESA DE REGALOS CONFIGURABLE */}
+                            <div className="md:col-span-2 bg-[#fbf9f4] border border-[#ded8cd] rounded-xl p-4 space-y-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                                    <span className="text-base font-bold text-[#2c4537]">🎁 Mesa de Regalos (Botón y Enlace Personalizables)</span>
+                                    <span className="text-xs text-zinc-500 font-medium">Configura el texto del botón y su link directo</span>
+                                </div>
+
+                                {/* Mesa 1 */}
+                                <div className="bg-white p-3.5 rounded-lg border border-zinc-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-700 mb-1">Texto del Botón 1</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ej: LIVERPOOL, MESA DE REGALOS, NUESTRA MESA..."
+                                            className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm uppercase"
+                                            value={data.gift_registry_button_text || ''}
+                                            onChange={e => setData('gift_registry_button_text', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-700 mb-1">Enlace / URL 1</label>
+                                        <input
+                                            type="text"
+                                            placeholder="https://mesaderegalos.liverpool.com.mx/..."
+                                            className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm"
+                                            value={data.gift_registry_url || ''}
+                                            onChange={e => setData('gift_registry_url', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Mesa 2 (Opcional) */}
+                                <div className="bg-white p-3.5 rounded-lg border border-zinc-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-700 mb-1">Texto del Botón 2 (Opcional)</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ej: AMAZON, SEARS, PALACIO..."
+                                            className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm uppercase"
+                                            value={data.gift_registry_button_text_2 || ''}
+                                            onChange={e => setData('gift_registry_button_text_2', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-700 mb-1">Enlace / URL 2 (Opcional)</label>
+                                        <input
+                                            type="text"
+                                            placeholder="https://www.amazon.com.mx/..."
+                                            className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm"
+                                            value={data.gift_registry_url_2 || ''}
+                                            onChange={e => setData('gift_registry_url_2', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                             {/* SECCIÓN MÚSICA DE FONDO */}
                             <div className="md:col-span-2 bg-[#fbf9f4] border border-[#ded8cd] rounded-xl p-4 space-y-4">
@@ -174,7 +290,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                                             type="text" 
                                             placeholder="Ej: Resto de mi vida, A Thousand Years..." 
                                             className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#2c4537] focus:border-[#2c4537] text-sm" 
-                                            value={data.song_title} 
+                                            value={data.song_title || ''} 
                                             onChange={e => setData('song_title', e.target.value)} 
                                         />
                                     </div>
@@ -184,7 +300,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                                             type="text" 
                                             placeholder="Ej: Camila, Il Divo, Christina Perri..." 
                                             className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#2c4537] focus:border-[#2c4537] text-sm" 
-                                            value={data.song_artist} 
+                                            value={data.song_artist || ''} 
                                             onChange={e => setData('song_artist', e.target.value)} 
                                         />
                                     </div>
@@ -252,53 +368,188 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
 
                     {/* SECCIÓN: ITINERARIO / TIMELINE */}
                     <div>
-                        <div className="flex justify-between items-center border-b pb-2 mb-4">
-                            <h3 className="text-lg font-bold text-zinc-800">Itinerario del Evento</h3>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b pb-3 mb-6">
+                            <div>
+                                <h3 className="text-lg font-bold text-zinc-800">Itinerario del Evento (Timeline)</h3>
+                                <p className="text-xs text-zinc-500 mt-0.5">
+                                    Configura los hitos del día. Los círculos estarán conectados por una elegante línea en la invitación interactiva.
+                                </p>
+                            </div>
                             {!isPlanner && (
-                                <button type="button" onClick={() => setData('timeline', [...data.timeline, { time: '', title: '', description: '' }])} className="text-sm bg-black text-white px-3 py-1.5 rounded-md hover:bg-zinc-800 transition">
-                                    + Agregar Evento
+                                <button
+                                    type="button"
+                                    onClick={() => setData('timeline', [
+                                        ...data.timeline,
+                                        { time: '', title: '', description: '', icon_url: '/resources_canvas/images/5.svg' }
+                                    ])}
+                                    className="inline-flex items-center gap-1.5 text-xs font-semibold bg-[#698175] text-white px-3.5 py-2 rounded-lg hover:bg-[#586e63] shadow-xs transition shrink-0"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                                    Agregar Evento
                                 </button>
                             )}
                         </div>
+
                         <div className="space-y-4">
                             {data.timeline.length === 0 ? (
-                                <p className="text-sm text-zinc-500 italic">No hay eventos en el itinerario aún.</p>
+                                <div className="text-center py-8 border-2 border-dashed rounded-xl bg-zinc-50 text-zinc-400 text-sm">
+                                    No hay eventos en el itinerario aún. Haz clic en <strong>"+ Agregar Evento"</strong> para comenzar.
+                                </div>
                             ) : (
                                 data.timeline.map((event, index) => (
-                                    <div key={index} className="flex flex-col md:flex-row gap-4 items-start p-4 bg-zinc-50 border rounded-md relative group">
-                                        <div className="w-full md:w-32 flex-shrink-0">
-                                            <label className="block text-xs font-medium text-zinc-500 mb-1">Hora</label>
-                                            <input type="time" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm" value={event.time} onChange={e => {
-                                                const newTimeline = [...data.timeline];
-                                                newTimeline[index].time = e.target.value;
-                                                setData('timeline', newTimeline);
-                                            }} required />
-                                        </div>
-                                        <div className="flex-1 space-y-3 w-full">
-                                            <div>
-                                                <label className="block text-xs font-medium text-zinc-500 mb-1">Título</label>
-                                                <input type="text" placeholder="Ej: Cóctel de Bienvenida" className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm" value={event.title} onChange={e => {
-                                                    const newTimeline = [...data.timeline];
-                                                    newTimeline[index].title = e.target.value;
-                                                    setData('timeline', newTimeline);
-                                                }} required />
+                                    <div
+                                        key={index}
+                                        className="flex flex-col lg:flex-row gap-5 items-start p-4 sm:p-5 bg-white border border-zinc-200 rounded-xl shadow-xs relative group hover:border-[#698175]/50 transition"
+                                    >
+                                        {/* Bloque Icono: Preview, Carga y Presets */}
+                                        <div className="flex flex-row lg:flex-col items-center gap-3 shrink-0 w-full lg:w-36 pb-3 lg:pb-0 border-b lg:border-b-0 lg:border-r border-zinc-100 pr-0 lg:pr-3">
+                                            <div className="w-16 h-16 rounded-full bg-[#748270] border-2 border-white/90 shadow-md flex items-center justify-center p-2.5 relative group/icon shrink-0">
+                                                {event.icon_url ? (
+                                                    <img
+                                                        src={event.icon_url}
+                                                        alt={event.title || 'Icono'}
+                                                        className="w-full h-full object-contain filter drop-shadow-xs"
+                                                    />
+                                                ) : (
+                                                    <span className="text-white/60 text-[10px] font-medium text-center">Sin icono</span>
+                                                )}
+                                                {uploadingIndex === index && (
+                                                    <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center text-white text-[10px] font-medium">
+                                                        Subiendo...
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-zinc-500 mb-1">Descripción (Opcional)</label>
-                                                <input type="text" placeholder="Disfruta de unos canapés y bebidas..." className="w-full rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm" value={event.description} onChange={e => {
-                                                    const newTimeline = [...data.timeline];
-                                                    newTimeline[index].description = e.target.value;
-                                                    setData('timeline', newTimeline);
-                                                }} />
+
+                                            <div className="flex flex-col items-start lg:items-center gap-1.5 w-full">
+                                                {!isPlanner && (
+                                                    <label className="cursor-pointer text-[11px] font-semibold text-[#526a5e] bg-stone-100 hover:bg-stone-200 px-2.5 py-1 rounded-md transition flex items-center gap-1.5">
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                                        <span>Cargar Icono</span>
+                                                        <input
+                                                            type="file"
+                                                            accept=".svg,.png,.jpg,.jpeg,.webp"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                if (e.target.files && e.target.files[0]) {
+                                                                    handleIconUpload(index, e.target.files[0]);
+                                                                }
+                                                            }}
+                                                        />
+                                                    </label>
+                                                )}
+
+                                                {/* Mini presets de iconos habituales */}
+                                                <div className="w-full mt-1">
+                                                    <span className="text-[10px] text-zinc-400 block mb-1 text-left lg:text-center font-medium">Predeterminados:</span>
+                                                    <div className="flex flex-wrap lg:justify-center gap-1">
+                                                        {defaultIconPresets.map((preset, pIdx) => (
+                                                            <button
+                                                                key={pIdx}
+                                                                type="button"
+                                                                title={`Usar icono: ${preset.name}`}
+                                                                onClick={() => {
+                                                                    const newTimeline = [...data.timeline];
+                                                                    newTimeline[index].icon_url = preset.icon;
+                                                                    setData('timeline', newTimeline);
+                                                                }}
+                                                                className={`w-6 h-6 rounded-full p-0.5 flex items-center justify-center transition border ${
+                                                                    event.icon_url === preset.icon
+                                                                        ? 'bg-[#55695f] border-zinc-900 ring-1 ring-zinc-700 shadow-xs'
+                                                                        : 'bg-[#748270] border-transparent opacity-65 hover:opacity-100 hover:scale-105'
+                                                                }`}
+                                                            >
+                                                                <img src={preset.icon} alt={preset.name} className="w-full h-full object-contain filter drop-shadow-xs" />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {/* Bloque Campos: Hora, Título, Descripción */}
+                                        <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="md:col-span-1">
+                                                <label className="block text-xs font-semibold text-zinc-600 mb-1">Hora del Evento</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Ej: 15:00 o 3:00 PM"
+                                                    className="w-full rounded-lg border-zinc-300 shadow-xs px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm"
+                                                    value={event.time}
+                                                    onChange={e => {
+                                                        const newTimeline = [...data.timeline];
+                                                        newTimeline[index].time = e.target.value;
+                                                        setData('timeline', newTimeline);
+                                                    }}
+                                                    required
+                                                />
+                                                <p className="text-[10px] text-zinc-400 mt-1">Formato 24h (15:00) o 12h (3:00 PM).</p>
+                                            </div>
+
+                                            <div className="md:col-span-2">
+                                                <label className="block text-xs font-semibold text-zinc-600 mb-1">Título / Nombre</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Ej: MISA, BRINDIS, CENA"
+                                                    className="w-full rounded-lg border-zinc-300 shadow-xs px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm uppercase tracking-wide font-medium"
+                                                    value={event.title}
+                                                    onChange={e => {
+                                                        const newTimeline = [...data.timeline];
+                                                        newTimeline[index].title = e.target.value;
+                                                        setData('timeline', newTimeline);
+                                                    }}
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="md:col-span-3">
+                                                <label className="block text-xs font-semibold text-zinc-600 mb-1">Descripción / Detalle (Opcional)</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Ej: Parroquia San Juan Bautista, Cóctel en el jardín..."
+                                                    className="w-full rounded-lg border-zinc-300 shadow-xs px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm"
+                                                    value={event.description || ''}
+                                                    onChange={e => {
+                                                        const newTimeline = [...data.timeline];
+                                                        newTimeline[index].description = e.target.value;
+                                                        setData('timeline', newTimeline);
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Botones de acción: Subir, Bajar, Eliminar */}
                                         {!isPlanner && (
-                                            <button type="button" onClick={() => {
-                                                const newTimeline = data.timeline.filter((_, i) => i !== index);
-                                                setData('timeline', newTimeline);
-                                            }} className="absolute top-2 right-2 text-zinc-400 hover:text-red-500">
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                            </button>
+                                            <div className="flex lg:flex-col items-center gap-1 self-end lg:self-start shrink-0 pt-1">
+                                                <button
+                                                    type="button"
+                                                    disabled={index === 0}
+                                                    onClick={() => moveTimelineItem(index, 'up')}
+                                                    title="Mover hacia arriba"
+                                                    className="p-1.5 text-zinc-400 hover:text-zinc-700 disabled:opacity-25 rounded-md hover:bg-zinc-100 transition"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" /></svg>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={index === data.timeline.length - 1}
+                                                    onClick={() => moveTimelineItem(index, 'down')}
+                                                    title="Mover hacia abajo"
+                                                    className="p-1.5 text-zinc-400 hover:text-zinc-700 disabled:opacity-25 rounded-md hover:bg-zinc-100 transition"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newTimeline = data.timeline.filter((_, i) => i !== index);
+                                                        setData('timeline', newTimeline);
+                                                    }}
+                                                    title="Eliminar evento"
+                                                    className="p-1.5 text-zinc-400 hover:text-red-600 rounded-md hover:bg-red-50 transition"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 ))

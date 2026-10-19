@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController;
 
 Route::get('settings', [WeddingController::class, 'edit'])->name('admin.wedding.settings');
 Route::put('settings', [WeddingController::class, 'update'])->name('admin.wedding.update');
+Route::post('timeline/upload-icon', [WeddingController::class, 'uploadTimelineIcon'])->name('admin.timeline.upload-icon');
 
 Route::put('gallery/reorder', [GalleryController::class, 'reorder'])->name('admin.gallery.reorder');
 Route::resource('gallery', GalleryController::class);
