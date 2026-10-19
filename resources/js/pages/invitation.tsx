@@ -24,6 +24,15 @@ export default function Invitation(props: WeddingProps) {
             const viewParam = params.get('view');
             if (viewParam === 'desktop') return true;
             if (viewParam === 'mobile') return false;
+
+            // Si es un smartphone (iPhone, iPod, Android móvil), cargar SIEMPRE la versión móvil
+            // Esto evita que Safari en iOS cargue la vista de escritorio por 'Solicitar sitio web para computadoras'
+            // o por orientación horizontal en pantallas con ancho lógico > 768px.
+            const isMobileDevice = /iPhone|iPod|Android.*Mobile|Mobile.*Firefox|BlackBerry|IEMobile/i.test(
+                navigator.userAgent
+            );
+            if (isMobileDevice) return false;
+
             return window.innerWidth >= 768;
         }
         return false;
@@ -42,6 +51,15 @@ export default function Invitation(props: WeddingProps) {
                 return;
             }
 
+            // Si es un smartphone, forzar siempre la versión móvil
+            const isMobileDevice = /iPhone|iPod|Android.*Mobile|Mobile.*Firefox|BlackBerry|IEMobile/i.test(
+                navigator.userAgent
+            );
+            if (isMobileDevice) {
+                setIsDesktop(false);
+                return;
+            }
+
             setIsDesktop(window.innerWidth >= 768);
         };
 
@@ -49,7 +67,14 @@ export default function Invitation(props: WeddingProps) {
         const handleChange = (e: MediaQueryListEvent) => {
             const params = new URLSearchParams(window.location.search);
             if (!params.get('view')) {
-                setIsDesktop(e.matches);
+                const isMobileDevice = /iPhone|iPod|Android.*Mobile|Mobile.*Firefox|BlackBerry|IEMobile/i.test(
+                    navigator.userAgent
+                );
+                if (isMobileDevice) {
+                    setIsDesktop(false);
+                } else {
+                    setIsDesktop(e.matches);
+                }
             }
         };
 

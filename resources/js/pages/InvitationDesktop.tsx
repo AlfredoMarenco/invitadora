@@ -884,7 +884,7 @@ export default function InvitationDesktop({ wedding, invitation }: WeddingProps)
                                 <div className="flex flex-col items-center gap-y-10 md:gap-y-8 lg:gap-y-12 w-full mt-6 sm:mt-8 md:mt-10 lg:mt-12">
                                     {/* Bloque 1: Ceremonia religiosa */}
                                     <div className="flex flex-col items-center my-12">
-                                        <span className="font-cardo text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] xl:text-[3.0rem] text-[#6d8293] leading-none mb-1 lg:mb-2 font-normal">
+                                        <span className="font-cardo text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] xl:text-[3.0rem] text-[#6d8293] leading-none mb-1 lg:mb-2 font-italic">
                                             Ceremonia religiosa
                                         </span>
                                         <h3 className="font-serif text-base sm:text-lg md:text-xl lg:text-[6.85rem] xl:text-[3.1rem] tracking-normal lg:tracking-[0.12em] text-[#3f5263] font-semibold uppercase mb-4 lg:mb-6">

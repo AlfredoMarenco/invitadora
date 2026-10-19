@@ -517,7 +517,7 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                     {/* (Pantalla completa tipo Canva con zoom en escritorio)     */}
                     {/* ========================================================= */}
                     <section className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-center select-none shrink-0">
-                        <div className="canvas-container invitation-section flex flex-col justify-between px-6 pt-3 sm:pt-4 pb-0 select-none shrink-0">
+                        <div className="canvas-container min-h-[100svh] sm:min-h-[890px] flex flex-col justify-between px-6 pt-3 sm:pt-4 pb-0 select-none shrink-0">
                             {/* Decoración botánica rama derecha */}
                             <img
                                 src="/resources_canvas/images/plantaladoderecho.webp"
@@ -668,12 +668,17 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                             </div>
 
                             {/* Bottom: Perrito con el anillo en la cabeza asomándose */}
-                            <div className="relative z-20 w-full flex justify-center items-end -mb-1 pointer-events-none select-none">
-                                <img
-                                    src="/resources_canvas/images/3.svg"
-                                    alt="Perrito con anillo"
-                                    className="w-full object-contain drop-shadow-sm scale-[0.9] transform origin-bottom -translate-y-50 sm:-translate-y-50"
-                                />
+                            <div className="relative z-20 w-full flex justify-center items-end mt-4 pointer-events-none select-none">
+                                <div
+                                    className="w-[90%] max-w-[360px] relative overflow-hidden"
+                                    style={{ aspectRatio: '810 / 397' }}
+                                >
+                                    <img
+                                        src="/resources_canvas/images/3.svg"
+                                        alt="Perrito con anillo"
+                                        className="w-full absolute bottom-0 left-0 drop-shadow-sm select-none pointer-events-none block"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -683,11 +688,11 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                     {/* (Pantalla completa tipo Canva con zoom en escritorio)     */}
                     {/* ========================================================= */}
                     <section className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-center select-none shrink-0 overflow-hidden">
-                        <div className="canvas-container min-h-[65svh] sm:min-h-[640px] flex flex-col items-center justify-start pt-3 sm:pt-5 pb-8 px-0 select-none shrink-0">
+                        <div className="canvas-container min-h-[65svh] sm:min-h-[640px] flex flex-col items-center justify-start pt-7 sm:pt-9 pb-8 px-0 select-none shrink-0">
                             {/* --- BLOQUE SUPERIOR: TÍTULO Y CARRUSEL DE GALERÍA --- */}
-                            <div className="flex flex-col items-center w-full mt-8">
+                            <div className="flex flex-col items-center w-full">
                                 {/* Título de Galería */}
-                                <h2 className="font-serif text-[12.3px] sm:text-[14px] tracking-[0.32em] text-[#788a80] uppercase font-medium mt-8 mb-3 sm:mb-4 text-center px-4">
+                                <h2 className="font-serif text-[12.3px] sm:text-[14px] tracking-[0.32em] text-[#788a80] uppercase font-medium mb-3 sm:mb-4 text-center px-4">
                                     GALERÍA
                                 </h2>
 
