@@ -212,26 +212,52 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
         }
     };
 
-    // Auto-reproducción al primer toque o interacción del usuario en la pantalla
+    // Auto-reproducción inteligente y desbloqueo confiable al primer gesto del usuario
     useEffect(() => {
         if (!wedding?.music_url) return;
 
-        const startAudioOnInteraction = () => {
-            if (audioRef.current && audioRef.current.paused) {
-                audioRef.current.play().then(() => {
-                    setIsPlaying(true);
-                }).catch(() => {});
+        let unlocked = false;
+
+        const removeListeners = () => {
+            window.removeEventListener('pointerdown', handleUserInteraction);
+            window.removeEventListener('touchstart', handleUserInteraction);
+            window.removeEventListener('click', handleUserInteraction);
+            window.removeEventListener('keydown', handleUserInteraction);
+        };
+
+        const tryPlay = () => {
+            const audio = audioRef.current;
+            if (!audio) return;
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        unlocked = true;
+                        setIsPlaying(true);
+                        removeListeners();
+                    })
+                    .catch(() => {
+                        // El navegador bloqueó el autoplay sin interacción previa; mantenemos los listeners activos
+                    });
             }
         };
 
-        window.addEventListener('click', startAudioOnInteraction, { once: true });
-        window.addEventListener('touchstart', startAudioOnInteraction, { once: true });
-        window.addEventListener('scroll', startAudioOnInteraction, { once: true });
+        const handleUserInteraction = () => {
+            if (unlocked) return;
+            tryPlay();
+        };
+
+        // 1. Intento inmediato al cargar el componente
+        tryPlay();
+
+        // 2. Si las políticas del navegador lo bloquean, escuchar interacciones reales del usuario
+        window.addEventListener('pointerdown', handleUserInteraction, { passive: true });
+        window.addEventListener('touchstart', handleUserInteraction, { passive: true });
+        window.addEventListener('click', handleUserInteraction, { passive: true });
+        window.addEventListener('keydown', handleUserInteraction, { passive: true });
 
         return () => {
-            window.removeEventListener('click', startAudioOnInteraction);
-            window.removeEventListener('touchstart', startAudioOnInteraction);
-            window.removeEventListener('scroll', startAudioOnInteraction);
+            removeListeners();
         };
     }, [wedding?.music_url]);
 
@@ -268,10 +294,10 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
 
     // Galería conectada al panel de administración (con fallback al template del canvas si aún no hay fotos)
     const defaultGalleryImages = [
-        '/resources_canvas/images/11.svg',
-        '/resources_canvas/images/12.svg',
-        '/resources_canvas/images/13.svg',
-        '/resources_canvas/images/14.svg',
+        '/images/canva_assets/backgroundhero1.jpg',
+        '/images/canva_assets/novios_perrito.webp',
+        '/images/canva_assets/perropregalery.webp',
+        '/images/canva_assets/herooriginal.webp',
     ];
 
     const rawGallery = wedding?.gallery_images || wedding?.galleryImages || [];
@@ -565,7 +591,10 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                             <img
                                 src="/images/canva_assets/backgroundhero1.jpg"
                                 alt={`${brideName} & ${groomName}`}
-                                className="w-full h-full object-cover object-[45%_22%] md:object-[50%_25%] scale-[1.08] md:scale-100 transform pointer-events-none translate-y-[3.5%] md:translate-y-0 will-change-transform"
+                                loading="eager"
+                                fetchPriority="high"
+                                decoding="async"
+                                className="w-full h-full object-cover object-[45%_22%] md:object-[50%_25%] scale-[1.08] md:scale-100 transform pointer-events-none translate-y-[3.5%] md:translate-y-0 hero-bg-reveal"
                             />
                             {/* Neblina / degradado superior blanco ultra suave y progresivo */}
                             <div className="absolute top-0 inset-x-0 h-48 md:h-56 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.5)_35%,rgba(255,255,255,0.15)_70%,transparent_100%)] pointer-events-none z-10" />
@@ -601,7 +630,7 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                             </div>
                         </div>
 
-                        {/* Espaciador inferior del Hero con audio tag persistente y señal interactiva de deslizamiento */}
+                        {/* Espaciador inferior del Hero y señal interactiva de deslizamiento */}
                         <div className="relative z-20 pb-4 md:pb-6 text-center flex flex-col items-center justify-center pointer-events-none" data-reveal="fade" data-reveal-delay="400">
                             <span className="font-serif text-[9px] sm:text-[10px] tracking-[0.28em] text-white/90 uppercase font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] animate-pulse">
                                 DESLIZA
@@ -609,9 +638,6 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                             <svg className="w-3.5 h-3.5 text-white/90 animate-bounce mt-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                             </svg>
-                            {wedding?.music_url && (
-                                <audio ref={audioRef} src={wedding.music_url} loop />
-                            )}
                         </div>
                     </section>
 
@@ -625,6 +651,8 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                             <img
                                 src="/resources_canvas/images/plantaladoderecho.webp"
                                 alt="Decoración botánica"
+                                loading="lazy"
+                                decoding="async"
                                 className="absolute -top-12 -right-10 -rotate-12 w-28 sm:w-32 object-contain pointer-events-none select-none z-30 animate-float-slow"
                             />
 
@@ -702,6 +730,8 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                     <img
                                         src="/resources_canvas/images/2.svg"
                                         alt="Huella de amor"
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-full h-full object-contain opacity-90 animate-pulse-subtle"
                                     />
                                 </div>
@@ -777,8 +807,10 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                     style={{ aspectRatio: '810 / 397' }}
                                 >
                                     <img
-                                        src="/resources_canvas/images/3.svg"
+                                        src="/images/canva_assets/perropregalery.webp"
                                         alt="Perrito con anillo"
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-full absolute bottom-0 left-0 drop-shadow-sm select-none pointer-events-none block"
                                     />
                                 </div>
@@ -880,8 +912,10 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                     <section className="relative w-full bg-[#748270] -mt-[1px] flex flex-col items-center justify-center py-10 sm:py-14 px-4 sm:px-6 select-none shrink-0 overflow-hidden min-h-[100svh] sm:min-h-[890px]">
                         {/* Fondo de textura auténtica de Canva sobre el verde olivo extendido borde a borde */}
                         <img
-                            src="/images/canva_assets/asset_17_9c5d7925.png"
+                            src="/images/canva_assets/asset_17_9c5d7925.webp"
                             alt="Fondo textura Itinerario"
+                            loading="lazy"
+                            decoding="async"
                             className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0 opacity-40 mix-blend-multiply"
                         />
 
@@ -890,6 +924,8 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                             <img
                                 src="/resources_canvas/images/4.svg"
                                 alt="Huellitas"
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-contain"
                             />
                         </div>
@@ -897,8 +933,10 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                         {/* Perrito con anillo asomándose en la esquina inferior derecha */}
                         <div className="absolute -bottom-2 -right-4 sm:right-0 w-[170px] sm:w-[215px] pointer-events-none select-none z-10" data-reveal="fade" data-reveal-delay="250">
                             <img
-                                src="/images/canva_assets/asset_13_254b129a.png"
+                                src="/images/canva_assets/asset_13_254b129a.webp"
                                 alt="Perrito asomándose"
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-auto object-contain drop-shadow-md"
                             />
                         </div>
@@ -964,6 +1002,8 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                                         <img
                                                             src={event.icon_url || '/resources_canvas/images/5.svg'}
                                                             alt={event.title || 'Itinerario'}
+                                                            loading="lazy"
+                                                            decoding="async"
                                                             className="w-full h-full object-contain filter drop-shadow-xs"
                                                         />
                                                     </div>
@@ -1016,24 +1056,30 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                     <img
                                         src="/resources_canvas/images/10.svg"
                                         alt="Marco de encaje"
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-[156%] max-w-none h-full object-fill -translate-y-20 sm:-translate-y-26 pointer-events-none select-none"
                                     />
                                 </div>
 
-                                {/* 12.svg: Planta lado izquierdo con flotación orgánica suave */}
+                                {/* Planta lado izquierdo con flotación orgánica suave */}
                                 <div className="absolute -left-7 sm:-left-8 top-[33%] w-24 sm:w-28 pointer-events-none select-none z-20 animate-float-slow">
                                     <img
-                                        src="/resources_canvas/images/12.svg"
+                                        src="/images/canva_assets/hojasubicacionizquierda.webp"
                                         alt="Decoración botánica izquierda"
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-full h-auto object-contain"
                                     />
                                 </div>
 
-                                {/* 13.svg: Planta lado derecho inferior con balanceo opuesto */}
+                                {/* Planta lado derecho inferior con balanceo opuesto */}
                                 <div className="absolute -right-6 sm:-right-7 bottom-0 sm:bottom-1 w-36 sm:w-38 pointer-events-none select-none z-20 -mr-12 -mt-32 -translate-y-30 sm:-translate-y-32 animate-float-reverse">
                                     <img
-                                        src="/resources_canvas/images/13.svg"
+                                        src="/images/canva_assets/hojasubicacionderecha.webp"
                                         alt="Decoración botánica derecha"
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-full h-auto object-contain"
                                     />
                                 </div>
@@ -1043,11 +1089,13 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
 
                                     {/* Bloque Superior: Sello y Título Ubicación */}
                                     <div className="flex flex-col items-center w-full translate-y-6 sm:translate-y-8" data-reveal="down">
-                                        {/* 11.svg: Sello de cera con huellita animado con pulso y sombra viva */}
+                                        {/* Sello de cera con huellita animado con pulso y sombra viva */}
                                         <div className="w-[66px] h-[66px] sm:w-[74px] sm:h-[74px] shrink-0 flex items-center justify-center drop-shadow-md mb-0.5 animate-pulse-subtle">
                                             <img
-                                                src="/resources_canvas/images/11.svg"
+                                                src="/images/canva_assets/sello_huellita.webp"
                                                 alt="Sello de huellita"
+                                                loading="lazy"
+                                                decoding="async"
                                                 className="w-full h-full object-contain"
                                             />
                                         </div>
@@ -1145,11 +1193,13 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                     <section className="relative w-full bg-[#fbf9f4] -mt-44 sm:-mt-52 flex flex-col items-center justify-center pt-0 pb-2 px-4 sm:px-6 select-none shrink-0">
                         <div className="canvas-container flex flex-col items-center justify-center">
                             <div className="relative w-full max-w-[420px] aspect-square flex items-center justify-center" data-reveal="scale" data-reveal-delay="100">
-                                {/* 14.svg: Sobre abierto con sello de cera */}
+                                {/* Sobre abierto con solapa monograma */}
                                 <img
-                                    src="/resources_canvas/images/14.svg"
+                                    src="/images/canva_assets/sobre.webp"
                                     alt="Sobre de regalos"
-                                    className="w-full h-full object-contain pointer-events-none select-none drop-shadow-sm"
+                                    loading="lazy"
+                                    decoding="async"
+                                    className="w-full h-full object-contain pointer-events-none select-none envelope-shadow"
                                 />
 
                                 {/* Monograma en la solapa superior (AJ escalonado con sutil palpitación) */}
@@ -1187,6 +1237,8 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                             <img
                                 src="/images/canva_assets/asset_16_31fee922.jpeg"
                                 alt="Adriana & Joaquín"
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-auto block select-none pointer-events-none"
                             />
 
@@ -1217,6 +1269,8 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                             <img
                                                 src="/resources_canvas/images/17.svg"
                                                 alt="Guayabera"
+                                                loading="lazy"
+                                                decoding="async"
                                                 className="w-full h-full object-contain"
                                             />
                                         </div>
@@ -1233,6 +1287,8 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                             <img
                                                 src="/resources_canvas/images/18.svg"
                                                 alt="Vestido de cóctel"
+                                                loading="lazy"
+                                                decoding="async"
                                                 className="w-full h-full object-contain"
                                             />
                                         </div>
@@ -1318,6 +1374,8 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                 <img
                                     src="/resources_canvas/images/26.svg"
                                     alt="Corazón con huella"
+                                    loading="lazy"
+                                    decoding="async"
                                     className="w-full h-full object-contain drop-shadow-sm"
                                 />
                             </div>
@@ -1338,11 +1396,13 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                             </p>
                         </div>
 
-                        {/* Imagen de los novios con su perrito (29.svg) a ancho completo de pantalla */}
+                        {/* Imagen de los novios con su perrito a ancho completo de pantalla */}
                         <div className="relative w-full flex flex-col items-center overflow-hidden z-10" data-reveal="up" data-reveal-delay="200">
                             <img
-                                src="/resources_canvas/images/29.svg"
+                                src="/images/canva_assets/novios_perrito.webp"
                                 alt="Adriana, Joaquín y su perrito"
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-auto object-cover block select-none pointer-events-none -mt-4 sm:-mt-6 -mb-1"
                             />
 
@@ -1465,30 +1525,30 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                         </div>
 
                                         <div>
-                                            <span className="font-serif text-[10px] sm:text-[10.5px] tracking-[0.25em] text-[#698175] uppercase font-bold block mb-1">
+                                            <span className="font-sans text-[10px] sm:text-[10.5px] tracking-[0.25em] text-[#698175] uppercase font-bold block mb-1">
                                                 CONFIRMACIÓN PRIVADA
                                             </span>
-                                            <h3 className="font-serif font-bold text-stone-900 text-xl leading-tight">
+                                            <h3 className="font-sans font-bold text-stone-900 text-lg sm:text-xl leading-tight">
                                                 Invitación Personal Requerida
                                             </h3>
                                         </div>
 
                                         <div className="w-full h-px bg-gradient-to-r from-transparent via-[#ded8cd] to-transparent my-1" />
 
-                                        <p className="font-serif text-[12.5px] text-stone-600 leading-relaxed max-w-[320px]">
-                                            Para confirmar tu asistencia y obtener tus <strong>pases de acceso oficiales</strong>, por favor ingresa únicamente a través del <strong>enlace personalizado</strong> que te compartieron directamente <strong>{brideName} &amp; {groomName}</strong>.
+                                        <p className="font-sans text-[12.5px] text-stone-600 leading-relaxed max-w-[320px]">
+                                            Para confirmar tu asistencia y obtener tus <strong className="font-semibold text-stone-800">pases de acceso oficiales</strong>, por favor ingresa únicamente a través del <strong className="font-semibold text-stone-800">enlace personalizado</strong> que te compartieron directamente <strong className="font-semibold text-[#28362e]">{brideName} &amp; {groomName}</strong>.
                                         </p>
 
                                         {/* Tarjeta explicativa con icono */}
-                                        <div className="bg-[#f7faf8] rounded-2xl border border-[#d2dfd7] p-3.5 text-stone-600 text-xs font-serif leading-relaxed w-full shadow-2xs">
-                                            <div className="flex items-center justify-center gap-1.5 text-[#28362e] font-bold text-[12px] mb-1">
+                                        <div className="bg-[#f7faf8] rounded-2xl border border-[#d2dfd7] p-3.5 text-stone-600 text-xs font-sans leading-relaxed w-full shadow-2xs">
+                                            <div className="flex items-center justify-center gap-1.5 text-[#28362e] font-semibold text-[12px] mb-1">
                                                 <Ticket className="w-4 h-4 text-[#698175]" />
                                                 <span>Pases de Acceso Exclusivos</span>
                                             </div>
                                             Cada invitación cuenta con boletos y códigos QR individuales asignados a los integrantes de tu familia o pase.
                                         </div>
 
-                                        <p className="text-[11px] font-serif text-stone-400 italic max-w-[280px]">
+                                        <p className="text-[11px] font-sans text-stone-400 italic max-w-[280px]">
                                             ¿No encuentras tu enlace privado? Comunícate con los novios para compartirte tu pase personalizado.
                                         </p>
                                     </div>
@@ -1671,17 +1731,21 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
 
                         {/* Hojas de eucalipto en la esquina inferior derecha con suave flotación */}
                         <img
-                            src="/images/canva_assets/eucalipto_footer.png"
+                            src="/images/canva_assets/eucalipto_footer.webp"
                             alt="Hojas de eucalipto"
+                            loading="lazy"
+                            decoding="async"
                             className="absolute bottom-0 right-0 w-36 min-[400px]:w-44 sm:w-56 md:w-64 h-auto object-contain pointer-events-none select-none z-0 opacity-90 animate-float-slow"
                             data-reveal="fade"
                             data-reveal-delay="200"
                         />
                     </footer>
 
-                    {/* Botón flotante de control musical */}
+                    {/* Audio element y Botón flotante de control musical */}
                     {wedding?.music_url && (
-                        <aside className="fixed bottom-5 right-5 z-50 select-none pointer-events-auto">
+                        <>
+                            <audio ref={audioRef} src={wedding.music_url} loop preload="metadata" playsInline />
+                            <aside className="fixed bottom-5 right-5 z-50 select-none pointer-events-auto">
                             <button
                                 type="button"
                                 onClick={togglePlay}
@@ -1708,6 +1772,7 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                 </span>
                             </button>
                         </aside>
+                        </>
                     )}
                 </div>
             </main>

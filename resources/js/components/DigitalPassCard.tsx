@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useRef, useState } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { 
     Download, 
     Share2, 
@@ -9,9 +9,19 @@ import {
     ShieldCheck, 
     Check, 
     Ticket,
-    Smartphone
+    Smartphone,
+    Eye,
+    X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { 
+    Dialog, 
+    DialogContent, 
+    DialogHeader, 
+    DialogTitle, 
+    DialogDescription, 
+    DialogFooter 
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 export interface GuestPassData {
@@ -41,6 +51,18 @@ export default function DigitalPassCard({
     invitationName = '',
 }: DigitalPassCardProps) {
     const cardRef = useRef<HTMLDivElement>(null);
+    const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+
+    // Modal de vista previa e instrucciones de guardado en iPhone / galería
+    const [previewModal, setPreviewModal] = useState<{
+        open: boolean;
+        imageSrc: string;
+    }>({
+        open: false,
+        imageSrc: '',
+    });
+
+    const [isGenerating, setIsGenerating] = useState(false);
 
     // Formatear código con espacio para lectura visual fácil (ej. AJ - 8K9N2)
     const formattedCode = guest.checkin_code || 'AJ-BOLETO';
@@ -61,92 +83,220 @@ export default function DigitalPassCard({
         window.open(waUrl, '_blank');
     };
 
-    // Descargar o imprimir pase para tenerlo en la galería de fotos
-    const handleDownloadPass = () => {
-        // Obtenemos el SVG del QR
-        const svgElement = cardRef.current?.querySelector('svg');
-        if (!svgElement) {
-            toast.info('Toma una captura de pantalla de este pase para tenerlo en tu galería.');
+    // Descargar pase con alta fidelidad y compatibilidad total con iPhone (iOS) y Android/PC
+    const handleDownloadPass = async () => {
+        // Encontrar el canvas del QR exacto
+        const qrCanvas = qrCanvasRef.current || cardRef.current?.querySelector('canvas');
+        if (!qrCanvas) {
+            toast.info('Preparando tu pase digital, intenta de nuevo en un segundo.');
             return;
         }
 
+        setIsGenerating(true);
+
         try {
-            // Creamos un canvas para exportar la tarjeta como imagen PNG
+            // Creamos un canvas de alta definición para exportar la tarjeta como imagen PNG
             const canvas = document.createElement('canvas');
+            const width = 700;
+            const height = 980;
+            canvas.width = width;
+            canvas.height = height;
             const ctx = canvas.getContext('2d');
-            canvas.width = 600;
-            canvas.height = 800;
 
-            if (ctx) {
-                // Fondo elegante
-                ctx.fillStyle = '#fbf9f4';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // Marco dorado
-                ctx.strokeStyle = '#d4af37';
-                ctx.lineWidth = 4;
-                ctx.strokeRect(20, 20, 560, 760);
-
-                // Franja superior verde
-                ctx.fillStyle = '#28362e';
-                ctx.fillRect(20, 20, 560, 100);
-
-                // Texto superior
-                ctx.fillStyle = '#f4ecd8';
-                ctx.font = 'bold 24px Georgia, serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('PASE DE ACCESO OFICIAL', 300, 60);
-                ctx.font = '16px Georgia, serif';
-                ctx.fillText(weddingName, 300, 95);
-
-                // Nombre del invitado
-                ctx.fillStyle = '#28362e';
-                ctx.font = 'bold 28px Georgia, serif';
-                ctx.fillText(guest.full_name.toUpperCase(), 300, 180);
-
-                // Mesa asignada
-                ctx.fillStyle = '#698175';
-                ctx.font = 'bold 20px Georgia, serif';
-                const mesaText = guest.table_name ? `MESA: ${guest.table_name.toUpperCase()}` : 'MESA POR ASIGNAR';
-                ctx.fillText(mesaText, 300, 215);
-
-                // Dibujar el QR
-                const xml = new XMLSerializer().serializeToString(svgElement);
-                const svgBlob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
-                const URL = window.URL || window.webkitURL || window;
-                const blobURL = URL.createObjectURL(svgBlob);
-                const img = new Image();
-
-                img.onload = () => {
-                    ctx.drawImage(img, 175, 260, 250, 250);
-
-                    // Código de acceso
-                    ctx.fillStyle = '#28362e';
-                    ctx.font = 'bold 24px monospace';
-                    ctx.fillText(guest.checkin_code, 300, 555);
-
-                    // Detalles inferiores
-                    ctx.fillStyle = '#666';
-                    ctx.font = '16px Georgia, serif';
-                    ctx.fillText(weddingDate, 300, 620);
-                    ctx.fillText(receptionLocation, 300, 650);
-
-                    ctx.fillStyle = '#888';
-                    ctx.font = '12px Georgia, serif';
-                    ctx.fillText('Presenta este código al momento de tu llegada a la recepción', 300, 720);
-
-                    // Descargar imagen
-                    const imageURI = canvas.toDataURL('image/png');
-                    const link = document.createElement('a');
-                    link.download = `Pase-${guest.full_name.replace(/\s+/g, '_')}.png`;
-                    link.href = imageURI;
-                    link.click();
-                    toast.success('¡Pase guardado en tus descargas!');
-                };
-                img.src = blobURL;
+            if (!ctx) {
+                setIsGenerating(false);
+                return;
             }
+
+            // 1. Fondo elegante crema de gala
+            ctx.fillStyle = '#fbf9f4';
+            ctx.fillRect(0, 0, width, height);
+
+            // 2. Marco exterior dorado
+            ctx.strokeStyle = '#cbb57b';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(24, 24, width - 48, height - 48);
+
+            // 3. Filete fino interior
+            ctx.strokeStyle = '#e6dbc5';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(32, 32, width - 64, height - 64);
+
+            // 4. Franja superior verde bosque esmeralda
+            ctx.fillStyle = '#28362e';
+            ctx.fillRect(32, 32, width - 64, 120);
+
+            // Acento dorado debajo de la franja
+            ctx.fillStyle = '#cbb57b';
+            ctx.fillRect(32, 150, width - 64, 3);
+
+            // Texto cabecera
+            ctx.fillStyle = '#f4ecd8';
+            ctx.font = 'bold 22px Georgia, serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('PASE OFICIAL DE ACCESO', width / 2, 80);
+
+            ctx.fillStyle = '#dcd2bd';
+            ctx.font = 'italic 16px Georgia, serif';
+            ctx.fillText(`Boda de ${weddingName}`, width / 2, 115);
+
+            // 5. Invitado de Honor
+            ctx.fillStyle = '#788a80';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText('INVITADO DE HONOR', width / 2, 205);
+
+            ctx.fillStyle = '#1d2721';
+            ctx.font = 'bold 28px Georgia, serif';
+            ctx.fillText(guest.full_name.toUpperCase(), width / 2, 245);
+
+            // 6. Mesa Asignada
+            const mesaText = guest.table_name ? `MESA: ${guest.table_name.toUpperCase()}` : 'MESA POR ASIGNAR EN RECEPCIÓN';
+            ctx.fillStyle = '#eef4f0';
+            const mesaBadgeW = Math.min(width - 100, ctx.measureText(mesaText).width + 50);
+            ctx.fillRect((width - mesaBadgeW) / 2, 268, mesaBadgeW, 36);
+            ctx.strokeStyle = '#b8d1c0';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect((width - mesaBadgeW) / 2, 268, mesaBadgeW, 36);
+
+            ctx.fillStyle = '#28362e';
+            ctx.font = 'bold 14px Georgia, serif';
+            ctx.fillText(mesaText, width / 2, 292);
+
+            // 7. Línea punteada de corte
+            ctx.strokeStyle = '#cbb57b';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 6]);
+            ctx.beginPath();
+            ctx.moveTo(40, 335);
+            ctx.lineTo(width - 40, 335);
+            ctx.stroke();
+            ctx.setLineDash([]); // reestablecer
+
+            // 8. Contenedor blanco del Código QR
+            const qrBoxSize = 300;
+            const qrBoxX = (width - qrBoxSize) / 2;
+            const qrBoxY = 360;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize);
+            ctx.strokeStyle = '#ded8cd';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize);
+
+            // 9. DIBUJAR EL QR EXACTO (Sincrónicamente desde el canvas de QR)
+            // Esto garantiza que JAMÁS se confunda con el icono de cubiertos ni falle en iOS
+            const qrPadding = 20;
+            ctx.drawImage(
+                qrCanvas, 
+                qrBoxX + qrPadding, 
+                qrBoxY + qrPadding, 
+                qrBoxSize - (qrPadding * 2), 
+                qrBoxSize - (qrPadding * 2)
+            );
+
+            // 10. Código de Acceso alfanumérico
+            ctx.fillStyle = '#788a80';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillText('CÓDIGO DE ACCESO', width / 2, 695);
+
+            ctx.fillStyle = '#1d2721';
+            ctx.font = 'bold 24px monospace';
+            ctx.fillText(guest.checkin_code || 'AJ-ACCESO', width / 2, 730);
+
+            // 11. Instrucción
+            ctx.fillStyle = '#666666';
+            ctx.font = '13px Georgia, serif';
+            ctx.fillText('Presenta este código al llegar a la recepción para ingresar sin filas', width / 2, 770);
+
+            // Separador fino
+            ctx.strokeStyle = '#ded8cd';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(60, 805);
+            ctx.lineTo(width - 60, 805);
+            ctx.stroke();
+
+            // 12. Pie de página: Fecha y Lugar
+            ctx.fillStyle = '#28362e';
+            ctx.font = 'bold 14px Georgia, serif';
+            ctx.fillText(weddingDate, width / 2, 840);
+
+            ctx.fillStyle = '#555555';
+            ctx.font = '13px Georgia, serif';
+            ctx.fillText(receptionLocation, width / 2, 870);
+
+            ctx.fillStyle = '#8f6d28';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillText('✦ PASE INDIVIDUAL OFICIAL • ACCESO VERIFICADO ✦', width / 2, 925);
+
+            // Generar imagen final
+            const dataUrl = canvas.toDataURL('image/png');
+            const sanitizedName = guest.full_name.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g, '_');
+            const fileName = `Pase_${sanitizedName}.png`;
+
+            // Detectar iOS (iPhone / iPad / iPod)
+            const isIOS = typeof navigator !== 'undefined' && (
+                /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+            );
+
+            canvas.toBlob(async (blob) => {
+                setIsGenerating(false);
+
+                if (!blob) {
+                    setPreviewModal({ open: true, imageSrc: dataUrl });
+                    return;
+                }
+
+                const file = new File([blob], fileName, { type: 'image/png' });
+
+                // EN IPHONE: Intentar primero Web Share API nativo de iOS
+                // Abre el menú nativo de iOS donde la primera opción es "Guardar imagen" (directo al Carrete de Fotos)
+                if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: `Pase de Acceso - ${guest.full_name}`,
+                            text: `Pase oficial de acceso para la boda de ${weddingName}`,
+                        });
+                        toast.success('¡Pase listo y compartido!');
+                        return;
+                    } catch (shareErr: any) {
+                        if (shareErr.name === 'AbortError') {
+                            // Si el usuario canceló la hoja de compartir de iOS, le abrimos el modal de vista previa
+                            setPreviewModal({ open: true, imageSrc: dataUrl });
+                            return;
+                        }
+                    }
+                }
+
+                // Si NO es iPhone, o si Web Share no está disponible, descargar normalmente
+                if (!isIOS) {
+                    try {
+                        const blobUrl = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.download = fileName;
+                        link.href = blobUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                        toast.success('¡Pase guardado en tus descargas!');
+                        return;
+                    } catch (err) {
+                        console.error('Error en descarga:', err);
+                    }
+                }
+
+                // En iOS o en caso de bloqueo de descargas automáticas:
+                // Desplegamos el modal visual con la instrucción clara de mantener presionado para Guardar en Fotos
+                setPreviewModal({ open: true, imageSrc: dataUrl });
+
+            }, 'image/png');
+
         } catch (e) {
-            toast.info('Guarda una captura de pantalla de este pase para mostrarlo al llegar.');
+            console.error('Error al generar pase:', e);
+            setIsGenerating(false);
+            toast.info('Toma una captura de pantalla a este pase para tenerlo en tu galería.');
         }
     };
 
@@ -221,10 +371,11 @@ export default function DigitalPassCard({
                     <div className="border-b-2 border-dashed border-[#ded8cd] w-full" />
                 </div>
 
-                {/* CÓDIGO QR DE ALTA DEFINICIÓN */}
+                {/* CÓDIGO QR DE ALTA DEFINICIÓN (CANVAS SINCRÓNICO) */}
                 <div className="flex flex-col items-center justify-center pt-3 pb-2">
                     <div className="p-3 bg-white rounded-2xl border-2 border-[#ded8cd] shadow-sm flex items-center justify-center">
-                        <QRCodeSVG
+                        <QRCodeCanvas
+                            ref={qrCanvasRef}
                             value={guest.checkin_code}
                             size={168}
                             level="H"
@@ -270,10 +421,11 @@ export default function DigitalPassCard({
                 <button
                     type="button"
                     onClick={handleDownloadPass}
-                    className="w-full py-2.5 px-4 rounded-xl bg-[#28362e] hover:bg-[#1d2721] active:scale-[0.99] text-[#f4ecd8] font-serif text-xs font-semibold tracking-wider uppercase shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    disabled={isGenerating}
+                    className="w-full py-2.5 px-4 rounded-xl bg-[#28362e] hover:bg-[#1d2721] active:scale-[0.99] text-[#f4ecd8] font-serif text-xs font-semibold tracking-wider uppercase shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-75"
                 >
                     <Download className="w-3.5 h-3.5 text-[#e6d0aa]" />
-                    <span>Guardar Pase en Fotos</span>
+                    <span>{isGenerating ? 'Generando Pase...' : 'Guardar Pase en Fotos'}</span>
                 </button>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -302,6 +454,97 @@ export default function DigitalPassCard({
                     </button>
                 </div>
             </div>
+
+            {/* ========================================================= */}
+            {/* MODAL DE VISTA PREVIA Y GUARDADO EN FOTOS (ESPECIAL IPHONE)*/}
+            {/* ========================================================= */}
+            <Dialog 
+                open={previewModal.open} 
+                onOpenChange={(open) => setPreviewModal(prev => ({ ...prev, open }))}
+            >
+                <DialogContent className="sm:max-w-md max-h-[92vh] overflow-y-auto p-5 text-center">
+                    <DialogHeader>
+                        <DialogTitle className="font-serif text-xl font-bold text-[#28362e]">
+                            Pase de Acceso Listo
+                        </DialogTitle>
+                        <DialogDescription className="font-serif text-xs text-stone-500">
+                            Guarda tu pase oficial para tenerlo a mano en la recepción.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {/* Instrucción visual para iPhone / Safari */}
+                    <div className="bg-[#f7f5ed] border border-[#d9cfbe] rounded-xl p-3 text-stone-700 text-xs font-serif text-left flex items-start gap-2.5 my-2 shadow-2xs">
+                        <span className="text-xl leading-none shrink-0">📱</span>
+                        <div>
+                            <strong className="block text-[#28362e] font-sans font-semibold text-[11.5px]">
+                                ¿Cómo guardarlo en tu iPhone?
+                            </strong>
+                            <p className="text-[11px] text-stone-600 mt-0.5 leading-snug">
+                                <strong>Mantén presionada la imagen</strong> de abajo durante un segundo y selecciona <strong>«Guardar en Fotos»</strong>.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Vista previa de la imagen generada con el QR exacto */}
+                    <div className="my-2 p-1.5 bg-white rounded-2xl border-2 border-[#ded8cd] shadow-md flex justify-center overflow-hidden">
+                        <img 
+                            src={previewModal.imageSrc} 
+                            alt={`Pase de Acceso - ${guest.full_name}`}
+                            className="w-full max-h-[50vh] object-contain rounded-xl select-all"
+                        />
+                    </div>
+
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+                        {typeof navigator !== 'undefined' && 'share' in navigator && (
+                            <Button
+                                type="button"
+                                onClick={async () => {
+                                    try {
+                                        const res = await fetch(previewModal.imageSrc);
+                                        const blob = await res.blob();
+                                        const file = new File([blob], `Pase_${guest.full_name}.png`, { type: 'image/png' });
+                                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                            await navigator.share({
+                                                files: [file],
+                                                title: `Pase de Acceso - ${guest.full_name}`,
+                                                text: `Pase oficial para la boda de ${weddingName}`,
+                                            });
+                                        }
+                                    } catch (e) {
+                                        console.log(e);
+                                    }
+                                }}
+                                className="bg-[#28362e] hover:bg-[#1d2721] text-[#f4ecd8] font-serif text-xs w-full sm:w-auto flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                                <Share2 className="w-3.5 h-3.5 text-[#e6d0aa]" />
+                                <span>Compartir / Guardar</span>
+                            </Button>
+                        )}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                const link = document.createElement('a');
+                                link.download = `Pase_${guest.full_name}.png`;
+                                link.href = previewModal.imageSrc;
+                                link.click();
+                            }}
+                            className="font-serif text-xs border-[#ded8cd] w-full sm:w-auto flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                            <Download className="w-3.5 h-3.5 text-[#698175]" />
+                            <span>Descargar Archivo</span>
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setPreviewModal(prev => ({ ...prev, open: false }))}
+                            className="text-stone-500 text-xs w-full sm:w-auto cursor-pointer"
+                        >
+                            Cerrar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

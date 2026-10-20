@@ -56,6 +56,7 @@ interface InvitationItem {
     name: string;
     phone?: string | null;
     category?: string | null;
+    side?: 'bride' | 'groom' | string | null;
     token: string;
     status: string;
     message_to_couple?: string | null;

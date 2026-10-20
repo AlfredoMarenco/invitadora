@@ -37,6 +37,7 @@ class InvitationController extends Controller
             'name' => 'required|string',
             'phone' => 'nullable|string',
             'category' => 'nullable|string',
+            'side' => 'required|in:groom,bride',
             'rsvp_deadline' => 'nullable|date',
             'guests' => 'required|array|min:1',
             'guests.*.full_name' => 'required|string',
@@ -49,6 +50,7 @@ class InvitationController extends Controller
                 'name' => $validated['name'],
                 'phone' => $validated['phone'] ?? null,
                 'category' => $validated['category'] ?? null,
+                'side' => $validated['side'] ?? 'bride',
                 'rsvp_deadline' => $validated['rsvp_deadline'] ?? null,
                 'token' => Str::random(8),
             ]);
@@ -77,6 +79,7 @@ class InvitationController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:50',
             'category' => 'nullable|string|max:100',
+            'side' => 'required|in:groom,bride',
             'rsvp_deadline' => 'nullable|date',
             'guests' => 'required|array|min:1',
             'guests.*.id' => 'nullable|integer',
@@ -90,6 +93,7 @@ class InvitationController extends Controller
                 'name' => $validated['name'],
                 'phone' => $validated['phone'] ?? null,
                 'category' => $validated['category'] ?? null,
+                'side' => $validated['side'] ?? 'bride',
                 'rsvp_deadline' => $validated['rsvp_deadline'] ?? null,
             ]);
 
@@ -202,7 +206,7 @@ class InvitationController extends Controller
             $file = fopen('php://output', 'w');
             // BOM for UTF-8
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            fputcsv($file, ['Familia/Grupo', 'Telefono', 'Categoria', 'Estado RSVP', 'Mensaje a Novios', 'Nombre Invitado', 'Tipo', 'Asiste', 'Mesa', 'Alergias/Restricciones', 'Notas Especiales']);
+            fputcsv($file, ['Familia/Grupo', 'Telefono', 'Lado / Quien Invita', 'Categoria', 'Estado RSVP', 'Mensaje a Novios', 'Nombre Invitado', 'Tipo', 'Asiste', 'Mesa', 'Alergias/Restricciones', 'Notas Especiales']);
             
             foreach ($invitations as $inv) {
                 foreach ($inv->guests as $guest) {
@@ -210,6 +214,7 @@ class InvitationController extends Controller
                     fputcsv($file, [
                         $inv->name,
                         $inv->phone,
+                        $inv->side === 'groom' ? 'Invitados del Novio' : 'Invitados de la Novia',
                         $inv->category ?? 'Sin etiqueta',
                         $inv->status,
                         $inv->message_to_couple ?? '',

@@ -29,7 +29,7 @@ class CheckInController extends Controller
                 $q->where('wedding_id', $wedding->id);
             })
             ->where('is_attending', '!=', false) // excluir los que dijeron que NO asisten
-            ->with('invitation:id,name,category,token')
+            ->with('invitation:id,name,category,side,token')
             ->orderBy('full_name')
             ->get();
 

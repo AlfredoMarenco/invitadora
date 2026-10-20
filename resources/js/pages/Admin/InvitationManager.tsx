@@ -116,6 +116,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         name: string;
         phone: string;
         category: string;
+        side: 'bride' | 'groom';
         rsvp_deadline: string;
         table_id: string;
         guests: Array<{ full_name: string; type: string; table_id?: string }>;
@@ -123,6 +124,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         name: '', 
         phone: '', 
         category: '', 
+        side: 'bride',
         rsvp_deadline: '', 
         table_id: '',
         guests: [{ full_name: '', type: 'adult', table_id: '' }] 
@@ -134,6 +136,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         name: string;
         phone: string;
         category: string;
+        side: 'bride' | 'groom';
         rsvp_deadline: string;
         table_id?: string;
         guests: Array<{
@@ -149,6 +152,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         name: '',
         phone: '',
         category: '',
+        side: 'bride',
         rsvp_deadline: '',
         table_id: '',
         guests: []
@@ -177,6 +181,10 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
     // Estado para eliminar invitación
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
+    // Filtros para la lista de invitados: por Lado (Novia / Novio) y búsqueda por texto
+    const [invitationFilterSide, setInvitationFilterSide] = useState<'all' | 'bride' | 'groom'>('all');
+    const [invitationSearch, setInvitationSearch] = useState('');
+
     // Reloj en vivo para ambiente de gala
     const [currentTime, setCurrentTime] = useState<string>('');
     useEffect(() => {
@@ -196,6 +204,31 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         return acc + (inv.guests?.filter((g: any) => g.is_attending === true).length || 0);
     }, 0);
     const percentConfirmed = totalGuests > 0 ? Math.round((confirmedGuests / totalGuests) * 100) : 0;
+
+    // Desglose por lado (Novia vs Novio)
+    const brideInvitations = invitations.filter(i => (i.side || 'bride') === 'bride');
+    const groomInvitations = invitations.filter(i => i.side === 'groom');
+    const brideGuestsCount = brideInvitations.reduce((acc, i) => acc + (i.guests?.length || 0), 0);
+    const groomGuestsCount = groomInvitations.reduce((acc, i) => acc + (i.guests?.length || 0), 0);
+
+    // Lista filtrada de invitaciones según Novia/Novio y buscador
+    const filteredInvitations = invitations.filter(inv => {
+        const side = inv.side || 'bride';
+        if (invitationFilterSide !== 'all' && side !== invitationFilterSide) {
+            return false;
+        }
+        if (invitationSearch.trim()) {
+            const q = invitationSearch.toLowerCase().trim();
+            const inName = inv.name?.toLowerCase().includes(q);
+            const inPhone = inv.phone?.toLowerCase().includes(q);
+            const inCategory = inv.category?.toLowerCase().includes(q);
+            const inGuests = inv.guests?.some((g: any) => g.full_name?.toLowerCase().includes(q));
+            if (!inName && !inPhone && !inCategory && !inGuests) {
+                return false;
+            }
+        }
+        return true;
+    });
 
     // Estadísticas de mesas
     const totalTableCapacity = tables.reduce((acc, t) => acc + (t.capacity || 0), 0);
@@ -306,6 +339,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                     name: '', 
                     phone: '', 
                     category: '', 
+                    side: 'bride',
                     rsvp_deadline: '', 
                     table_id: '',
                     guests: [{ full_name: '', type: 'adult', table_id: '' }] 
@@ -325,6 +359,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
             name: inv.name || '',
             phone: inv.phone || '',
             category: inv.category || '',
+            side: (inv.side === 'groom' ? 'groom' : 'bride'),
             rsvp_deadline: inv.rsvp_deadline || '',
             table_id: allSame ? String(firstId) : '',
             guests: inv.guests ? inv.guests.map((g: any) => ({
@@ -622,8 +657,8 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                 style={{ width: `${percentConfirmed}%` }}
                             />
                         </div>
-                        <span className="text-[10px] font-mono text-[#e8d5aa] font-bold mt-1">
-                            {totalInvitations} familias • {percentConfirmed}% confirmado
+                        <span className="text-[10px] font-mono text-[#e8d5aa] font-bold mt-1 text-right">
+                            👰 Novia: {brideGuestsCount} • 🤵 Novio: {groomGuestsCount} ({percentConfirmed}% conf.)
                         </span>
                     </div>
 
@@ -742,56 +777,143 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
 
             {activeTab === 'invitations' ? (
                 /* ========================================================= */
-                /* 2. TABLA DE INVITADOS CON COLUMNAS UNIFICADAS Y DROPDOWN  */
+                /* 2. TABLA DE INVITADOS CON FILTRO NOVIO/NOVIA Y BÚSQUEDA   */
                 /* ========================================================= */
-                <Card className="shadow-sm border-[#ded8cd] bg-card overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-[#f5f2eb]/75 dark:bg-muted/40 text-stone-600 dark:text-muted-foreground text-xs uppercase font-semibold border-b border-[#ded8cd]">
-                            <tr>
-                                <th className="px-5 py-4 font-semibold tracking-wider">Familia / Titular</th>
-                                <th className="px-5 py-4 font-semibold tracking-wider">
-                                    <div className="flex items-center justify-between gap-3">
-                                        <span>Integrantes y Pases</span>
-                                        {invitations.length > 0 && (
-                                            <button
-                                                type="button"
-                                                onClick={toggleExpandAll}
-                                                className="text-[11px] font-normal normal-case text-stone-500 hover:text-[#2c4537] dark:hover:text-[#cfbe95] underline cursor-pointer"
-                                            >
-                                                {expandedInvIds.length === invitations.length ? 'Contraer todos' : 'Expandir todos'}
-                                            </button>
-                                        )}
-                                    </div>
-                                </th>
-                                <th className="px-5 py-4 font-semibold tracking-wider">Mensaje a los Novios</th>
-                                <th className="px-5 py-4 font-semibold tracking-wider">Estado RSVP</th>
-                                <th className="px-5 py-4 font-semibold tracking-wider text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#f0ede6] dark:divide-border/40">
-                            {invitations.map((inv: any) => {
-                                const isExpanded = expandedInvIds.includes(inv.id);
-                                const hasDependencies = Boolean(
-                                    inv.status === 'responded' || 
-                                    inv.guests?.some((g: any) => g.has_entered || g.is_attending !== null)
-                                );
+                <div className="space-y-3">
+                    {/* Barra de Filtros Novia / Novio y Buscador */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-stone-900/90 p-3 sm:p-3.5 rounded-2xl border border-[#ded8cd] dark:border-stone-800 shadow-2xs">
+                        {/* Selector de Lado (Novia / Novio / Todos) */}
+                        <div className="flex items-center gap-1.5 p-1 bg-[#f5f2eb]/80 dark:bg-stone-950 rounded-xl border border-[#e4ded3] dark:border-stone-800 overflow-x-auto">
+                            <button
+                                type="button"
+                                onClick={() => setInvitationFilterSide('all')}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                                    invitationFilterSide === 'all'
+                                        ? 'bg-[#2c4537] text-white shadow-xs'
+                                        : 'text-stone-600 dark:text-stone-300 hover:text-stone-900'
+                                }`}
+                            >
+                                <span>Todos</span>
+                                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                                    invitationFilterSide === 'all' ? 'bg-[#cfbe95] text-[#2c4537]' : 'bg-stone-200 dark:bg-stone-800 text-stone-600'
+                                }`}>
+                                    {invitations.length}
+                                </span>
+                            </button>
 
-                                return (
-                                    <tr key={inv.id} className="hover:bg-[#fbf9f4]/80 dark:hover:bg-muted/20 transition-colors group">
-                                        {/* 1. FAMILIA / TITULAR */}
-                                        <td className="px-5 py-4 align-top">
-                                            <div className="flex flex-col items-start gap-1 min-w-[170px] max-w-[220px]">
-                                                <div className="flex items-center gap-1.5 flex-wrap">
-                                                    <span className="font-bold text-sm text-[#70531c] dark:text-[#f4ecd8] leading-tight">
-                                                        {inv.name}
-                                                    </span>
-                                                    {inv.category && (
-                                                        <Badge variant="outline" className="text-[10px] h-5 border-[#cfbe95] text-[#84662d] bg-[#fbf8f0]">
-                                                            {inv.category}
-                                                        </Badge>
-                                                    )}
-                                                </div>
+                            <button
+                                type="button"
+                                onClick={() => setInvitationFilterSide('bride')}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                                    invitationFilterSide === 'bride'
+                                        ? 'bg-[#934d31] text-white shadow-xs'
+                                        : 'text-stone-600 dark:text-stone-300 hover:text-[#934d31]'
+                                }`}
+                            >
+                                <span>👰 {wedding?.bride_name ? `Novia (${wedding.bride_name})` : 'Novia'}</span>
+                                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                                    invitationFilterSide === 'bride' ? 'bg-[#fad5c7] text-[#934d31]' : 'bg-stone-200 dark:bg-stone-800 text-stone-600'
+                                }`}>
+                                    {brideInvitations.length} ({brideGuestsCount} pases)
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setInvitationFilterSide('groom')}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                                    invitationFilterSide === 'groom'
+                                        ? 'bg-[#2c4537] text-white shadow-xs'
+                                        : 'text-stone-600 dark:text-stone-300 hover:text-[#2c4537]'
+                                }`}
+                            >
+                                <span>🤵 {wedding?.groom_name ? `Novio (${wedding.groom_name})` : 'Novio'}</span>
+                                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                                    invitationFilterSide === 'groom' ? 'bg-[#cfbe95] text-[#2c4537]' : 'bg-stone-200 dark:bg-stone-800 text-stone-600'
+                                }`}>
+                                    {groomInvitations.length} ({groomGuestsCount} pases)
+                                </span>
+                            </button>
+                        </div>
+
+                        {/* Buscador de Invitados */}
+                        <div className="relative flex-1 sm:max-w-xs">
+                            <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <Input 
+                                placeholder="Buscar por familia o invitado..." 
+                                value={invitationSearch}
+                                onChange={(e) => setInvitationSearch(e.target.value)}
+                                className="pl-9 pr-8 h-9 text-xs bg-[#faf8f3] dark:bg-stone-950 border-[#ded8cd] dark:border-stone-800 rounded-xl"
+                            />
+                            {invitationSearch && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => setInvitationSearch('')} 
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 cursor-pointer"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    <Card className="shadow-sm border-[#ded8cd] bg-card overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-[#f5f2eb]/75 dark:bg-muted/40 text-stone-600 dark:text-muted-foreground text-xs uppercase font-semibold border-b border-[#ded8cd]">
+                                <tr>
+                                    <th className="px-5 py-4 font-semibold tracking-wider">Familia / Titular</th>
+                                    <th className="px-5 py-4 font-semibold tracking-wider">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span>Integrantes y Pases</span>
+                                            {invitations.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={toggleExpandAll}
+                                                    className="text-[11px] font-normal normal-case text-stone-500 hover:text-[#2c4537] dark:hover:text-[#cfbe95] underline cursor-pointer"
+                                                >
+                                                    {expandedInvIds.length === invitations.length ? 'Contraer todos' : 'Expandir todos'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </th>
+                                    <th className="px-5 py-4 font-semibold tracking-wider">Mensaje a los Novios</th>
+                                    <th className="px-5 py-4 font-semibold tracking-wider">Estado RSVP</th>
+                                    <th className="px-5 py-4 font-semibold tracking-wider text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#f0ede6] dark:divide-border/40">
+                                {filteredInvitations.map((inv: any) => {
+                                    const isExpanded = expandedInvIds.includes(inv.id);
+                                    const hasDependencies = Boolean(
+                                        inv.status === 'responded' || 
+                                        inv.guests?.some((g: any) => g.has_entered || g.is_attending !== null)
+                                    );
+
+                                    return (
+                                        <tr key={inv.id} className="hover:bg-[#fbf9f4]/80 dark:hover:bg-muted/20 transition-colors group">
+                                            {/* 1. FAMILIA / TITULAR */}
+                                            <td className="px-5 py-4 align-top">
+                                                <div className="flex flex-col items-start gap-1.5 min-w-[170px] max-w-[220px]">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span className="font-bold text-sm text-[#70531c] dark:text-[#f4ecd8] leading-tight">
+                                                            {inv.name}
+                                                        </span>
+                                                        {inv.side === 'groom' ? (
+                                                            <Badge className="text-[10px] h-5 bg-[#e8efe9] text-[#2c4537] border-[#b8d1c0] hover:bg-[#dfebe1] dark:bg-[#203328] dark:text-[#c4ded0] dark:border-[#385645] flex items-center gap-1 font-semibold">
+                                                                <span>🤵</span> Novio
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge className="text-[10px] h-5 bg-[#fcf0ea] text-[#934d31] border-[#f4cbbe] hover:bg-[#fae7de] dark:bg-[#382017] dark:text-[#f5cac0] dark:border-[#5a3324] flex items-center gap-1 font-semibold">
+                                                                <span>👰</span> Novia
+                                                            </Badge>
+                                                        )}
+                                                        {inv.category && (
+                                                            <Badge variant="outline" className="text-[10px] h-5 border-[#cfbe95] text-[#84662d] bg-[#fbf8f0]">
+                                                                {inv.category}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
                                                 {inv.phone && (
                                                     <span className="text-xs text-stone-500 dark:text-stone-400 flex items-center gap-1 font-mono">
                                                         <Phone className="w-3 h-3 text-[#cfbe95]"/> {inv.phone}
@@ -1035,16 +1157,34 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                     </tr>
                                 );
                             })}
-                            {invitations.length === 0 && (
+                            {filteredInvitations.length === 0 && (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-16 text-center">
                                         <div className="flex flex-col items-center justify-center text-gray-400">
                                             <div className="bg-[#f5f2eb] dark:bg-stone-800 p-4 rounded-full mb-4">
                                                 <Users className="w-8 h-8 opacity-50 text-[#cfbe95]" />
                                             </div>
-                                            <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">Sin invitados todavía</p>
-                                            <p className="text-sm mb-4">Agrega tu primera invitación para empezar.</p>
-                                            {!isPlanner && (
+                                            <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                                {invitations.length === 0 ? 'Sin invitados todavía' : 'No se encontraron invitados'}
+                                            </p>
+                                            <p className="text-sm mb-4">
+                                                {invitations.length === 0 
+                                                    ? 'Agrega tu primera invitación para empezar.' 
+                                                    : 'Prueba ajustando el filtro de Novia / Novio o el buscador.'}
+                                            </p>
+                                            {invitations.length > 0 && (invitationFilterSide !== 'all' || invitationSearch) && (
+                                                <Button 
+                                                    onClick={() => {
+                                                        setInvitationFilterSide('all');
+                                                        setInvitationSearch('');
+                                                    }} 
+                                                    variant="outline" 
+                                                    className="cursor-pointer text-xs"
+                                                >
+                                                    Limpiar Filtros
+                                                </Button>
+                                            )}
+                                            {!isPlanner && invitations.length === 0 && (
                                                 <Button onClick={() => setShowModal(true)} variant="outline" className="cursor-pointer">
                                                     Crear primera invitación
                                                 </Button>
@@ -1057,6 +1197,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                     </table>
                 </div>
             </Card>
+            </div>
             ) : (
                 <BanquetSeatingView
                     tables={tables}
@@ -1511,16 +1652,25 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label htmlFor="edit_category" className="text-xs font-bold text-stone-700 dark:text-stone-300">
-                                    Etiqueta / Categoría
+                                <Label htmlFor="edit_side" className="text-xs font-bold text-stone-700 dark:text-stone-300">
+                                    ¿De quién es el invitado? *
                                 </Label>
-                                <Input 
-                                    id="edit_category"
-                                    placeholder="Ej. VIP, Familia Novia, Amigos..."
-                                    value={editFormData.category} 
-                                    onChange={e => setEditFormData({ ...editFormData, category: e.target.value })} 
-                                    className="h-10 bg-white dark:bg-stone-900 border-[#ded8cd]"
-                                />
+                                <Select 
+                                    value={editFormData.side} 
+                                    onValueChange={(val: 'bride' | 'groom') => setEditFormData({ ...editFormData, side: val })}
+                                >
+                                    <SelectTrigger id="edit_side" className="h-10 bg-white dark:bg-stone-900 border-[#ded8cd] text-xs">
+                                        <SelectValue placeholder="Seleccionar..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="bride" className="text-xs py-2 cursor-pointer">
+                                            👰 Invitados de la Novia {wedding?.bride_name ? `(${wedding.bride_name})` : ''}
+                                        </SelectItem>
+                                        <SelectItem value="groom" className="text-xs py-2 cursor-pointer">
+                                            🤵 Invitados del Novio {wedding?.groom_name ? `(${wedding.groom_name})` : ''}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
@@ -1538,8 +1688,23 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                 />
                             </div>
                             <div className="space-y-1.5">
+                                <Label htmlFor="edit_category" className="text-xs font-bold text-stone-700 dark:text-stone-300">
+                                    Etiqueta / Categoría
+                                </Label>
+                                <Input 
+                                    id="edit_category"
+                                    placeholder="Ej. VIP, Familia, Amigos..."
+                                    value={editFormData.category} 
+                                    onChange={e => setEditFormData({ ...editFormData, category: e.target.value })} 
+                                    className="h-10 bg-white dark:bg-stone-900 border-[#ded8cd]"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-1">
+                            <div className="space-y-1.5">
                                 <Label htmlFor="edit_deadline" className="text-xs font-bold text-stone-700 dark:text-stone-300">
-                                    Límite RSVP Especial
+                                    Límite RSVP Especial (Opcional)
                                 </Label>
                                 <Input 
                                     id="edit_deadline"
@@ -1823,7 +1988,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                     <form onSubmit={handleSubmit} className="space-y-6 pt-4">
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="name">Nombre (Ej. Familia Pérez)</Label>
+                                <Label htmlFor="name">Nombre (Ej. Familia Pérez) *</Label>
                                 <Input 
                                     id="name"
                                     placeholder="Nombre a mostrar"
@@ -1833,13 +1998,25 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="category">Etiqueta (VIP, Foráneos...)</Label>
-                                <Input 
-                                    id="category"
-                                    placeholder="Clasificación opcional"
-                                    value={formData.category} 
-                                    onChange={e => setFormData({...formData, category: e.target.value})} 
-                                />
+                                <Label htmlFor="side" className="text-xs font-bold text-stone-700 dark:text-stone-300">
+                                    ¿De quién es el invitado? *
+                                </Label>
+                                <Select 
+                                    value={formData.side} 
+                                    onValueChange={(val: 'bride' | 'groom') => setFormData({ ...formData, side: val })}
+                                >
+                                    <SelectTrigger id="side" className="h-10 bg-white dark:bg-stone-900 border-[#ded8cd] text-xs">
+                                        <SelectValue placeholder="Seleccionar..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="bride" className="text-xs py-2 cursor-pointer">
+                                            👰 Invitados de la Novia {wedding?.bride_name ? `(${wedding.bride_name})` : ''}
+                                        </SelectItem>
+                                        <SelectItem value="groom" className="text-xs py-2 cursor-pointer">
+                                            🤵 Invitados del Novio {wedding?.groom_name ? `(${wedding.groom_name})` : ''}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                         <div className="grid gap-4 md:grid-cols-2">
@@ -1852,6 +2029,17 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                     onChange={e => setFormData({...formData, phone: e.target.value})} 
                                 />
                             </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="category">Etiqueta (VIP, Amigos, etc.)</Label>
+                                <Input 
+                                    id="category"
+                                    placeholder="Clasificación opcional"
+                                    value={formData.category} 
+                                    onChange={e => setFormData({...formData, category: e.target.value})} 
+                                />
+                            </div>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-1">
                             <div className="space-y-2">
                                 <Label htmlFor="rsvp_deadline">Fecha Límite Especial (Opcional)</Label>
                                 <Input 
