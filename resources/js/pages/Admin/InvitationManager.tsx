@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BanquetSeatingView from './Partials/BanquetSeatingView';
+import LuxuryModal from '@/components/LuxuryModal';
 
 interface TableGuest {
     id: number;
@@ -47,6 +48,12 @@ interface TableItem {
     notes?: string;
     guests_count: number;
     guests?: TableGuest[];
+    pos_x?: number;
+    pos_y?: number;
+    shape?: 'round' | 'rectangular' | 'head';
+    rotation?: number;
+    width?: number;
+    height?: number;
 }
 
 interface InvitationManagerProps {
@@ -65,6 +72,43 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         initialTab === 'tables' ? 'tables' : 'invitations'
     );
     const [tableSearch, setTableSearch] = useState('');
+
+    // Modal de lujo para alertas y confirmaciones
+    const [luxuryModalState, setLuxuryModalState] = useState<{
+        open: boolean;
+        title: string;
+        description: string;
+        type?: 'warning' | 'info' | 'success' | 'danger' | 'error';
+        confirmText?: string;
+        cancelText?: string;
+        onConfirm?: () => void;
+    }>({
+        open: false,
+        title: '',
+        description: '',
+    });
+
+    const showAlertModal = (title: string, description: string, type: 'warning' | 'info' | 'success' | 'error' = 'warning') => {
+        setLuxuryModalState({
+            open: true,
+            title,
+            description,
+            type,
+            confirmText: 'Entendido',
+        });
+    };
+
+    const showConfirmModal = (title: string, description: string, onConfirm: () => void, confirmText = 'Sí, Eliminar') => {
+        setLuxuryModalState({
+            open: true,
+            title,
+            description,
+            type: 'danger',
+            confirmText,
+            cancelText: 'Cancelar',
+            onConfirm,
+        });
+    };
 
     // Estado para nueva invitación
     const [showModal, setShowModal] = useState(false);
@@ -118,11 +162,11 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
 
     // Estado para el modal de gestión de mesas
     const [showTableModal, setShowTableModal] = useState(false);
-    const [newTableData, setNewTableData] = useState({ name: '', capacity: 10, notes: '' });
+    const [newTableData, setNewTableData] = useState<{ name: string; capacity: number; notes: string; shape: string; width?: number; height?: number }>({ name: '', capacity: 10, notes: '', shape: 'round', width: 150, height: 150 });
     const [tableSubmitting, setTableSubmitting] = useState(false);
     const [tableError, setTableError] = useState<string | null>(null);
     const [editingTableId, setEditingTableId] = useState<number | null>(null);
-    const [editTableData, setEditTableData] = useState({ name: '', capacity: 10, notes: '' });
+    const [editTableData, setEditTableData] = useState<{ name: string; capacity: number; notes: string; shape: string; width?: number; height?: number }>({ name: '', capacity: 10, notes: '', shape: 'round', width: 150, height: 150 });
 
     // Estado para desplegar / contraer lista de integrantes
     const [expandedInvIds, setExpandedInvIds] = useState<number[]>([]);
@@ -315,7 +359,11 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
     const removeEditGuestField = (index: number) => {
         const target = editFormData.guests[index];
         if (target?.has_entered) {
-            alert('No se puede retirar a un integrante que ya ingresó al evento.');
+            showAlertModal(
+                'Pase Protegido',
+                'No se puede retirar a un integrante que ya ingresó al evento por control de acceso.',
+                'warning'
+            );
             return;
         }
         setEditFormData({
@@ -370,7 +418,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
             onFinish: () => setDeleteConfirmId(null),
             onError: (errors: any) => {
                 if (errors?.invitation) {
-                    alert(errors.invitation);
+                    showAlertModal('Acción No Permitida', errors.invitation, 'error');
                 }
             }
         });
@@ -416,7 +464,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
 
         router.post('/admin/tables', newTableData, {
             onSuccess: () => {
-                setNewTableData({ name: '', capacity: 10, notes: '' });
+                setNewTableData({ name: '', capacity: 10, notes: '', shape: 'round', width: 150, height: 150 });
                 setTableSubmitting(false);
             },
             onError: (err: any) => {
@@ -434,8 +482,12 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
             name: table.name,
             capacity: table.capacity,
             notes: table.notes || '',
+            shape: table.shape || 'round',
+            width: table.width || (table.shape === 'rectangular' ? 210 : table.shape === 'head' ? 240 : 150),
+            height: table.height || (table.shape === 'rectangular' ? 100 : table.shape === 'head' ? 110 : 150),
         });
         setTableError(null);
+        setShowTableModal(true);
     };
 
     const handleUpdateTable = (tableId: number) => {
@@ -457,10 +509,16 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
     };
 
     const handleDeleteTable = (tableId: number) => {
-        if (!confirm('¿Deseas eliminar esta mesa? Los invitados asignados a ella quedarán sin mesa asignada.')) return;
-        router.delete(`/admin/tables/${tableId}`, {
-            onError: () => setTableError('Error al eliminar la mesa.')
-        });
+        const table = tables.find(t => t.id === tableId);
+        showConfirmModal(
+            '¿Eliminar Mesa?',
+            `¿Deseas eliminar la mesa "${table?.name || 'seleccionada'}"? Los invitados asignados a ella quedarán sin mesa asignada para que puedas reubicarlos libremente.`,
+            () => {
+                router.delete(`/admin/tables/${tableId}`, {
+                    onError: () => setTableError('Error al eliminar la mesa.')
+                });
+            }
+        );
     };
 
     // Generador de texto para WhatsApp
@@ -1015,6 +1073,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                         setEditingTableId(null);
                         setShowTableModal(true);
                     }}
+                    venueElements={wedding.venue_elements_list || []}
                 />
             )}
 
@@ -1105,14 +1164,75 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <Label className="text-xs">Notas (Opcional)</Label>
-                                    <Input 
-                                        placeholder="Ej. Cerca de la pista, junto a los novios, terraza..."
-                                        value={editTableData.notes} 
-                                        onChange={e => setEditTableData({ ...editTableData, notes: e.target.value })} 
-                                        className="h-9"
-                                    />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Forma en el Plano 2D</Label>
+                                        <Select 
+                                            value={editTableData.shape} 
+                                            onValueChange={(val: any) => {
+                                                const defaultW = val === 'rectangular' ? 210 : val === 'head' ? 240 : 150;
+                                                const defaultH = val === 'rectangular' ? 100 : val === 'head' ? 110 : 150;
+                                                setEditTableData({ ...editTableData, shape: val, width: defaultW, height: defaultH });
+                                            }}
+                                        >
+                                            <SelectTrigger className="h-9 text-xs">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="round">🟢 Mesa Redonda (Banquete)</SelectItem>
+                                                <SelectItem value="rectangular">▭ Mesa Rectangular (Imperial)</SelectItem>
+                                                <SelectItem value="head">👑 Mesa de Honor (Novios)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Notas (Opcional)</Label>
+                                        <Input 
+                                            placeholder="Ej. Cerca de la pista, junto a los novios, terraza..."
+                                            value={editTableData.notes} 
+                                            onChange={e => setEditTableData({ ...editTableData, notes: e.target.value })} 
+                                            className="h-9"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs font-semibold">Ancho / Diámetro (px)</Label>
+                                        <Input 
+                                            type="number"
+                                            min={60}
+                                            max={600}
+                                            value={editTableData.width || 150} 
+                                            onChange={e => {
+                                                const w = parseInt(e.target.value) || 150;
+                                                setEditTableData({ 
+                                                    ...editTableData, 
+                                                    width: w, 
+                                                    height: editTableData.shape === 'round' ? w : (editTableData.height || 100) 
+                                                });
+                                            }}
+                                            className="h-9"
+                                        />
+                                    </div>
+                                    {editTableData.shape !== 'round' ? (
+                                        <div className="space-y-1">
+                                            <Label className="text-xs font-semibold">Alto (px)</Label>
+                                            <Input 
+                                                type="number"
+                                                min={40}
+                                                max={400}
+                                                value={editTableData.height || 100} 
+                                                onChange={e => setEditTableData({ ...editTableData, height: parseInt(e.target.value) || 100 })} 
+                                                className="h-9"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1 flex flex-col justify-end">
+                                            <span className="text-[11px] text-stone-400 italic pb-2">
+                                                * El ancho define el diámetro del círculo.
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex justify-end gap-2 pt-1">
                                     <Button 
@@ -1163,14 +1283,75 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <Label className="text-xs">Notas (Opcional)</Label>
-                                    <Input 
-                                        placeholder="Ej. Pista principal, terraza, mesa redonda..."
-                                        value={newTableData.notes} 
-                                        onChange={e => setNewTableData({ ...newTableData, notes: e.target.value })} 
-                                        className="h-9"
-                                    />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Forma en el Plano 2D</Label>
+                                        <Select 
+                                            value={newTableData.shape} 
+                                            onValueChange={(val: any) => {
+                                                const defaultW = val === 'rectangular' ? 210 : val === 'head' ? 240 : 150;
+                                                const defaultH = val === 'rectangular' ? 100 : val === 'head' ? 110 : 150;
+                                                setNewTableData({ ...newTableData, shape: val, width: defaultW, height: defaultH });
+                                            }}
+                                        >
+                                            <SelectTrigger className="h-9 text-xs">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="round">🟢 Mesa Redonda (Banquete)</SelectItem>
+                                                <SelectItem value="rectangular">▭ Mesa Rectangular (Imperial)</SelectItem>
+                                                <SelectItem value="head">👑 Mesa de Honor (Novios)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Notas (Opcional)</Label>
+                                        <Input 
+                                            placeholder="Ej. Pista principal, terraza, mesa redonda..."
+                                            value={newTableData.notes} 
+                                            onChange={e => setNewTableData({ ...newTableData, notes: e.target.value })} 
+                                            className="h-9"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs font-semibold">Ancho / Diámetro (px)</Label>
+                                        <Input 
+                                            type="number"
+                                            min={60}
+                                            max={600}
+                                            value={newTableData.width || 150} 
+                                            onChange={e => {
+                                                const w = parseInt(e.target.value) || 150;
+                                                setNewTableData({ 
+                                                    ...newTableData, 
+                                                    width: w, 
+                                                    height: newTableData.shape === 'round' ? w : (newTableData.height || 100) 
+                                                });
+                                            }}
+                                            className="h-9"
+                                        />
+                                    </div>
+                                    {newTableData.shape !== 'round' ? (
+                                        <div className="space-y-1">
+                                            <Label className="text-xs font-semibold">Alto (px)</Label>
+                                            <Input 
+                                                type="number"
+                                                min={40}
+                                                max={400}
+                                                value={newTableData.height || 100} 
+                                                onChange={e => setNewTableData({ ...newTableData, height: parseInt(e.target.value) || 100 })} 
+                                                className="h-9"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1 flex flex-col justify-end">
+                                            <span className="text-[11px] text-stone-400 italic pb-2">
+                                                * El ancho define el diámetro del círculo.
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex justify-end pt-1">
                                     <Button 
@@ -1837,6 +2018,18 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* MODAL DE LUJO PARA ALERTAS Y CONFIRMACIONES */}
+            <LuxuryModal
+                open={luxuryModalState.open}
+                onClose={() => setLuxuryModalState(prev => ({ ...prev, open: false }))}
+                title={luxuryModalState.title}
+                description={luxuryModalState.description}
+                type={luxuryModalState.type}
+                confirmText={luxuryModalState.confirmText}
+                cancelText={luxuryModalState.cancelText}
+                onConfirm={luxuryModalState.onConfirm}
+            />
         </div>
     );
 }

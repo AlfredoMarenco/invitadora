@@ -9,7 +9,61 @@ class Wedding extends Model
 {
     protected $guarded = [];
 
-    protected $appends = ['music_url', 'gift_registries_list', 'timeline_list'];
+    protected $appends = ['music_url', 'gift_registries_list', 'timeline_list', 'venue_elements_list'];
+
+    public function getVenueElementsListAttribute(): array
+    {
+        if (!empty($this->venue_elements) && is_array($this->venue_elements) && count($this->venue_elements) > 0) {
+            return $this->venue_elements;
+        }
+
+        return [
+            [
+                'id' => 'stage-1',
+                'type' => 'stage',
+                'title' => 'ESCENARIO & GRUPO MUSICAL',
+                'subtitle' => 'Zona de Sonido e Iluminación',
+                'x' => 450,
+                'y' => 30,
+                'width' => 380,
+                'height' => 75,
+                'shape' => 'rectangle',
+            ],
+            [
+                'id' => 'dancefloor-1',
+                'type' => 'dancefloor',
+                'title' => 'PISTA DE BAILE',
+                'subtitle' => 'A & J',
+                'x' => 470,
+                'y' => 160,
+                'width' => 340,
+                'height' => 220,
+                'shape' => 'rectangle',
+            ],
+            [
+                'id' => 'bar-1',
+                'type' => 'bar',
+                'title' => 'BARRA LIBRE',
+                'subtitle' => 'Mixología & Cócteles',
+                'x' => 960,
+                'y' => 160,
+                'width' => 170,
+                'height' => 180,
+                'shape' => 'rectangle',
+            ],
+            [
+                'id' => 'entrance-1',
+                'type' => 'entrance',
+                'title' => 'ACCESO PRINCIPAL',
+                'subtitle' => 'Entrada de Invitados',
+                'x' => 490,
+                'y' => 880,
+                'width' => 300,
+                'height' => 50,
+                'shape' => 'pill',
+            ],
+        ];
+    }
 
     public function getTimelineListAttribute(): array
     {
@@ -109,6 +163,7 @@ class Wedding extends Model
             'locations' => 'array',
             'timeline' => 'array',
             'gift_registries' => 'array',
+            'venue_elements' => 'array',
             'wedding_date' => 'datetime',
             'rsvp_deadline' => 'date',
         ];

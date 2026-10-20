@@ -19,6 +19,9 @@ Route::put('invitations/{invitation}/assign-table', [InvitationController::class
 use App\Http\Controllers\Admin\GuestController;
 use App\Http\Controllers\Admin\WeddingTableController;
 
+Route::put('tables/batch-positions', [WeddingTableController::class, 'batchPositions'])->name('admin.tables.batch-positions');
+Route::put('tables/{table}/position', [WeddingTableController::class, 'updatePosition'])->name('admin.tables.update-position');
+Route::put('venue-elements', [WeddingTableController::class, 'updateVenueElements'])->name('admin.venue-elements.update');
 Route::resource('tables', WeddingTableController::class)->except(['create', 'show', 'edit']);
 Route::put('guests/{guest}', [GuestController::class, 'update'])->name('admin.guests.update');
 

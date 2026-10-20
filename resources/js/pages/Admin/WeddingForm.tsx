@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
+import LuxuryModal from '@/components/LuxuryModal';
 
 interface WeddingFormProps {
     wedding: any;
@@ -8,6 +9,7 @@ interface WeddingFormProps {
 export default function WeddingForm({ wedding }: WeddingFormProps) {
     const { auth } = usePage().props;
     const isPlanner = auth.user.role === 'wedding_planner';
+    const [alertModal, setAlertModal] = useState<{ open: boolean; title: string; message: string }>({ open: false, title: '', message: '' });
 
     const { data, setData, post, put, processing, errors } = useForm({
         bride_name: wedding?.bride_name || '',
@@ -74,11 +76,11 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                 newTimeline[index].icon_url = result.url;
                 setData('timeline', newTimeline);
             } else {
-                alert(result.message || 'Error al subir el icono.');
+                setAlertModal({ open: true, title: 'Error al subir icono', message: result.message || 'No se pudo subir la imagen del icono.' });
             }
         } catch (err) {
             console.error('Error uploading icon:', err);
-            alert('Hubo un error al subir el icono.');
+            setAlertModal({ open: true, title: 'Error de conexión', message: 'Hubo un error al subir el icono.' });
         } finally {
             setUploadingIndex(null);
         }
@@ -570,6 +572,14 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                     )}
                 </form>
             </div>
+
+            <LuxuryModal
+                open={alertModal.open}
+                onClose={() => setAlertModal(prev => ({ ...prev, open: false }))}
+                title={alertModal.title}
+                description={alertModal.message}
+                type="error"
+            />
         </>
     );
 }

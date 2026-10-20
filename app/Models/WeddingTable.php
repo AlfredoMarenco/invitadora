@@ -16,6 +16,11 @@ class WeddingTable extends Model
     {
         return [
             'capacity' => 'integer',
+            'pos_x' => 'float',
+            'pos_y' => 'float',
+            'rotation' => 'integer',
+            'width' => 'integer',
+            'height' => 'integer',
         ];
     }
 

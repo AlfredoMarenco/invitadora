@@ -22,6 +22,12 @@ class WeddingTableController extends Controller
             'name' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1|max:100',
             'notes' => 'nullable|string|max:500',
+            'pos_x' => 'nullable|numeric',
+            'pos_y' => 'nullable|numeric',
+            'shape' => 'nullable|string|in:round,rectangular,head',
+            'rotation' => 'nullable|integer',
+            'width' => 'nullable|integer|min:40|max:800',
+            'height' => 'nullable|integer|min:40|max:800',
         ]);
 
         $wedding->tables()->create($validated);
@@ -35,6 +41,12 @@ class WeddingTableController extends Controller
             'name' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1|max:100',
             'notes' => 'nullable|string|max:500',
+            'pos_x' => 'nullable|numeric',
+            'pos_y' => 'nullable|numeric',
+            'shape' => 'nullable|string|in:round,rectangular,head',
+            'rotation' => 'nullable|integer',
+            'width' => 'nullable|integer|min:40|max:800',
+            'height' => 'nullable|integer|min:40|max:800',
         ]);
 
         $currentGuestsCount = $table->guests()->count();
@@ -50,6 +62,65 @@ class WeddingTableController extends Controller
         $table->guests()->update(['table_name' => $table->name]);
 
         return back()->with('success', 'Mesa actualizada correctamente.');
+    }
+
+    public function updatePosition(Request $request, WeddingTable $table)
+    {
+        $validated = $request->validate([
+            'pos_x' => 'required|numeric',
+            'pos_y' => 'required|numeric',
+            'rotation' => 'nullable|integer',
+            'shape' => 'nullable|string|in:round,rectangular,head',
+            'width' => 'nullable|integer|min:40|max:800',
+            'height' => 'nullable|integer|min:40|max:800',
+        ]);
+
+        $table->update($validated);
+
+        return back()->with('success', 'Posición de mesa actualizada.');
+    }
+
+    public function batchPositions(Request $request)
+    {
+        $validated = $request->validate([
+            'tables' => 'required|array',
+            'tables.*.id' => 'required|exists:wedding_tables,id',
+            'tables.*.pos_x' => 'required|numeric',
+            'tables.*.pos_y' => 'required|numeric',
+            'tables.*.rotation' => 'nullable|integer',
+            'tables.*.shape' => 'nullable|string|in:round,rectangular,head',
+            'tables.*.width' => 'nullable|integer|min:40|max:800',
+            'tables.*.height' => 'nullable|integer|min:40|max:800',
+        ]);
+
+        foreach ($validated['tables'] as $tData) {
+            $updateData = [
+                'pos_x' => $tData['pos_x'],
+                'pos_y' => $tData['pos_y'],
+                'rotation' => $tData['rotation'] ?? 0,
+                'shape' => $tData['shape'] ?? 'round',
+            ];
+            if (isset($tData['width'])) $updateData['width'] = $tData['width'];
+            if (isset($tData['height'])) $updateData['height'] = $tData['height'];
+
+            WeddingTable::where('id', $tData['id'])->update($updateData);
+        }
+
+        return back()->with('success', 'Distribución de mesas guardada correctamente.');
+    }
+
+    public function updateVenueElements(Request $request)
+    {
+        $validated = $request->validate([
+            'elements' => 'present|array',
+        ]);
+
+        $wedding = Wedding::firstOrFail();
+        $wedding->update([
+            'venue_elements' => $validated['elements'],
+        ]);
+
+        return back()->with('success', 'Zonas y estructuras del salón guardadas correctamente.');
     }
 
     public function destroy(WeddingTable $table)
