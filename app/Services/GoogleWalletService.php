@@ -41,14 +41,22 @@ class GoogleWalletService
         $weddingDateText = $wedding->wedding_date ? $wedding->wedding_date->format('d/m/Y') : '20/02/2027';
         $location = $wedding->locations['reception'] ?? 'Hacienda San Diego Cutz';
 
+        // Los IDs en Google Wallet deben ser alfanuméricos con punto, guión o guión bajo
+        $cleanCode = preg_replace('/[^A-Za-z0-9_-]/', '', $guest->checkin_code ?? 'CODE');
         $classId = "{$issuerId}.wedding_{$wedding->id}";
-        $objectId = "{$issuerId}.guest_{$guest->id}_{$guest->checkin_code}";
+        $objectId = "{$issuerId}.guest_{$guest->id}_{$cleanCode}";
 
-        // Objeto Genérico de Pase Oficial para Google Wallet
+        // 1. Clase Genérica (Plantilla del Evento): Debe incluirse para que Google la cree automáticamente al vuelo
+        $genericClass = [
+            'id' => $classId,
+            'hexBackgroundColor' => '#28362e',
+        ];
+
+        // 2. Objeto Genérico de Pase Oficial para el invitado
         $genericObject = [
             'id' => $objectId,
             'classId' => $classId,
-            'genericType' => 'GENERIC_TICKET',
+            'genericType' => 'GENERIC_OTHER',
             'hexBackgroundColor' => '#28362e',
             'cardTitle' => [
                 'defaultValue' => [
@@ -103,6 +111,7 @@ class GoogleWalletService
             'typ' => 'savetowallet',
             'iat' => time(),
             'payload' => [
+                'genericClasses' => [$genericClass],
                 'genericObjects' => [$genericObject],
             ],
         ];
