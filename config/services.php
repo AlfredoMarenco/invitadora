@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'google_wallet' => [
+        'issuer_id' => env('GOOGLE_WALLET_ISSUER_ID'),
+        'client_email' => env('GOOGLE_WALLET_CLIENT_EMAIL'),
+        'private_key' => env('GOOGLE_WALLET_PRIVATE_KEY'),
+    ],
+
 ];

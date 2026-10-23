@@ -63,9 +63,39 @@ export default function DigitalPassCard({
     });
 
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isSavingWallet, setIsSavingWallet] = useState(false);
 
     // Formatear código con espacio para lectura visual fácil (ej. AJ - 8K9N2)
     const formattedCode = guest.checkin_code || 'AJ-BOLETO';
+
+    // Manejar enlace a Google Wallet
+    const handleGoogleWallet = async () => {
+        setIsSavingWallet(true);
+        try {
+            const res = await fetch(`/public/pass/${encodeURIComponent(guest.checkin_code || guest.id)}/google-wallet`, {
+                headers: { 'Accept': 'application/json' },
+            });
+            const data = await res.json();
+
+            if (data.success && data.url) {
+                window.open(data.url, '_blank');
+                toast.success('Abriendo pase en Google Wallet...');
+            } else if (data.configured === false) {
+                toast.info('Pase digital listo', {
+                    description: 'Puedes guardarlo directamente en tu galería de Fotos con el botón superior.',
+                });
+            } else {
+                toast.error(data.message || 'No se pudo conectar con Google Wallet');
+            }
+        } catch (e) {
+            console.error('Error connecting to Google Wallet:', e);
+            toast.info('Pase digital listo', {
+                description: 'Puedes guardarlo en tu carrete de Fotos para tenerlo disponible sin conexión.',
+            });
+        } finally {
+            setIsSavingWallet(false);
+        }
+    };
 
     // Manejar envío por WhatsApp al acompañante
     const handleShareWhatsApp = () => {
@@ -439,18 +469,15 @@ export default function DigitalPassCard({
                         <span>Enviar por WhatsApp</span>
                     </button>
 
-                    {/* Botón: Apple Wallet / Smartphone Wallet */}
+                    {/* Botón: Google Wallet */}
                     <button
                         type="button"
-                        onClick={() => {
-                            toast.info('Tu pase digital está listo y guardado. También puedes descargarlo en Fotos.', {
-                                description: 'Presenta el código QR directamente al llegar al salón.'
-                            });
-                        }}
-                        className="py-2 px-3 rounded-xl bg-black hover:bg-stone-900 text-white font-sans text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                        onClick={handleGoogleWallet}
+                        disabled={isSavingWallet}
+                        className="py-2 px-3 rounded-xl bg-black hover:bg-stone-900 text-white font-sans text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-70"
                     >
                         <Smartphone className="w-3.5 h-3.5 text-white" />
-                        <span>Wallet Digital</span>
+                        <span>{isSavingWallet ? 'Conectando...' : 'Google Wallet'}</span>
                     </button>
                 </div>
             </div>

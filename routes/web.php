@@ -13,6 +13,7 @@ Route::get('/', function () {
     return Inertia::render('invitation', [
         'wedding' => $wedding,
         'invitation' => null,
+        'rsvp' => $wedding?->rsvpWindow() ?? ['deadline' => null, 'closed' => false],
     ]);
 })->name('home');
 

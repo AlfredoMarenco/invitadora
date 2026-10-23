@@ -44,6 +44,8 @@ class WeddingController extends Controller
             'bank_transfer_info' => 'nullable|string',
             'dress_code' => 'nullable|string',
             'rsvp_deadline' => 'nullable|date',
+            'rsvp_notification_email' => 'nullable|string|max:500',
+            'notify_on_rsvp' => 'nullable|boolean',
             'song_title' => 'nullable|string|max:255',
             'song_artist' => 'nullable|string|max:255',
             'background_audio' => 'nullable|file|mimes:mp3,wav,m4a,aac,ogg|max:51200', // max 50mb

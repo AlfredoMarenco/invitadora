@@ -13,3 +13,7 @@ Route::match(['put', 'post'], '/public/rsvp/{token}', [PublicRsvpController::cla
 // Ruta para ver la landing page con el token de confirmación
 Route::get('/public/rsvp/{token}', [PublicWeddingController::class, 'showWithToken'])->name('public.wedding.rsvp');
 
+// Endpoint para guardar o abrir pase en Google Wallet
+use App\Http\Controllers\Public\PublicPassController;
+Route::get('/public/pass/{code}/google-wallet', [PublicPassController::class, 'googleWallet'])->name('public.pass.google-wallet');
+

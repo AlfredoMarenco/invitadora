@@ -24,7 +24,8 @@ class PublicWeddingController extends Controller
 
         return Inertia::render('invitation', [
             'wedding' => $wedding,
-            'invitation' => null // Sin invitación
+            'invitation' => null, // Sin invitación
+            'rsvp' => $wedding->rsvpWindow(),
         ]);
     }
 
@@ -49,9 +50,14 @@ class PublicWeddingController extends Controller
             $invitation->update(['status' => 'viewed']);
         }
 
+        $invitation->setRelation('wedding', $wedding);
+        $rsvpWindow = $invitation->rsvpWindow();
+        $invitation->unsetRelation('wedding'); // Evita duplicar la boda dentro del payload
+
         return Inertia::render('invitation', [
             'wedding' => $wedding,
-            'invitation' => $invitation
+            'invitation' => $invitation,
+            'rsvp' => $rsvpWindow,
         ]);
     }
 }

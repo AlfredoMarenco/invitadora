@@ -35,6 +35,8 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
             { time: '02:00', title: 'CLAUSURA', description: 'Fin de la celebración', icon_url: '/resources_canvas/images/10.svg' },
         ]),
         rsvp_deadline: wedding?.rsvp_deadline ? wedding.rsvp_deadline.split('T')[0] : '',
+        rsvp_notification_email: wedding?.rsvp_notification_email || '',
+        notify_on_rsvp: wedding?.notify_on_rsvp ?? true,
         song_title: wedding?.song_title || '',
         song_artist: wedding?.song_artist || '',
         background_audio: null,
@@ -96,16 +98,16 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
         setData('timeline', newTimeline);
     };
 
-    const submit = (e) => {
+    const submit = (e: React.FormEvent) => {
         e.preventDefault();
         
         // Convert comma separated strings to arrays for JSON storage
         const payload = {
             ...data,
-            bride_parents: data.bride_parents ? data.bride_parents.split(',').map(n => n.trim()) : [],
-            groom_parents: data.groom_parents ? data.groom_parents.split(',').map(n => n.trim()) : [],
-            bride_godparents: data.bride_godparents ? data.bride_godparents.split(',').map(n => n.trim()) : [],
-            groom_godparents: data.groom_godparents ? data.groom_godparents.split(',').map(n => n.trim()) : [],
+            bride_parents: data.bride_parents ? data.bride_parents.split(',').map((n: string) => n.trim()) : [],
+            groom_parents: data.groom_parents ? data.groom_parents.split(',').map((n: string) => n.trim()) : [],
+            bride_godparents: data.bride_godparents ? data.bride_godparents.split(',').map((n: string) => n.trim()) : [],
+            groom_godparents: data.groom_godparents ? data.groom_godparents.split(',').map((n: string) => n.trim()) : [],
             _method: 'put',
         };
 
@@ -191,6 +193,49 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* SECCIÓN: NOTIFICACIONES DE CONFIRMACIÓN */}
+                    <div>
+                        <h3 className="text-lg font-bold border-b pb-2 mb-4">Avisos y Notificaciones de Confirmación</h3>
+                        <div className="bg-[#fcfaf7] border border-[#e7dfd1] rounded-xl p-5 space-y-4">
+                            <div className="flex items-start gap-3">
+                                <input
+                                    type="checkbox"
+                                    id="notify_on_rsvp"
+                                    checked={data.notify_on_rsvp}
+                                    onChange={e => setData('notify_on_rsvp', e.target.checked)}
+                                    className="mt-1 h-4 w-4 rounded border-zinc-300 text-[#28362e] focus:ring-[#698175] cursor-pointer"
+                                />
+                                <label htmlFor="notify_on_rsvp" className="text-sm font-medium text-zinc-800 cursor-pointer">
+                                    Enviar notificación inmediata por correo cuando alguien confirme o responda su asistencia
+                                    <span className="block text-xs text-zinc-500 font-normal mt-0.5">
+                                        Las confirmaciones también se guardan en la campana de notificaciones de la barra superior del panel.
+                                    </span>
+                                </label>
+                            </div>
+
+                            {data.notify_on_rsvp && (
+                                <div className="pt-2 pl-7">
+                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                        Correos de los Novios para recibir los avisos (Separados por coma)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="ejemplo: novia@gmail.com, novio@gmail.com"
+                                        className="w-full max-w-xl rounded-md border-zinc-300 shadow-sm px-3 py-2 border focus:ring-[#698175] focus:border-[#698175] text-sm"
+                                        value={data.rsvp_notification_email}
+                                        onChange={e => setData('rsvp_notification_email', e.target.value)}
+                                    />
+                                    {errors.rsvp_notification_email && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.rsvp_notification_email}</p>
+                                    )}
+                                    <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
+                                        ✨ Se enviará un correo elegante y brandeado con el nombre de los invitados, cuántos pases confirmaron, alergias alimentarias y el mensaje dedicatorio. Si se deja vacío, se enviará al correo de la cuenta administradora actual.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -398,7 +443,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                                     No hay eventos en el itinerario aún. Haz clic en <strong>"+ Agregar Evento"</strong> para comenzar.
                                 </div>
                             ) : (
-                                data.timeline.map((event, index) => (
+                                data.timeline.map((event: any, index: number) => (
                                     <div
                                         key={index}
                                         className="flex flex-col lg:flex-row gap-5 items-start p-4 sm:p-5 bg-white border border-zinc-200 rounded-xl shadow-xs relative group hover:border-[#698175]/50 transition"
@@ -543,7 +588,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        const newTimeline = data.timeline.filter((_, i) => i !== index);
+                                                        const newTimeline = data.timeline.filter((_: any, i: number) => i !== index);
                                                         setData('timeline', newTimeline);
                                                     }}
                                                     title="Eliminar evento"

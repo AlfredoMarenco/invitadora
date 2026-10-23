@@ -165,7 +165,28 @@ class Wedding extends Model
             'gift_registries' => 'array',
             'venue_elements' => 'array',
             'wedding_date' => 'datetime',
-            'rsvp_deadline' => 'date',
+            'rsvp_deadline' => 'date:Y-m-d',
+            'notify_on_rsvp' => 'boolean',
+        ];
+    }
+
+    /**
+     * La confirmación se permite durante todo el día límite y se cierra al día siguiente.
+     */
+    public function isRsvpClosed(): bool
+    {
+        return $this->rsvp_deadline !== null
+            && now()->startOfDay()->gt($this->rsvp_deadline->copy()->startOfDay());
+    }
+
+    /**
+     * @return array{deadline: ?string, closed: bool}
+     */
+    public function rsvpWindow(): array
+    {
+        return [
+            'deadline' => $this->rsvp_deadline?->format('Y-m-d'),
+            'closed' => $this->isRsvpClosed(),
         ];
     }
 

@@ -77,9 +77,11 @@ export interface WeddingProps {
         timeline_list?: Array<{ time: string; title: string; description?: string; icon_url?: string }>;
     };
     invitation?: InvitationData | null;
+    /** Ventana de confirmación calculada en el servidor (fecha límite efectiva Y-m-d y si ya cerró) */
+    rsvp?: { deadline: string | null; closed: boolean } | null;
 }
 
-export default function InvitationMobile({ wedding, invitation }: WeddingProps) {
+export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingProps) {
     const brideName = wedding?.bride_name || 'Adriana';
     const groomName = wedding?.groom_name || 'Joaquín';
     const dateText = wedding?.wedding_date
@@ -104,6 +106,17 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
             return '20 | FEB | 2027';
         }
     }, [wedding?.wedding_date]);
+
+    // Fecha límite de confirmación (llega como "Y-m-d"; se formatea sin desfase de zona horaria)
+    const rsvpClosed = !!rsvp?.closed;
+    const rsvpDeadlineText = useMemo(() => {
+        if (!rsvp?.deadline) return '';
+        const [y, m, d] = rsvp.deadline.split('-').map(Number);
+        if (!y || !m || !d) return '';
+        return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('es-MX', {
+            day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+        });
+    }, [rsvp?.deadline]);
 
     const songTitle = wedding?.song_title || 'RESTO DE MI VIDA';
 
@@ -1491,13 +1504,19 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                         )}
 
                                         <div className="mt-6 pt-3 border-t border-stone-100 w-full text-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => setRsvpSubmitted(false)}
-                                                className="font-serif text-[11px] tracking-wider uppercase text-[#788a80] underline hover:text-[#556c7d] cursor-pointer"
-                                            >
-                                                Modificar respuesta
-                                            </button>
+                                            {rsvpClosed ? (
+                                                <p className="font-serif text-[11px] text-stone-400 italic">
+                                                    Las confirmaciones cerraron{rsvpDeadlineText ? ` el ${rsvpDeadlineText}` : ''}. Para cualquier cambio, contacta a los novios.
+                                                </p>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setRsvpSubmitted(false)}
+                                                    className="font-serif text-[11px] tracking-wider uppercase text-[#788a80] underline hover:text-[#556c7d] cursor-pointer"
+                                                >
+                                                    Modificar respuesta
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ) : !invitation ? (
@@ -1536,6 +1555,22 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                             ¿No encuentras tu enlace privado? Comunícate con los novios para compartirte tu pase personalizado.
                                         </p>
                                     </div>
+                                ) : rsvpClosed ? (
+                                    /* La fecha límite para confirmar ya pasó */
+                                    <div className="flex flex-col items-center text-center py-5 px-2 animate-fadeIn space-y-3">
+                                        <div className="w-12 h-12 rounded-full bg-[#f3efe6] text-[#a08a5c] border border-[#e2d6bd] flex items-center justify-center text-xl shadow-xs">
+                                            ⏳
+                                        </div>
+                                        <span className="font-serif text-[10px] tracking-[0.25em] text-[#698175] uppercase font-bold">
+                                            Confirmaciones cerradas
+                                        </span>
+                                        <h3 className="font-serif font-bold text-stone-800 text-base">
+                                            {invitation.name}
+                                        </h3>
+                                        <p className="font-serif text-[12.5px] text-stone-600 leading-relaxed max-w-[300px]">
+                                            La fecha límite para confirmar {rsvpDeadlineText ? <>fue el <strong className="text-[#28362e]">{rsvpDeadlineText}</strong></> : 'ya pasó'}. Si necesitas hacer algún cambio, comunícate directamente con <strong className="text-[#28362e]">{brideName} &amp; {groomName}</strong>.
+                                        </p>
+                                    </div>
                                 ) : (
                                     <form onSubmit={handleRsvpSubmit} className="flex flex-col space-y-4 sm:space-y-5">
                                         {/* Encabezado de la invitación personalizada */}
@@ -1549,6 +1584,11 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                             <p className="font-serif text-[11px] text-stone-600 mt-0.5">
                                                 Hemos reservado <strong className="text-[#556c7d]">{invitation.guests?.length || 1} {invitation.guests?.length === 1 ? 'pase' : 'pases'}</strong> en su honor
                                             </p>
+                                            {rsvpDeadlineText && (
+                                                <p className="font-serif text-[10.5px] text-[#a08a5c] mt-1.5 tracking-wide">
+                                                    Por favor confirma antes del <strong className="font-semibold">{rsvpDeadlineText}</strong>
+                                                </p>
+                                            )}
                                         </div>
 
                                         {/* Si hay múltiples integrantes asignados a la invitación */}

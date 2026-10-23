@@ -34,3 +34,8 @@ use App\Http\Controllers\Admin\HotelController;
 Route::put('hotels/reorder', [HotelController::class, 'reorder'])->name('hotels.reorder');
 Route::put('hotels/{hotel}/toggle', [HotelController::class, 'toggle'])->name('hotels.toggle');
 Route::resource('hotels', HotelController::class);
+
+use App\Http\Controllers\Admin\NotificationController;
+Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+Route::put('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+Route::put('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
