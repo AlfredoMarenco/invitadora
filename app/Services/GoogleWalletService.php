@@ -50,10 +50,11 @@ class GoogleWalletService
 
         // Los IDs en Google Wallet deben ser alfanuméricos con punto, guión o guión bajo
         $cleanCode = preg_replace('/[^A-Za-z0-9_-]/', '', $guest->checkin_code ?? 'CODE');
-        $classId = "{$issuerId}.wedding_{$wedding->id}";
-        $objectId = "{$issuerId}.guest_{$guest->id}_{$cleanCode}";
+        // Versionamos la clase para que Google Wallet no use la plantilla previa en caché
+        $classId = "{$issuerId}.wedding_{$wedding->id}_gala_v2";
+        $objectId = "{$issuerId}.guest_{$guest->id}_{$cleanCode}_v2";
 
-        // 1. Clase Genérica (Plantilla del Evento): Debe incluirse para que Google la cree automáticamente al vuelo
+        // 1. Clase Genérica (Plantilla del Evento)
         $genericClass = [
             'id' => $classId,
             'hexBackgroundColor' => '#28362e',
