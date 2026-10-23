@@ -1299,9 +1299,9 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                     </div>
                                 </div>
 
-                                {/* EXCLUSIVO NOVIOS */}
+                                {/* COLORES A EVITAR */}
                                 <h4 className="font-serif text-[11px] sm:text-[12.5px] font-semibold tracking-[0.2em] uppercase text-[#556c7d] text-center mb-3" data-reveal="up" data-reveal-delay="200">
-                                    EXCLUSIVO NOVIOS
+                                    COLORES A EVITAR
                                 </h4>
 
                                 {/* 6 Círculos de color con micro-interacción hover */}
@@ -1330,27 +1330,11 @@ export default function InvitationMobile({ wedding, invitation }: WeddingProps) 
                                         className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#727f6e] border border-[#616e5d] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg cursor-pointer"
                                         title="Verde olivo oscuro"
                                     />
-                                </div>
-
-                                {/* COLORES A EVITAR */}
-                                <h4 className="font-serif text-[11px] sm:text-[12.5px] font-semibold tracking-[0.2em] uppercase text-[#556c7d] text-center mb-3" data-reveal="up" data-reveal-delay="300">
-                                    COLORES A EVITAR
-                                </h4>
-
-                                {/* Círculo Rojo */}
-                                <div className="flex items-center justify-center mb-6 sm:mb-7" data-reveal="scale" data-reveal-delay="350">
                                     <div
-                                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#a90f0f] border border-[#8f0c0c] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg cursor-pointer"
+                                        className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-[#a90f0f] border border-[#8f0c0c] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg cursor-pointer"
                                         title="Rojo intenso"
                                     />
                                 </div>
-
-                                {/* Texto explicativo exacto en 3 líneas */}
-                                <p className="font-serif text-[9px] sm:text-[10px] font-medium tracking-[0.06em] uppercase text-[#617482] leading-[1.6] text-center w-full max-w-[420px] px-2" data-reveal="fade" data-reveal-delay="400">
-                                    Verde en todas sus tonalidades, blanco y marfil serán<br />
-                                    colores exclusivos de los novios. Les pedimos amablemente<br />
-                                    evitar el rojo intenso.
-                                </p>
                             </div>
                     </section>
 
