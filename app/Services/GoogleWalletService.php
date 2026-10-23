@@ -50,14 +50,23 @@ class GoogleWalletService
 
         // Los IDs en Google Wallet deben ser alfanuméricos con punto, guión o guión bajo
         $cleanCode = preg_replace('/[^A-Za-z0-9_-]/', '', $guest->checkin_code ?? 'CODE');
-        // Versionamos la clase para que Google Wallet no use la plantilla previa en caché
-        $classId = "{$issuerId}.wedding_{$wedding->id}_gala_v2";
-        $objectId = "{$issuerId}.guest_{$guest->id}_{$cleanCode}_v2";
+        // Versionamos la clase para que Google Wallet aplique la nueva plantilla de inmediato
+        $classId = "{$issuerId}.wedding_{$wedding->id}_gala_v3";
+        $objectId = "{$issuerId}.guest_{$guest->id}_{$cleanCode}_v3";
+
+        // Logotipo / Monograma de los novios (Indispensable para que Google Wallet pinte el color de fondo)
+        $logoUrl = $this->resolveLogoUrl($wedding);
 
         // 1. Clase Genérica (Plantilla del Evento)
         $genericClass = [
             'id' => $classId,
-            'hexBackgroundColor' => '#28362e',
+            'hexBackgroundColor' => '#28362E',
+            'logo' => [
+                'sourceUri' => [
+                    'uri' => $logoUrl,
+                    'description' => "Monograma {$brideName} & {$groomName}",
+                ],
+            ],
         ];
 
         // 2. Módulos de texto visibles en la tarjeta
@@ -158,7 +167,13 @@ class GoogleWalletService
             'id' => $objectId,
             'classId' => $classId,
             'genericType' => 'GENERIC_OTHER',
-            'hexBackgroundColor' => '#28362e',
+            'hexBackgroundColor' => '#28362E',
+            'logo' => [
+                'sourceUri' => [
+                    'uri' => $logoUrl,
+                    'description' => "Monograma {$brideName} & {$groomName}",
+                ],
+            ],
             'cardTitle' => [
                 'defaultValue' => [
                     'language' => 'es-419',
@@ -191,21 +206,15 @@ class GoogleWalletService
             ];
         }
 
-        // 5. Imagen de portada si es pública (https)
-        $firstGalleryImage = $wedding->galleryImages()->where('is_active', true)->first();
-        if ($firstGalleryImage && !empty($firstGalleryImage->image_path)) {
-            $imageUrl = str_starts_with($firstGalleryImage->image_path, 'http')
-                ? $firstGalleryImage->image_path
-                : \Illuminate\Support\Facades\Storage::url($firstGalleryImage->image_path);
-
-            if (str_starts_with($imageUrl, 'https://')) {
-                $genericObject['heroImage'] = [
-                    'sourceUri' => [
-                        'uri' => $imageUrl,
-                        'description' => "{$brideName} & {$groomName}",
-                    ],
-                ];
-            }
+        // 5. Imagen de portada (Hero Banner)
+        $heroImageUrl = $this->resolveHeroImageUrl($wedding);
+        if ($heroImageUrl) {
+            $genericObject['heroImage'] = [
+                'sourceUri' => [
+                    'uri' => $heroImageUrl,
+                    'description' => "{$brideName} & {$groomName}",
+                ],
+            ];
         }
 
         $payload = [
@@ -268,4 +277,39 @@ class GoogleWalletService
     {
         return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($data));
     }
+
+    /**
+     * Resuelve una URL pública HTTPS para la imagen de portada (Hero Image).
+     */
+    private function resolveHeroImageUrl(Wedding $wedding): string
+    {
+        $firstGalleryImage = $wedding->galleryImages()->where('is_active', true)->first();
+        if ($firstGalleryImage && !empty($firstGalleryImage->image_path)) {
+            $path = $firstGalleryImage->image_path;
+            $fullUrl = str_starts_with($path, 'http') ? $path : url(ltrim($path, '/'));
+
+            // Verificar si es un dominio accesible por los servidores de Google (no localhost ni .test)
+            $host = parse_url($fullUrl, PHP_URL_HOST) ?? '';
+            $isLocal = in_array($host, ['localhost', '127.0.0.1'])
+                || str_ends_with($host, '.test')
+                || str_starts_with($host, '192.168.');
+
+            if (!$isLocal && str_starts_with($fullUrl, 'https://')) {
+                return $fullUrl;
+            }
+        }
+
+        // Portada de gala nupcial en CDN HTTPS público de alta disponibilidad
+        return 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80';
+    }
+
+    /**
+     * Resuelve el logotipo / monograma de los novios para el encabezado del pase.
+     */
+    private function resolveLogoUrl(Wedding $wedding): string
+    {
+        // Monograma circular dorado nupcial en CDN HTTPS
+        return 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=260&h=260&q=80';
+    }
 }
+
