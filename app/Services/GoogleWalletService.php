@@ -38,8 +38,15 @@ class GoogleWalletService
 
         $brideName = $wedding->bride_name ?? 'Adriana';
         $groomName = $wedding->groom_name ?? 'Joaquín';
-        $weddingDateText = $wedding->wedding_date ? $wedding->wedding_date->format('d/m/Y') : '20/02/2027';
-        $location = $wedding->locations['reception'] ?? 'Hacienda San Diego Cutz';
+
+        // Formato de fecha elegante en español
+        $weddingDateText = $wedding->wedding_date
+            ? $wedding->wedding_date->locale('es')->isoFormat('D [de] MMMM [de] YYYY')
+            : '20 de Febrero de 2027';
+
+        $receptionLocation = $wedding->locations['reception'] ?? 'Hacienda San Diego Cutz';
+        $ceremonyLocation = $wedding->locations['ceremony'] ?? null;
+        $dressCode = $wedding->dress_code ?? null;
 
         // Los IDs en Google Wallet deben ser alfanuméricos con punto, guión o guión bajo
         $cleanCode = preg_replace('/[^A-Za-z0-9_-]/', '', $guest->checkin_code ?? 'CODE');
@@ -52,7 +59,100 @@ class GoogleWalletService
             'hexBackgroundColor' => '#28362e',
         ];
 
-        // 2. Objeto Genérico de Pase Oficial para el invitado
+        // 2. Módulos de texto visibles en la tarjeta
+        $textModules = [
+            [
+                'id' => 'guest_name',
+                'header' => 'INVITADO OFICIAL',
+                'body' => $guest->full_name . ($guest->type === 'child' ? ' (Niño/a)' : ' (Adulto)'),
+            ],
+            [
+                'id' => 'table',
+                'header' => 'MESA ASIGNADA',
+                'body' => $guest->table?->name ?? 'Mesa asignada a la entrada',
+            ],
+            [
+                'id' => 'guest_code',
+                'header' => 'CÓDIGO DE CHECK-IN',
+                'body' => $guest->checkin_code,
+            ],
+            [
+                'id' => 'date',
+                'header' => 'FECHA DE CELEBRACIÓN',
+                'body' => $weddingDateText,
+            ],
+            [
+                'id' => 'reception',
+                'header' => 'LUGAR DE RECEPCIÓN',
+                'body' => $receptionLocation,
+            ],
+        ];
+
+        if (!empty($ceremonyLocation)) {
+            $textModules[] = [
+                'id' => 'ceremony',
+                'header' => 'CEREMONIA RELIGIOSA',
+                'body' => $ceremonyLocation,
+            ];
+        }
+
+        if (!empty($dressCode)) {
+            $textModules[] = [
+                'id' => 'dress_code',
+                'header' => 'CÓDIGO DE VESTIMENTA',
+                'body' => $dressCode,
+            ];
+        }
+
+        if (!empty($guest->allergies)) {
+            $textModules[] = [
+                'id' => 'allergies',
+                'header' => 'MENÚ ESPECIAL / ALERGIAS',
+                'body' => $guest->allergies,
+            ];
+        }
+
+        // 3. Enlaces interactivos en el reverso del pase (Google Maps, Waze, Mesa de Regalos, Invitación)
+        $uris = [];
+
+        // Enlace a Google Maps para recepción
+        if (!empty($wedding->locations['reception_maps'])) {
+            $uris[] = [
+                'kind' => 'walletobjects#uri',
+                'uri' => $wedding->locations['reception_maps'],
+                'description' => '📍 Cómo llegar a la Recepción (Google Maps)',
+            ];
+        }
+
+        // Enlace a Waze
+        if (!empty($wedding->locations['reception_waze'])) {
+            $uris[] = [
+                'kind' => 'walletobjects#uri',
+                'uri' => $wedding->locations['reception_waze'],
+                'description' => '🚗 Navegar con Waze a la Recepción',
+            ];
+        }
+
+        // Enlace a Mesa de Regalos
+        $giftUrl = $wedding->gift_registry_url ?? (!empty($wedding->gift_registries_list[0]['url']) ? $wedding->gift_registries_list[0]['url'] : null);
+        if (!empty($giftUrl)) {
+            $uris[] = [
+                'kind' => 'walletobjects#uri',
+                'uri' => $giftUrl,
+                'description' => '🎁 Mesa de Regalos de los Novios',
+            ];
+        }
+
+        // Enlace directo a la invitación web
+        if ($invitation && !empty($invitation->token)) {
+            $uris[] = [
+                'kind' => 'walletobjects#uri',
+                'uri' => url("/public/rsvp/{$invitation->token}"),
+                'description' => '💌 Ver Invitación Web y Detalles',
+            ];
+        }
+
+        // 4. Objeto Genérico de Pase Oficial para el invitado
         $genericObject = [
             'id' => $objectId,
             'classId' => $classId,
@@ -73,7 +173,7 @@ class GoogleWalletService
             'subheader' => [
                 'defaultValue' => [
                     'language' => 'es-419',
-                    'value' => 'Pase de Acceso Oficial',
+                    'value' => 'Pase Oficial de Acceso',
                 ],
             ],
             'barcode' => [
@@ -81,29 +181,31 @@ class GoogleWalletService
                 'value' => $guest->checkin_code,
                 'alternateText' => $guest->checkin_code,
             ],
-            'textModulesData' => [
-                [
-                    'id' => 'guest_code',
-                    'header' => 'CÓDIGO DE ACCESO',
-                    'body' => $guest->checkin_code,
-                ],
-                [
-                    'id' => 'table',
-                    'header' => 'MESA ASIGNADA',
-                    'body' => $guest->table?->name ?? 'Por asignar',
-                ],
-                [
-                    'id' => 'date',
-                    'header' => 'FECHA',
-                    'body' => $weddingDateText,
-                ],
-                [
-                    'id' => 'venue',
-                    'header' => 'LUGAR',
-                    'body' => $location,
-                ],
-            ],
+            'textModulesData' => $textModules,
         ];
+
+        if (!empty($uris)) {
+            $genericObject['linksModuleData'] = [
+                'uris' => $uris,
+            ];
+        }
+
+        // 5. Imagen de portada si es pública (https)
+        $firstGalleryImage = $wedding->galleryImages()->where('is_active', true)->first();
+        if ($firstGalleryImage && !empty($firstGalleryImage->image_path)) {
+            $imageUrl = str_starts_with($firstGalleryImage->image_path, 'http')
+                ? $firstGalleryImage->image_path
+                : \Illuminate\Support\Facades\Storage::url($firstGalleryImage->image_path);
+
+            if (str_starts_with($imageUrl, 'https://')) {
+                $genericObject['heroImage'] = [
+                    'sourceUri' => [
+                        'uri' => $imageUrl,
+                        'description' => "{$brideName} & {$groomName}",
+                    ],
+                ];
+            }
+        }
 
         $payload = [
             'iss' => $clientEmail,
