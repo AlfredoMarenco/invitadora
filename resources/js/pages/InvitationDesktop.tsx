@@ -8,6 +8,7 @@ import DigitalPassCard, { GuestPassData } from '../components/DigitalPassCard';
 interface GalleryImageItem {
     id: number;
     image_path: string;
+    thumb_path?: string | null;
     order?: number;
     is_active?: boolean;
 }
@@ -18,6 +19,8 @@ interface HotelItem {
     location?: string;
     description?: string;
     url?: string | null;
+    phone?: string | null;
+    maps_url?: string | null;
     image?: string;
     image_path?: string;
     order?: number;
@@ -74,6 +77,8 @@ export interface WeddingProps {
         gift_registry_button_text_2?: string;
         gift_registries_list?: Array<{ name: string; url: string }>;
         timeline?: Array<{ time: string; title: string; description?: string; icon_url?: string }>;
+        timeline_mode?: string | null;
+        timeline_image_path?: string | null;
         timeline_list?: Array<{ time: string; title: string; description?: string; icon_url?: string }>;
     };
     invitation?: InvitationData | null;
@@ -315,7 +320,7 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
 
     const rawGallery = wedding?.gallery_images || wedding?.galleryImages || [];
     const galleryList = rawGallery.length > 0
-        ? rawGallery.map((img) => img.image_path)
+        ? rawGallery.map((img) => img.thumb_path || img.image_path)
         : defaultGalleryImages;
 
     // Cuenta regresiva hacia wedding_date (o 20 de febrero de 2027 por defecto)
@@ -437,7 +442,9 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
             name: h.name,
             description: h.location || h.description || '',
             image: h.image_path || h.image || '/images/hotels/hotel_1.jpg',
-            url: h.url || (h.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.name + ' ' + h.location)}` : '#'),
+            url: h.url || '',
+            phone: h.phone || '',
+            mapsUrl: h.maps_url || (h.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.name + ' ' + h.location)}` : ''),
         }))
         : defaultHotels;
 
@@ -958,6 +965,11 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                 </h2>
                             </div>
 
+                            {wedding?.timeline_mode === 'image' && wedding?.timeline_image_path ? (
+                                <div className="w-full flex justify-center py-2" data-reveal="up">
+                                    <img src={wedding.timeline_image_path} alt="Itinerario" loading="lazy" decoding="async" className="w-full h-auto rounded-xl shadow-lg object-contain" />
+                                </div>
+                            ) : (<>
                             {/* TIMELINE VERTICAL CON CÍRCULOS UNIDOS POR UNA LÍNEA */}
                             <div className="relative w-full py-2">
                                 {/* Línea vertical continua que une todos los nodos */}
@@ -1047,6 +1059,7 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                     })}
                                 </div>
                             </div>
+                            </>)}
                         </div>
                     </section>
 
@@ -1411,6 +1424,11 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                             {/* Subtítulo */}
                             <p className="font-serif text-[9.5px] sm:text-[11px] text-[#788a80] font-medium uppercase text-center max-w-[320px] sm:max-w-[390px] leading-relaxed mb-6 sm:mb-8 px-4 tracking-normal" data-reveal="down" data-reveal-delay="100">
                                 ESTAREMOS ENCANTADOS QUE NOS ACOMPAÑES Y DISFRUTES TODA LA EXPERIENCIA
+                            </p>
+
+                            {/* Disclaimer de descuento en hoteles */}
+                            <p className="font-serif text-[10.5px] sm:text-[12px] italic text-[#476070] text-center max-w-[300px] sm:max-w-[380px] leading-relaxed mb-5 sm:mb-6 px-4 py-2 rounded-xl bg-white/70 border border-[#788a80]/40" data-reveal="down" data-reveal-delay="150">
+                                Menciona <strong className="font-semibold not-italic">&ldquo;Reserva para la boda de {brideName} y {groomName}&rdquo;</strong> para recibir un descuento o precio preferencial en los hoteles.
                             </p>
 
                             {/* Carrusel fluido y accesible de hoteles */}

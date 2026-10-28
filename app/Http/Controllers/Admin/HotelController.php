@@ -77,6 +77,8 @@ class HotelController extends Controller
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:500',
             'url' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:50',
+            'maps_url' => 'nullable|string|max:1000',
             'image' => 'required|image|max:5120', // Máx 5MB
             'is_active' => 'nullable|boolean',
         ]);
@@ -89,6 +91,8 @@ class HotelController extends Controller
             'name' => $validated['name'],
             'location' => $validated['location'],
             'url' => $validated['url'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'maps_url' => $validated['maps_url'] ?? null,
             'image_path' => Storage::url($path),
             'order' => $maxOrder + 1,
             'is_active' => $request->boolean('is_active', true),
@@ -108,6 +112,8 @@ class HotelController extends Controller
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:500',
             'url' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:50',
+            'maps_url' => 'nullable|string|max:1000',
             'image' => 'nullable|image|max:5120',
             'is_active' => 'nullable|boolean',
         ]);
@@ -126,6 +132,8 @@ class HotelController extends Controller
         $hotel->name = $validated['name'];
         $hotel->location = $validated['location'];
         $hotel->url = $validated['url'] ?? null;
+        $hotel->phone = $validated['phone'] ?? null;
+        $hotel->maps_url = $validated['maps_url'] ?? null;
         if ($request->has('is_active')) {
             $hotel->is_active = $request->boolean('is_active');
         }

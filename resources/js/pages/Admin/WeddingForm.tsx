@@ -34,6 +34,8 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
             { time: '20:00', title: 'FIESTA', description: 'Música y baile', icon_url: '/resources_canvas/images/9.svg' },
             { time: '02:00', title: 'CLAUSURA', description: 'Fin de la celebración', icon_url: '/resources_canvas/images/10.svg' },
         ]),
+        timeline_mode: wedding?.timeline_mode || 'items',
+        timeline_image_path: wedding?.timeline_image_path || '',
         rsvp_deadline: wedding?.rsvp_deadline ? wedding.rsvp_deadline.split('T')[0] : '',
         rsvp_notification_email: wedding?.rsvp_notification_email || '',
         notify_on_rsvp: wedding?.notify_on_rsvp ?? true,
@@ -85,6 +87,32 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
             setAlertModal({ open: true, title: 'Error de conexión', message: 'Hubo un error al subir el icono.' });
         } finally {
             setUploadingIndex(null);
+        }
+    };
+
+    const [uploadingTimelineImage, setUploadingTimelineImage] = useState(false);
+
+    const handleTimelineImageUpload = async (file: File) => {
+        setUploadingTimelineImage(true);
+        try {
+            const fd = new FormData();
+            fd.append('icon', file);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const response = await fetch('/admin/timeline/upload-icon', {
+                method: 'POST',
+                headers: { ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}), 'Accept': 'application/json' },
+                body: fd,
+            });
+            const result = await response.json();
+            if (result.success && result.url) {
+                setData('timeline_image_path', result.url);
+            } else {
+                setAlertModal({ open: true, title: 'Error al subir imagen', message: result.message || 'No se pudo subir la imagen del itinerario.' });
+            }
+        } catch (err) {
+            setAlertModal({ open: true, title: 'Error de conexión', message: 'Hubo un error al subir la imagen del itinerario.' });
+        } finally {
+            setUploadingTimelineImage(false);
         }
     };
 
@@ -437,6 +465,24 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                             )}
                         </div>
 
+                        <div className="flex gap-2 mb-5">
+                            {[{ v: 'items', t: 'Por items (timeline)' }, { v: 'image', t: 'Una imagen' }].map(o => (
+                                <button key={o.v} type="button" disabled={isPlanner} onClick={() => setData('timeline_mode', o.v)}
+                                    className={`px-4 py-2 rounded-lg text-xs font-semibold border transition ${data.timeline_mode === o.v ? 'bg-[#698175] text-white border-[#698175]' : 'bg-white text-zinc-600 border-zinc-300 hover:border-[#698175]'}`}>
+                                    {o.t}
+                                </button>
+                            ))}
+                        </div>
+
+                        {data.timeline_mode === 'image' ? (
+                            <div className="space-y-3">
+                                <p className="text-xs text-zinc-500">Esta imagen reemplaza al timeline en la invitación (los items se conservan guardados). Se comprime automáticamente.</p>
+                                {data.timeline_image_path && (<img src={data.timeline_image_path} alt="Itinerario" className="max-h-96 rounded-xl border shadow-xs" />)}
+                                {!isPlanner && (<input type="file" accept="image/*" disabled={uploadingTimelineImage} onChange={(e) => { const file = e.target.files?.[0]; if (file) handleTimelineImageUpload(file); }} className="block text-xs" />)}
+                                {uploadingTimelineImage && <p className="text-xs text-zinc-500">Subiendo y comprimiendo...</p>}
+                                {!data.timeline_image_path && <p className="text-xs text-amber-600">Aún no hay imagen: mientras tanto se mostrará el timeline por items.</p>}
+                            </div>
+                        ) : (
                         <div className="space-y-4">
                             {data.timeline.length === 0 ? (
                                 <div className="text-center py-8 border-2 border-dashed rounded-xl bg-zinc-50 text-zinc-400 text-sm">
@@ -602,6 +648,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                                 ))
                             )}
                         </div>
+                        )}
                     </div>
 
                     {!isPlanner && (

@@ -8,6 +8,7 @@ use App\Models\GalleryImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Support\ImageOptimizer;
 
 class GalleryController extends Controller
 {
@@ -29,7 +30,7 @@ class GalleryController extends Controller
 
         $request->validate([
             'images' => 'required|array|min:1',
-            'images.*' => 'file|mimes:jpeg,png,jpg,webp,gif,avif,heic,heif|max:102400', // Hasta 100MB por imagen (sin restricción práctica de tamaño)
+            'images.*' => 'file|mimes:jpeg,png,jpg,webp,gif,avif,heic,heif|max:25600', // Hasta 100MB por imagen (sin restricción práctica de tamaño)
         ], [
             'images.required' => 'Debes seleccionar al menos una fotografía.',
             'images.*.mimes' => 'El formato debe ser una imagen válida (JPG, JPEG, PNG, WEBP, GIF, HEIC).',
@@ -38,11 +39,12 @@ class GalleryController extends Controller
         $maxOrder = $wedding->galleryImages()->max('order') ?? -1;
 
         foreach ($request->file('images') as $file) {
-            $imageUrl = $this->compressAndStoreImage($file);
+            [$imageUrl, $thumbUrl] = self::compressAndStoreImage($file);
             $maxOrder++;
             
             $wedding->galleryImages()->create([
                 'image_path' => $imageUrl,
+                'thumb_path' => $thumbUrl,
                 'order' => $maxOrder,
             ]);
         }
@@ -59,6 +61,9 @@ class GalleryController extends Controller
 
         $path = str_replace('/storage/', '', $gallery->image_path);
         Storage::disk('public')->delete($path);
+        if ($gallery->thumb_path) {
+            Storage::disk('public')->delete(str_replace('/storage/', '', $gallery->thumb_path));
+        }
         $gallery->delete();
 
         return back()->with('success', 'Fotografía eliminada correctamente.');
@@ -80,88 +85,20 @@ class GalleryController extends Controller
     }
 
     /**
-     * Comprime y optimiza la imagen a formato WebP o JPEG usando GD,
-     * corrigiendo orientación EXIF y redimensionando a un máximo de 1920px.
+     * Genera versi?n completa (1600px, WebP q72) y miniatura (700px, WebP q68).
+     * Devuelve [url_full, url_thumb|null].
      */
-    private function compressAndStoreImage($file): string
+    public static function compressAndStoreImage($file): array
     {
-        $extension = strtolower($file->getClientOriginalExtension());
-        $mime = $file->getMimeType();
-        $sourcePath = $file->getRealPath();
+        $src = $file->getRealPath();
+        $name = Str::random(24);
 
-        if (extension_loaded('gd') && function_exists('imagewebp')) {
-            $srcImage = null;
-
-            if (in_array($extension, ['jpg', 'jpeg']) || str_contains($mime, 'jpeg')) {
-                $srcImage = @imagecreatefromjpeg($sourcePath);
-
-                // Corregir rotación EXIF para fotos tomadas con celular
-                if ($srcImage && function_exists('exif_read_data')) {
-                    $exif = @exif_read_data($sourcePath);
-                    if (!empty($exif['Orientation'])) {
-                        switch ($exif['Orientation']) {
-                            case 3:
-                                $srcImage = imagerotate($srcImage, 180, 0);
-                                break;
-                            case 6:
-                                $srcImage = imagerotate($srcImage, -90, 0);
-                                break;
-                            case 8:
-                                $srcImage = imagerotate($srcImage, 90, 0);
-                                break;
-                        }
-                    }
-                }
-            } elseif ($extension === 'png' || str_contains($mime, 'png')) {
-                $srcImage = @imagecreatefrompng($sourcePath);
-            } elseif ($extension === 'webp' || str_contains($mime, 'webp')) {
-                $srcImage = @imagecreatefromwebp($sourcePath);
-            } elseif ($extension === 'gif' || str_contains($mime, 'gif')) {
-                $srcImage = @imagecreatefromgif($sourcePath);
-            }
-
-            if ($srcImage) {
-                $origWidth = imagesx($srcImage);
-                $origHeight = imagesy($srcImage);
-
-                // Redimensionar si supera 1920px (Full HD) manteniendo proporción
-                $maxDim = 1920;
-                $newWidth = $origWidth;
-                $newHeight = $origHeight;
-
-                if ($origWidth > $maxDim || $origHeight > $maxDim) {
-                    if ($origWidth >= $origHeight) {
-                        $newWidth = $maxDim;
-                        $newHeight = (int) round(($origHeight / $origWidth) * $maxDim);
-                    } else {
-                        $newHeight = $maxDim;
-                        $newWidth = (int) round(($origWidth / $origHeight) * $maxDim);
-                    }
-                }
-
-                $dstImage = imagecreatetruecolor($newWidth, $newHeight);
-                imagealphablending($dstImage, false);
-                imagesavealpha($dstImage, true);
-
-                imagecopyresampled($dstImage, $srcImage, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
-
-                // Comprimir en WebP calidad 82 (ahorro ~90% de almacenamiento con fidelidad visual alta)
-                $filename = 'gallery/' . Str::random(24) . '.webp';
-                $tempPath = tempnam(sys_get_temp_dir(), 'webp_');
-                imagewebp($dstImage, $tempPath, 82);
-
-                imagedestroy($srcImage);
-                imagedestroy($dstImage);
-
-                Storage::disk('public')->put($filename, file_get_contents($tempPath));
-                @unlink($tempPath);
-
-                return Storage::url($filename);
-            }
+        $full = ImageOptimizer::store($src, 'gallery', 1600, 72, $name);
+        if ($full) {
+            return [$full, ImageOptimizer::store($src, 'gallery/thumbs', 700, 68, $name)];
         }
 
-        // Fallback en caso de que GD no pueda procesar el formato
-        $path = $file->store('gallery', 'public');
-        return Storage::url($path);
+        // Fallback si GD no puede procesar el formato (p. ej. HEIC)
+        return [Storage::url($file->store('gallery', 'public')), null];
     }
 }

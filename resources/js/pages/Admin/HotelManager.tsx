@@ -37,6 +37,8 @@ interface HotelItem {
     name: string;
     location: string;
     url?: string | null;
+    phone?: string | null;
+    maps_url?: string | null;
     image_path: string;
     order: number;
     is_active: boolean;
@@ -72,6 +74,8 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
     const [createName, setCreateName] = useState('');
     const [createLocation, setCreateLocation] = useState('');
     const [createUrl, setCreateUrl] = useState('');
+    const [createPhone, setCreatePhone] = useState('');
+    const [createMapsUrl, setCreateMapsUrl] = useState('');
     const [createImageFile, setCreateImageFile] = useState<File | null>(null);
     const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
     const [createIsActive, setCreateIsActive] = useState(true);
@@ -82,6 +86,8 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
     const [editName, setEditName] = useState('');
     const [editLocation, setEditLocation] = useState('');
     const [editUrl, setEditUrl] = useState('');
+    const [editPhone, setEditPhone] = useState('');
+    const [editMapsUrl, setEditMapsUrl] = useState('');
     const [editImageFile, setEditImageFile] = useState<File | null>(null);
     const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
     const [editIsActive, setEditIsActive] = useState(true);
@@ -96,6 +102,8 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
         setCreateName('');
         setCreateLocation('');
         setCreateUrl('');
+        setCreatePhone('');
+        setCreateMapsUrl('');
         setCreateImageFile(null);
         setCreateImagePreview(null);
         setCreateIsActive(true);
@@ -137,6 +145,8 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
         if (createUrl.trim()) {
             formData.append('url', createUrl.trim());
         }
+        formData.append('phone', createPhone.trim());
+        formData.append('maps_url', createMapsUrl.trim());
         formData.append('image', createImageFile);
         formData.append('is_active', createIsActive ? '1' : '0');
 
@@ -162,6 +172,8 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
         setEditName(hotel.name);
         setEditLocation(hotel.location);
         setEditUrl(hotel.url || '');
+        setEditPhone(hotel.phone || '');
+        setEditMapsUrl(hotel.maps_url || '');
         setEditImageFile(null);
         setEditImagePreview(hotel.image_path);
         setEditIsActive(hotel.is_active);
@@ -199,6 +211,8 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
         formData.append('name', editName.trim());
         formData.append('location', editLocation.trim());
         formData.append('url', editUrl.trim() || '');
+        formData.append('phone', editPhone.trim());
+        formData.append('maps_url', editMapsUrl.trim());
         formData.append('is_active', editIsActive ? '1' : '0');
         if (editImageFile) {
             formData.append('image', editImageFile);
@@ -606,6 +620,28 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
                             {createErrors.url && (
                                 <p className="text-[11px] text-rose-600">{createErrors.url}</p>
                             )}
+                        </div>
+
+                        {/* Teléfono y ubicación en Maps */}
+                        <div className="space-y-1.5">
+                            <Label htmlFor="create-phone" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">Teléfono del hotel (el botón "Reservar ahora" llama a este número)</Label>
+                            <Input id="create-phone" type="tel" value={createPhone} onChange={(e) => setCreatePhone(e.target.value)} placeholder="+52 999 123 4567" className="text-sm" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="create-maps" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">Enlace de Google Maps (Opcional)</Label>
+                            <Input id="create-maps" type="url" value={createMapsUrl} onChange={(e) => setCreateMapsUrl(e.target.value)} placeholder="https://maps.app.goo.gl/..." className="text-sm" />
+                            <p className="text-[10.5px] text-muted-foreground">Si lo dejas vacío se busca el hotel en Google Maps con su nombre y dirección.</p>
+                        </div>
+
+                        {/* Teléfono y ubicación en Maps */}
+                        <div className="space-y-1.5">
+                            <Label htmlFor="edit-phone" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">Teléfono del hotel (el botón "Reservar ahora" llama a este número)</Label>
+                            <Input id="edit-phone" type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="+52 999 123 4567" className="text-sm" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="edit-maps" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">Enlace de Google Maps (Opcional)</Label>
+                            <Input id="edit-maps" type="url" value={editMapsUrl} onChange={(e) => setEditMapsUrl(e.target.value)} placeholder="https://maps.app.goo.gl/..." className="text-sm" />
+                            <p className="text-[10.5px] text-muted-foreground">Si lo dejas vacío se busca el hotel en Google Maps con su nombre y dirección.</p>
                         </div>
 
                         {/* Imagen del Hotel */}

@@ -7,6 +7,9 @@ export interface HotelItem {
     location?: string;
     description?: string;
     url?: string | null;
+    phone?: string | null;
+    maps_url?: string | null;
+    mapsUrl?: string | null;
     image?: string;
     image_path?: string;
     order?: number;
@@ -29,7 +32,8 @@ export default function HotelCarousel({
         const hotel = hotels[0];
         const hotelImg = hotel.image_path || hotel.image || '/images/hotels/hotel_1.jpg';
         const hotelDesc = hotel.description || hotel.location || '';
-        const hotelUrl = hotel.url || (hotel.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.name + ' ' + hotel.location)}` : '#');
+        const reserveHref = hotel.phone ? `tel:${hotel.phone.replace(/[^+\d]/g, '')}` : (hotel.url || '#');
+        const mapsHref = hotel.maps_url || hotel.mapsUrl || (hotel.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.name + ' ' + hotel.location)}` : '#');
 
         return (
             <div className="w-full flex flex-col items-center justify-center px-4 py-2">
@@ -56,15 +60,24 @@ export default function HotelCarousel({
                         </div>
                     </div>
 
-                    <a
-                        href={hotelUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-3.5 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border border-[#788a80] text-[#476070] font-semibold font-serif text-[9.5px] sm:text-[10.5px] tracking-[0.16em] uppercase shadow-xs transition-all duration-300 hover:shadow-sm hover:scale-[1.02]"
-                    >
-                        <span>RESERVA AQUÍ</span>
-                        <span className="text-xs">&rarr;</span>
-                    </a>
+                    <div className="mt-3.5 flex flex-col items-center gap-1.5">
+                        <a
+                            href={reserveHref}
+                            target={reserveHref.startsWith('tel:') ? undefined : '_blank'}
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border border-[#788a80] text-[#476070] font-semibold font-serif text-[9.5px] sm:text-[10.5px] tracking-[0.16em] uppercase shadow-xs transition-all duration-300 hover:shadow-sm hover:scale-[1.02]"
+                        >
+                            <span>{hotel.phone ? '📞 RESERVAR AHORA' : 'RESERVAR AHORA'}</span>
+                        </a>
+                        <a
+                            href={mapsHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-4 py-1 font-serif text-[9px] sm:text-[9.5px] tracking-[0.14em] uppercase text-[#476070] underline underline-offset-2"
+                        >
+                            <span>📍 VER UBICACIÓN</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         );
@@ -366,7 +379,8 @@ export default function HotelCarousel({
                     const isNeighbor = Math.abs(idx - currentIndex) === 1;
                     const hotelImg = hotel.image_path || hotel.image || '/images/hotels/hotel_1.jpg';
                     const hotelDesc = hotel.description || hotel.location || '';
-                    const hotelUrl = hotel.url || (hotel.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.name + ' ' + hotel.location)}` : '#');
+                    const reserveHref = hotel.phone ? `tel:${hotel.phone.replace(/[^+\d]/g, '')}` : (hotel.url || '#');
+                    const mapsHref = hotel.maps_url || hotel.mapsUrl || (hotel.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.name + ' ' + hotel.location)}` : '#');
 
                     return (
                         <div
@@ -418,26 +432,42 @@ export default function HotelCarousel({
                             </div>
 
                             {/* Botón: RESERVA AQUÍ -> */}
-                            <a
-                                href={hotelUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => {
-                                    if (hasDraggedRef.current) {
-                                        e.preventDefault();
-                                        return;
-                                    }
-                                    e.stopPropagation();
-                                }}
-                                className={`mt-3 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border font-serif text-[9.5px] sm:text-[10px] tracking-[0.16em] uppercase shadow-xs transition-all duration-300 hover:shadow-sm ${
-                                    isCenter
-                                        ? 'opacity-100 border-[#788a80] text-[#476070] font-semibold shadow-xs hover:scale-105'
-                                        : 'opacity-60 border-[#788a80]/35 text-[#556c7d] hover:border-[#788a80]'
-                                }`}
-                            >
-                                <span>RESERVA AQUÍ</span>
-                                <span className="text-xs">&rarr;</span>
-                            </a>
+                            <div className="mt-3 flex flex-col items-center gap-1.5">
+                                <a
+                                    href={reserveHref}
+                                    target={reserveHref.startsWith('tel:') ? undefined : '_blank'}
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                        if (hasDraggedRef.current) {
+                                            e.preventDefault();
+                                            return;
+                                        }
+                                        e.stopPropagation();
+                                    }}
+                                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border font-serif text-[9.5px] sm:text-[10px] tracking-[0.16em] uppercase shadow-xs transition-all duration-300 hover:shadow-sm ${
+                                        isCenter
+                                            ? 'opacity-100 border-[#788a80] text-[#476070] font-semibold shadow-xs hover:scale-105'
+                                            : 'opacity-60 border-[#788a80]/35 text-[#556c7d] hover:border-[#788a80]'
+                                    }`}
+                                >
+                                    <span>{hotel.phone ? '📞 RESERVAR AHORA' : 'RESERVAR AHORA'}</span>
+                                </a>
+                                <a
+                                    href={mapsHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                        if (hasDraggedRef.current) {
+                                            e.preventDefault();
+                                            return;
+                                        }
+                                        e.stopPropagation();
+                                    }}
+                                    className={`inline-flex items-center gap-1.5 px-4 py-1 rounded-full border border-transparent font-serif text-[9px] sm:text-[9.5px] tracking-[0.14em] uppercase underline underline-offset-2 transition-all duration-300 ${isCenter ? 'opacity-100 text-[#476070]' : 'opacity-60 text-[#556c7d]'}`}
+                                >
+                                    <span>📍 VER UBICACIÓN</span>
+                                </a>
+                            </div>
                         </div>
                     );
                 })}

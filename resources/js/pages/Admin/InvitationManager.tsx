@@ -561,8 +561,15 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         const url = `${window.location.origin}/public/rsvp/${invitation.token}`;
         const guestCount = invitation.guests?.length || 0;
         const passText = guestCount === 1 ? '1 pase' : `${guestCount} pases`;
+        const rawDeadline = String(invitation.rsvp_deadline || wedding?.rsvp_deadline || '').slice(0, 10);
+        let deadlineLine = '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(rawDeadline)) {
+            const [dy, dm, dd] = rawDeadline.split('-').map(Number);
+            const deadlineText = new Date(dy, dm - 1, dd).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+            deadlineLine = `\n\n\u{1F4C5} Te pedimos confirmar tu asistencia a más tardar el *${deadlineText}*.`;
+        }
 
-        return `¡Hola *${invitation.name}*! \u{1F44B}\n\nNos casamos y nos haría muy felices contar con su presencia en este día tan especial para nosotros.\n\nHemos reservado *${passText}* en su honor \u{1F3AB}.\n\nPor favor, hagan clic en el siguiente enlace para ver nuestra invitación digital, conocer todos los detalles del evento y confirmar su asistencia:\n\u{1F449} ${url}\n\n¡Los esperamos! \u{1F942}`;
+        return `¡Hola *${invitation.name}*! \u{1F44B}\n\nNos casamos y nos haría muy felices contar con su presencia en este día tan especial para nosotros.\n\nHemos reservado *${passText}* en su honor \u{1F3AB}.\n\nPor favor, hagan clic en el siguiente enlace para ver nuestra invitación digital, conocer todos los detalles del evento y confirmar su asistencia:\n\u{1F449} ${url}${deadlineLine}\n\n¡Los esperamos! \u{1F942}`;
     };
 
     const generateWaLink = (invitation: any) => {

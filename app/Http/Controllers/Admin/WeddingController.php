@@ -36,6 +36,8 @@ class WeddingController extends Controller
             'timeline.*.title' => 'required_with:timeline|string',
             'timeline.*.description' => 'nullable|string',
             'timeline.*.icon_url' => 'nullable|string',
+            'timeline_mode' => 'nullable|in:items,image',
+            'timeline_image_path' => 'nullable|string|max:500',
             'gift_registry_url' => 'nullable|string',
             'gift_registry_button_text' => 'nullable|string|max:100',
             'gift_registry_url_2' => 'nullable|string',
@@ -106,11 +108,17 @@ class WeddingController extends Controller
     public function uploadTimelineIcon(Request $request)
     {
         $request->validate([
-            'icon' => 'required|file|mimes:svg,png,jpg,jpeg,webp|max:5120',
+            'icon' => 'required|file|mimes:svg,png,jpg,jpeg,webp|max:20480',
         ]);
 
-        $path = $request->file('icon')->store('timeline_icons', 'public');
-        $url = \Illuminate\Support\Facades\Storage::url($path);
+        $file = $request->file('icon');
+        $url = null;
+        if (strtolower($file->getClientOriginalExtension()) !== 'svg') {
+            $url = \App\Support\ImageOptimizer::store($file->getRealPath(), 'timeline_icons', 1600, 75);
+        }
+        if (!$url) {
+            $url = \Illuminate\Support\Facades\Storage::url($file->store('timeline_icons', 'public'));
+        }
 
         return response()->json([
             'success' => true,
