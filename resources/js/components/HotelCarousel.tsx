@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Phone, X } from 'lucide-react';
 
 export interface HotelItem {
     id?: number;
@@ -27,16 +27,94 @@ export default function HotelCarousel({
 }: HotelCarouselProps) {
     if (!hotels || hotels.length === 0) return null;
 
+    const [reserveModalHotel, setReserveModalHotel] = useState<HotelItem | null>(null);
+
+    const renderReservationModal = () => {
+        if (!reserveModalHotel) return null;
+        const cleanPhone = reserveModalHotel.phone ? reserveModalHotel.phone.replace(/[^+\d]/g, '') : '';
+        const callHref = cleanPhone ? `tel:${cleanPhone}` : (reserveModalHotel.url || '#');
+
+        return (
+            <div
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs px-4 animate-in fade-in duration-200"
+                onClick={() => setReserveModalHotel(null)}
+            >
+                <div
+                    className="relative w-full max-w-sm rounded-3xl bg-[#fbf9f4] border-2 border-[#748270]/40 p-6 sm:p-7 text-center shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <button
+                        type="button"
+                        onClick={() => setReserveModalHotel(null)}
+                        aria-label="Cerrar"
+                        className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-[#748270]/10 hover:bg-[#748270]/20 text-[#476070] flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+
+                    <div className="mx-auto mb-3.5 w-12 h-12 rounded-full bg-[#748270]/15 text-[#748270] flex items-center justify-center">
+                        <Phone className="w-5 h-5" />
+                    </div>
+
+                    <p className="font-serif text-[10px] uppercase tracking-[0.22em] text-[#748270] font-semibold mb-1">
+                        Tarifa Preferencial de Boda
+                    </p>
+                    <h4 className="font-serif text-lg sm:text-xl font-bold text-[#2f4554] uppercase tracking-wide mb-3">
+                        {reserveModalHotel.name}
+                    </h4>
+
+                    <div className="rounded-2xl bg-white border border-[#748270]/25 px-4 py-3.5 mb-4 shadow-xs">
+                        <p className="font-serif text-[12px] sm:text-[13px] text-[#476070] leading-relaxed">
+                            Al comunicarte con el hotel, menciona:
+                        </p>
+                        <p className="font-serif text-[14px] sm:text-[15px] font-bold text-[#2f4554] mt-1.5 tracking-wide">
+                            “Reservo para la boda de Adriana y Joaquín”
+                        </p>
+                        <p className="font-serif text-[11px] sm:text-[12px] text-[#5c7282] mt-1.5 leading-snug">
+                            para recibir un descuento o precio preferencial en tu reservación.
+                        </p>
+                    </div>
+
+                    {reserveModalHotel.phone && (
+                        <p className="font-serif text-xs text-[#476070] mb-4 tracking-wider">
+                            Tel: <span className="font-semibold text-[#2f4554]">{reserveModalHotel.phone}</span>
+                        </p>
+                    )}
+
+                    <div className="flex flex-col gap-2">
+                        <a
+                            href={callHref}
+                            target={callHref.startsWith('tel:') ? undefined : '_blank'}
+                            rel="noopener noreferrer"
+                            onClick={() => setReserveModalHotel(null)}
+                            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#748270] hover:bg-[#616e5d] text-white font-serif text-[11px] sm:text-[12px] font-semibold tracking-[0.18em] uppercase shadow-md transition-all duration-200 hover:scale-[1.02]"
+                        >
+                            <Phone className="w-3.5 h-3.5" />
+                            <span>{cleanPhone ? 'LLAMAR AHORA' : 'CONTINUAR A RESERVA'}</span>
+                        </a>
+                        <button
+                            type="button"
+                            onClick={() => setReserveModalHotel(null)}
+                            className="w-full py-2 font-serif text-[10px] tracking-[0.16em] uppercase text-[#5c7282] hover:text-[#2f4554] transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // Caso de un solo hotel: tarjeta centrada estática sin carrusel
     if (hotels.length === 1) {
         const hotel = hotels[0];
         const hotelImg = hotel.image_path || hotel.image || '/images/hotels/hotel_1.jpg';
         const hotelDesc = hotel.description || hotel.location || '';
-        const reserveHref = hotel.phone ? `tel:${hotel.phone.replace(/[^+\d]/g, '')}` : (hotel.url || '#');
         const mapsHref = hotel.maps_url || hotel.mapsUrl || (hotel.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.name + ' ' + hotel.location)}` : '#');
 
         return (
             <div className="w-full flex flex-col items-center justify-center px-4 py-2">
+                {renderReservationModal()}
                 <div className="flex flex-col items-center w-[260px] sm:w-[290px] transition-all duration-300">
                     <div className="w-full h-[165px] sm:h-[185px] rounded-2xl overflow-hidden shadow-xl ring-2 ring-[#788a80] bg-stone-100 border border-transparent relative group">
                         <img
@@ -61,14 +139,13 @@ export default function HotelCarousel({
                     </div>
 
                     <div className="mt-3.5 flex flex-col items-center gap-1.5">
-                        <a
-                            href={reserveHref}
-                            target={reserveHref.startsWith('tel:') ? undefined : '_blank'}
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border border-[#788a80] text-[#476070] font-semibold font-serif text-[9.5px] sm:text-[10.5px] tracking-[0.16em] uppercase shadow-xs transition-all duration-300 hover:shadow-sm hover:scale-[1.02]"
+                        <button
+                            type="button"
+                            onClick={() => setReserveModalHotel(hotel)}
+                            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border border-[#788a80] text-[#476070] font-semibold font-serif text-[9.5px] sm:text-[10.5px] tracking-[0.16em] uppercase shadow-xs transition-all duration-300 hover:shadow-sm hover:scale-[1.02] cursor-pointer"
                         >
-                            <span>{hotel.phone ? '📞 RESERVAR AHORA' : 'RESERVAR AHORA'}</span>
-                        </a>
+                            <span>📞 RESERVAR AHORA</span>
+                        </button>
                         <a
                             href={mapsHref}
                             target="_blank"
@@ -329,6 +406,7 @@ export default function HotelCarousel({
             onMouseEnter={() => { isPausedRef.current = true; }}
             onMouseLeave={() => { isPausedRef.current = false; onMouseLeave(); }}
         >
+            {renderReservationModal()}
             {/* Flecha izquierda */}
             <button
                 type="button"
@@ -431,27 +509,27 @@ export default function HotelCarousel({
                                 </div>
                             </div>
 
-                            {/* Botón: RESERVA AQUÍ -> */}
+                            {/* Botón: RESERVAR AHORA */}
                             <div className="mt-3 flex flex-col items-center gap-1.5">
-                                <a
-                                    href={reserveHref}
-                                    target={reserveHref.startsWith('tel:') ? undefined : '_blank'}
-                                    rel="noopener noreferrer"
+                                <button
+                                    type="button"
                                     onClick={(e) => {
                                         if (hasDraggedRef.current) {
                                             e.preventDefault();
                                             return;
                                         }
                                         e.stopPropagation();
+                                        pauseTemporarily(10000);
+                                        setReserveModalHotel(hotel);
                                     }}
-                                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border font-serif text-[9.5px] sm:text-[10px] tracking-[0.16em] uppercase shadow-xs transition-all duration-300 hover:shadow-sm ${
+                                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border font-serif text-[9.5px] sm:text-[10px] tracking-[0.16em] uppercase shadow-xs transition-all duration-300 hover:shadow-sm cursor-pointer ${
                                         isCenter
                                             ? 'opacity-100 border-[#788a80] text-[#476070] font-semibold shadow-xs hover:scale-105'
                                             : 'opacity-60 border-[#788a80]/35 text-[#556c7d] hover:border-[#788a80]'
                                     }`}
                                 >
-                                    <span>{hotel.phone ? '📞 RESERVAR AHORA' : 'RESERVAR AHORA'}</span>
-                                </a>
+                                    <span>📞 RESERVAR AHORA</span>
+                                </button>
                                 <a
                                     href={mapsHref}
                                     target="_blank"

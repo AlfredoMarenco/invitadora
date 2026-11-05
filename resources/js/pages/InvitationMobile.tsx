@@ -951,7 +951,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                         </div>
 
                         {/* Perrito con anillo asomándose en la esquina inferior derecha */}
-                        <div className="absolute -bottom-2 -right-4 sm:right-0 w-[170px] sm:w-[215px] pointer-events-none select-none z-10" data-reveal="fade" data-reveal-delay="250">
+                        <div className="absolute -bottom-2 -right-4 sm:right-0 w-[170px] sm:w-[215px] pointer-events-none select-none z-30" data-reveal="fade" data-reveal-delay="250">
                             <img
                                 src="/images/canva_assets/asset_13_254b129a.webp"
                                 alt="Perrito asomándose"
@@ -970,9 +970,9 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                                 </h2>
                             </div>
 
-                            {wedding?.timeline_mode === 'image' && wedding?.timeline_image_path ? (
-                                <div className="w-full flex justify-center py-2" data-reveal="up">
-                                    <img src={wedding.timeline_image_path} alt="Itinerario" loading="lazy" decoding="async" className="w-full h-auto rounded-xl shadow-lg object-contain" />
+                            {wedding?.timeline_mode !== 'items' ? (
+                                <div className="w-full flex justify-center py-2 pb-16 sm:pb-20" data-reveal="up">
+                                    <img src={wedding?.timeline_image_path || '/images/canva_assets/itinerario_final.svg'} alt="Itinerario" loading="lazy" decoding="async" className="w-full max-w-[380px] h-auto object-contain drop-shadow-sm" />
                                 </div>
                             ) : (<>
                             {/* TIMELINE VERTICAL CON CÍRCULOS UNIDOS POR UNA LÍNEA */}
@@ -1247,6 +1247,17 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                                         <span className="block whitespace-nowrap">contaremos con mesa de regalos</span>
                                         <span className="block whitespace-nowrap">y lluvia de sobres.</span>
                                     </p>
+                                </div>
+
+                                {/* Sello de cera en el cierre del sobre verde */}
+                                <div className="absolute top-[55%] left-1/2 -translate-x-1/2 w-[88px] h-[88px] sm:w-[110px] sm:h-[110px] pointer-events-none select-none z-20 drop-shadow-[0_6px_14px_rgba(0,0,0,0.28)]" data-reveal="scale" data-reveal-delay="300">
+                                    <img
+                                        src="/images/canva_assets/sello_sobre.webp"
+                                        alt="Sello del sobre"
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="w-full h-full object-contain"
+                                    />
                                 </div>
                             </div>
                         </div>

@@ -477,10 +477,11 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                         {data.timeline_mode === 'image' ? (
                             <div className="space-y-3">
                                 <p className="text-xs text-zinc-500">Esta imagen reemplaza al timeline en la invitación (los items se conservan guardados). Se comprime automáticamente.</p>
-                                {data.timeline_image_path && (<img src={data.timeline_image_path} alt="Itinerario" className="max-h-96 rounded-xl border shadow-xs" />)}
+                                <div className="p-4 rounded-xl bg-[#748270] inline-block border shadow-xs">
+                                    <img src={data.timeline_image_path || '/images/canva_assets/itinerario_final.svg'} alt="Itinerario" className="max-h-96 object-contain" />
+                                </div>
                                 {!isPlanner && (<input type="file" accept="image/*" disabled={uploadingTimelineImage} onChange={(e) => { const file = e.target.files?.[0]; if (file) handleTimelineImageUpload(file); }} className="block text-xs" />)}
                                 {uploadingTimelineImage && <p className="text-xs text-zinc-500">Subiendo y comprimiendo...</p>}
-                                {!data.timeline_image_path && <p className="text-xs text-amber-600">Aún no hay imagen: mientras tanto se mostrará el timeline por items.</p>}
                             </div>
                         ) : (
                         <div className="space-y-4">

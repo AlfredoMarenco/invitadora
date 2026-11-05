@@ -17,7 +17,8 @@ import {
     Building2, 
     CheckCircle2, 
     AlertTriangle,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Phone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -460,6 +461,18 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
                                         </span>
                                     </div>
 
+                                    {hotel.phone ? (
+                                        <div className="flex items-center gap-1.5 text-xs font-medium text-[#28362e] dark:text-[#e2e8e4]">
+                                            <Phone className="size-3.5 text-[#698175] shrink-0" />
+                                            <span>{hotel.phone}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-1.5 text-[11px] text-amber-600/80 dark:text-amber-400/80">
+                                            <Phone className="size-3 shrink-0" />
+                                            <span>Sin teléfono de reserva asignado</span>
+                                        </div>
+                                    )}
+
                                     {hotel.url && (
                                         <div className="flex items-center gap-1.5 text-xs text-[#698175] truncate">
                                             <Globe className="size-3.5 shrink-0" />
@@ -626,21 +639,11 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
                         <div className="space-y-1.5">
                             <Label htmlFor="create-phone" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">Teléfono del hotel (el botón "Reservar ahora" llama a este número)</Label>
                             <Input id="create-phone" type="tel" value={createPhone} onChange={(e) => setCreatePhone(e.target.value)} placeholder="+52 999 123 4567" className="text-sm" />
+                            <p className="text-[10.5px] text-muted-foreground">Al tocar "Reservar ahora", los invitados verán el aviso de tarifa preferencial y llamarán a este número.</p>
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="create-maps" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">Enlace de Google Maps (Opcional)</Label>
                             <Input id="create-maps" type="url" value={createMapsUrl} onChange={(e) => setCreateMapsUrl(e.target.value)} placeholder="https://maps.app.goo.gl/..." className="text-sm" />
-                            <p className="text-[10.5px] text-muted-foreground">Si lo dejas vacío se busca el hotel en Google Maps con su nombre y dirección.</p>
-                        </div>
-
-                        {/* Teléfono y ubicación en Maps */}
-                        <div className="space-y-1.5">
-                            <Label htmlFor="edit-phone" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">Teléfono del hotel (el botón "Reservar ahora" llama a este número)</Label>
-                            <Input id="edit-phone" type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="+52 999 123 4567" className="text-sm" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label htmlFor="edit-maps" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">Enlace de Google Maps (Opcional)</Label>
-                            <Input id="edit-maps" type="url" value={editMapsUrl} onChange={(e) => setEditMapsUrl(e.target.value)} placeholder="https://maps.app.goo.gl/..." className="text-sm" />
                             <p className="text-[10.5px] text-muted-foreground">Si lo dejas vacío se busca el hotel en Google Maps con su nombre y dirección.</p>
                         </div>
 
@@ -783,10 +786,51 @@ export default function HotelManager({ wedding, hotels: initialHotels = [] }: Ho
                             )}
                         </div>
 
+                        {/* Teléfono y ubicación en Maps */}
+                        <div className="space-y-1.5">
+                            <Label htmlFor="edit-phone" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">
+                                Teléfono del hotel (el botón "Reservar ahora" llama a este número)
+                            </Label>
+                            <Input
+                                id="edit-phone"
+                                type="tel"
+                                value={editPhone}
+                                onChange={(e) => setEditPhone(e.target.value)}
+                                placeholder="Ej. +52 985 856 1234"
+                                className="text-sm"
+                            />
+                            <p className="text-[10.5px] text-muted-foreground">
+                                Al tocar "Reservar ahora", los invitados verán el aviso de tarifa preferencial y llamarán a este número.
+                            </p>
+                            {editErrors.phone && (
+                                <p className="text-[11px] text-rose-600">{editErrors.phone}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="edit-maps" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">
+                                Enlace de Google Maps (Opcional)
+                            </Label>
+                            <Input
+                                id="edit-maps"
+                                type="url"
+                                value={editMapsUrl}
+                                onChange={(e) => setEditMapsUrl(e.target.value)}
+                                placeholder="https://maps.app.goo.gl/..."
+                                className="text-sm"
+                            />
+                            <p className="text-[10.5px] text-muted-foreground">
+                                Si lo dejas vacío se busca el hotel en Google Maps con su nombre y dirección.
+                            </p>
+                            {editErrors.maps_url && (
+                                <p className="text-[11px] text-rose-600">{editErrors.maps_url}</p>
+                            )}
+                        </div>
+
                         {/* URL de Reserva o Mapa (Opcional) */}
                         <div className="space-y-1.5">
                             <Label htmlFor="edit-url" className="text-xs font-semibold text-[#28362e] dark:text-[#e2e8e4]">
-                                Enlace de Reserva o Sitio Web
+                                Enlace de Reserva o Sitio Web (Opcional)
                             </Label>
                             <Input
                                 id="edit-url"
