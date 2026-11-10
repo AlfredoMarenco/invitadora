@@ -634,17 +634,17 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                         <div className="relative z-20 w-full max-w-[340px] sm:max-w-[380px] md:max-w-[560px] lg:max-w-[660px] mx-auto px-4 my-auto flex flex-col select-none" data-reveal="scale" data-reveal-delay="200">
                             {/* Primera línea: Adriana & */}
                             <div className="flex items-baseline justify-start pl-2 sm:pl-4 md:pl-8">
-                                <span className="font-script text-[3rem] sm:text-[3.5rem] md:text-[4.6rem] lg:text-[5.4rem] leading-[0.85] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                                <span className="font-script text-[3rem] sm:text-[3.5rem] md:text-[4.6rem] lg:text-[5.4rem] leading-[1.15] py-2 px-2 -my-2 -mx-2 text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.6)]">
                                     {brideName}
                                 </span>
-                                <span className="font-script text-[1.8rem] sm:text-[2.6rem] md:text-[3.2rem] lg:text-[3.8rem] leading-[0.2] ml-2 md:ml-4 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                                <span className="font-script text-[1.8rem] sm:text-[2.6rem] md:text-[3.2rem] lg:text-[3.8rem] leading-none py-2 px-2 -my-2 ml-1 md:ml-3 text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.6)]">
                                     &amp;
                                 </span>
                             </div>
 
                             {/* Segunda línea: Joaquin */}
                             <div className="flex justify-start pl-12 sm:pl-16 md:pl-28 mt-3 sm:mt-4 md:mt-6 ml-5">
-                                <span className="font-script text-[3rem] sm:text-[3.5rem] md:text-[4.6rem] lg:text-[5.4rem] leading-[0.85] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                                <span className="font-script text-[3rem] sm:text-[3.5rem] md:text-[4.6rem] lg:text-[5.4rem] leading-[1.15] py-2 px-2 -my-2 -mx-2 text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.6)]">
                                     {groomName}
                                 </span>
                             </div>
@@ -761,7 +761,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                             <div className="relative z-20 flex flex-col items-center justify-center my-auto py-2 mt-4 w-full">
                                 {/* --- BLOQUE: NUESTROS PADRES --- */}
                                 <div className="flex flex-col items-center text-center w-full" data-reveal="up" data-reveal-delay="100">
-                                    <h2 className="font-script text-[2.1rem] sm:text-[2.4rem] text-[#698175] leading-none mb-3 sm:mb-4 font-normal tracking-normal">
+                                    <h2 className="font-script text-[2.1rem] sm:text-[2.4rem] text-[#698175] leading-[1.2] py-1.5 px-3 -my-1.5 mb-3 sm:mb-4 font-normal tracking-normal">
                                         Nuestros Padres
                                     </h2>
 
@@ -775,7 +775,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                                     </div>
 
                                     {/* Ampersand & */}
-                                    <span className="font-script text-2xl sm:text-3xl py-3 text-[#698175] leading-none my-1">
+                                    <span className="font-script text-2xl sm:text-3xl py-3 px-2 text-[#698175] leading-none my-1">
                                         &amp;
                                     </span>
 
@@ -791,7 +791,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
 
                                 {/* --- BLOQUE: NUESTROS PADRINOS --- */}
                                 <div className="flex flex-col items-center mt-12 sm:mt-8 text-center w-full" data-reveal="up" data-reveal-delay="200">
-                                    <h2 className="font-script text-[2.1rem] sm:text-[2.4rem] text-[#698175] leading-none mb-6 sm:mb-8 font-normal tracking-normal">
+                                    <h2 className="font-script text-[2.1rem] sm:text-[2.4rem] text-[#698175] leading-[1.2] py-1.5 px-3 -my-1.5 mb-6 sm:mb-8 font-normal tracking-normal">
                                         Nuestros Padrinos
                                     </h2>
 
@@ -805,7 +805,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                                     </div>
 
                                     {/* Ampersand & */}
-                                    <span className="font-script text-2xl sm:text-3xl text-[#698175] leading-none my-1 py-3">
+                                    <span className="font-script text-2xl sm:text-3xl text-[#698175] leading-none my-1 py-3 px-2">
                                         &amp;
                                     </span>
 
@@ -965,7 +965,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                         <div className="canvas-container flex flex-col justify-between py-2 px-2 sm:px-4 select-none shrink-0 relative z-20 w-full max-w-[430px]">
                             {/* Título de la sección: Itinerario */}
                             <div className="w-full text-center mb-6 sm:mb-8" data-reveal="down">
-                                <h2 className="font-script text-[2.8rem] sm:text-[3.5rem] text-[#fbf9f4] tracking-wide font-normal leading-none drop-shadow-sm">
+                                <h2 className="font-script text-[2.8rem] sm:text-[3.5rem] text-[#fbf9f4] tracking-wide font-normal leading-[1.2] py-2 px-3 -my-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.12)]">
                                     Itinerario
                                 </h2>
                             </div>
@@ -1127,7 +1127,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                                         </div>
 
                                         {/* Título: Ubicación */}
-                                        <h2 className="font-script text-[1.9rem] sm:text-[2.4rem] text-[#617485] leading-none mb-1 mt-2 font-italic drop-shadow-sm tracking-normal">
+                                        <h2 className="font-script text-[1.9rem] sm:text-[2.4rem] text-[#617485] leading-[1.2] py-1.5 px-3 -my-1.5 mb-1 mt-2 font-italic [text-shadow:0_1px_2px_rgba(0,0,0,0.08)] tracking-normal">
                                             Ubicación
                                         </h2>
                                     </div>
@@ -1184,7 +1184,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
 
                                     {/* Bloque 3: Mesa de regalos */}
                                     <div className="flex flex-col items-center my-auto -translate-y-32 sm:-translate-y-38" data-reveal="up" data-reveal-delay="300">
-                                        <h2 className="font-script text-[1.9rem] sm:text-[1.8rem] text-[#617485] leading-none mb-2 font-normal drop-shadow-sm">
+                                        <h2 className="font-script text-[1.9rem] sm:text-[1.8rem] text-[#617485] leading-[1.2] py-1.5 px-3 -my-1.5 mb-2 font-normal [text-shadow:0_1px_2px_rgba(0,0,0,0.08)]">
                                             Mesa de regalos
                                         </h2>
                                         <div className="flex flex-col gap-2.5 w-full max-w-[145px] sm:max-w-[160px]">
@@ -1280,10 +1280,10 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                             />
 
                             {/* Degradado superior y Nombres de los novios */}
-                            <div className="absolute top-0 inset-x-0 h-40 sm:h-48 bg-gradient-to-b from-[#fbf9f4] via-[#fbf9f4]/80 to-transparent flex flex-col items-center justify-start pt-8 sm:pt-10 z-10 pointer-events-none select-none">
-                                <h2 className="font-script text-[2.8rem] sm:text-[3.4rem] text-[#788e80] leading-[0.88] text-center flex flex-col items-center drop-shadow-sm font-normal" data-reveal="down" data-reveal-delay="150">
-                                    <span>Adriana &</span>
-                                    <span>Joaquín</span>
+                            <div className="absolute top-0 inset-x-0 h-44 sm:h-52 bg-gradient-to-b from-[#fbf9f4] via-[#fbf9f4]/80 to-transparent flex flex-col items-center justify-start pt-5 sm:pt-7 z-10 pointer-events-none select-none">
+                                <h2 className="font-script text-[2.8rem] sm:text-[3.4rem] text-[#788e80] leading-[1.15] pt-3 pb-2 px-4 text-center flex flex-col items-center [text-shadow:0_1px_2px_rgba(0,0,0,0.06)] font-normal" data-reveal="down" data-reveal-delay="150">
+                                    <span className="block px-2 pt-1">Adriana &amp;</span>
+                                    <span className="block px-2 pb-1 -mt-3 sm:-mt-3.5">Joaquín</span>
                                 </h2>
                             </div>
 
@@ -1294,7 +1294,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                         {/* Bloque de Dresscode, Iconos y Paletas de Color */}
                         <div className="canvas-container relative z-10 -mt-16 sm:-mt-20 w-full flex flex-col items-center px-4 pb-14 sm:pb-20">
                                 {/* Título: Dresscode */}
-                                <h3 className="font-script text-[3.0rem] sm:text-[3.6rem] text-[#556c7d] leading-none mb-5 sm:mb-6 drop-shadow-sm font-normal text-center tracking-normal" data-reveal="down">
+                                <h3 className="font-script text-[3.0rem] sm:text-[3.6rem] text-[#556c7d] leading-[1.2] pt-3 pb-2 px-4 -mt-3 mb-3 sm:mb-4 [text-shadow:0_1px_2px_rgba(0,0,0,0.06)] font-normal text-center tracking-normal" data-reveal="down">
                                     Dresscode
                                 </h3>
 
@@ -1441,7 +1441,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                     <section className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-start pt-10 sm:pt-14 pb-12 sm:pb-14 px-0 select-none overflow-hidden">
                         <div className="canvas-container flex flex-col items-center">
                             {/* Título: Hospedaje */}
-                            <h2 className="font-script text-[3rem] sm:text-[3.6rem] text-[#788e80] leading-none mb-3 text-center tracking-normal" data-reveal="down">
+                            <h2 className="font-script text-[3rem] sm:text-[3.6rem] text-[#788e80] leading-[1.2] pt-3 pb-2 px-4 -mt-3 mb-1 text-center tracking-normal" data-reveal="down">
                                 Hospedaje
                             </h2>
 
@@ -1468,7 +1468,7 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                     <section className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-start pt-6 sm:pt-8 pb-14 sm:pb-16 px-4 select-none overflow-hidden">
                         <div className="canvas-container flex flex-col items-center">
                             {/* Título en letra cursiva */}
-                            <h2 className="font-script text-[3.2rem] sm:text-[3.9rem] text-[#788e80] leading-none mb-2 text-center" data-reveal="down">
+                            <h2 className="font-script text-[3.2rem] sm:text-[3.9rem] text-[#788e80] leading-[1.2] pt-3 pb-2 px-4 -mt-3 mb-0.5 text-center" data-reveal="down">
                                 ¿Nos acompañas?
                             </h2>
 
@@ -1773,10 +1773,10 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                             </span>
 
                             {/* Nombres en cursiva centrados: Adriana & Joaquín */}
-                            <h2 className="font-script text-[3.2rem] sm:text-[4.2rem] text-[#788e80] leading-tight my-1 drop-shadow-xs tracking-normal text-center flex items-center justify-center gap-2 flex-wrap">
-                                <span>{brideName}</span>
+                            <h2 className="font-script text-[3.2rem] sm:text-[4.2rem] text-[#788e80] leading-[1.2] py-2 px-3 -my-1 [text-shadow:0_1px_2px_rgba(0,0,0,0.05)] tracking-normal text-center flex items-center justify-center gap-2 flex-wrap">
+                                <span className="px-1">{brideName}</span>
                                 <span className="text-[18px] sm:text-[22px] font-serif font-light text-[#788e80] -translate-y-0.5">&amp;</span>
-                                <span>{groomName}</span>
+                                <span className="px-1">{groomName}</span>
                             </h2>
 
                             {/* Fecha más grande y dinámica: 20 | FEB | 2027 */}
