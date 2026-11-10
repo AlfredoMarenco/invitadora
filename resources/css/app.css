@@ -180,13 +180,13 @@
 
 @media (min-width: 768px) {
     .canvas-container {
-        zoom: 1.6;
+        zoom: 1.15;
     }
 }
 
 @media (min-width: 1024px) {
     .canvas-container {
-        zoom: 2.05;
+        zoom: 1.35;
     }
 }
 

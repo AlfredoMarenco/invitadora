@@ -615,35 +615,35 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                             />
 
                             {/* Neblina / degradado superior blanco ultra suave y progresivo con mayor cobertura */}
-                            <div className="absolute top-0 inset-x-0 h-64 md:h-[450px] bg-[linear-gradient(to_bottom,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.5)_40%,rgba(255,255,255,0.15)_75%,transparent_100%)] pointer-events-none z-10" />
+                            <div className="absolute top-0 inset-x-0 h-28 sm:h-36 md:h-44 lg:h-64 xl:h-[420px] bg-[linear-gradient(to_bottom,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.5)_40%,rgba(255,255,255,0.15)_75%,transparent_100%)] pointer-events-none z-10" />
 
                             {/* Neblina / degradado inferior difuminado ultra suave hacia el tono crema #fbf9f4 con mayor cobertura */}
-                            <div className="absolute bottom-0 inset-x-0 h-64 md:h-[600px] bg-[linear-gradient(to_top,#fbf9f4_0%,#fbf9f4_30%,rgba(251,249,244,0.75)_55%,rgba(251,249,244,0.35)_80%,rgba(251,249,244,0)_100%)] pointer-events-none z-10" />
+                            <div className="absolute bottom-0 inset-x-0 h-32 sm:h-40 md:h-52 lg:h-72 xl:h-[520px] bg-[linear-gradient(to_top,#fbf9f4_0%,#fbf9f4_30%,rgba(251,249,244,0.75)_55%,rgba(251,249,244,0.35)_80%,rgba(251,249,244,0)_100%)] pointer-events-none z-10" />
 
                             {/* Los textos van en una capa absoluta por encima de la neblina (z-20) */}
                             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none z-20">
                                 {/* Fecha arriba */}
-                                <header className="pt-32 sm:pt-20 md:pt-72 text-center px-4 text-6xl sm:text-6xl md:text-7xl" data-reveal="down">
+                                <header className="pt-10 sm:pt-14 md:pt-16 lg:pt-24 xl:pt-36 text-center px-4 text-xs sm:text-sm md:text-base lg:text-xl xl:text-3xl" data-reveal="down">
                                     <p className="font-serif tracking-[0.28em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
                                         {dateText}
                                     </p>
                                 </header>
 
                                 {/* Nombres de los novios en cursiva */}
-                                <div className="relative z-20 w-full max-w-[400px] md:max-w-[700px] lg:max-w-[850px] mx-auto px-4 my-auto flex flex-col select-none" data-reveal="scale" data-reveal-delay="200">
+                                <div className="relative z-20 w-full max-w-[380px] md:max-w-[540px] lg:max-w-[680px] xl:max-w-[850px] mx-auto px-4 my-auto flex flex-col select-none" data-reveal="scale" data-reveal-delay="200">
                                     {/* Primera línea: Adriana & */}
                                     <div className="flex items-baseline justify-start pl-4 md:pl-8">
-                                        <span className="font-script text-6xl md:text-8xl lg:text-[7.5rem] leading-[0.85] text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)]">
+                                        <span className="font-script text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7.5rem] leading-[0.85] text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)]">
                                             {brideName}
                                         </span>
-                                        <span className="font-script text-4xl md:text-6xl lg:text-[4.5rem] leading-[0.2] ml-3 md:ml-6 text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)]">
+                                        <span className="font-script text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[4.5rem] leading-[0.2] ml-3 md:ml-6 text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)]">
                                             &amp;
                                         </span>
                                     </div>
 
                                     {/* Segunda línea: Joaquín */}
-                                    <div className="flex justify-start pl-16 md:pl-36 mt-4 md:mt-8">
-                                        <span className="font-script text-6xl md:text-8xl lg:text-[7.5rem] leading-[0.85] text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)]">
+                                    <div className="flex justify-start pl-14 md:pl-28 lg:pl-36 mt-3 md:mt-6 lg:mt-8">
+                                        <span className="font-script text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7.5rem] leading-[0.85] text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)]">
                                             {groomName}
                                         </span>
                                     </div>
@@ -1103,11 +1103,11 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                             </div>
 
                             {/* Contenido Interior: Sello, Ubicación, Botones de mapa y Mesa de regalos */}
-                            <div className="relative z-10 w-full h-full flex flex-col items-center justify-start text-center pt-[3.8%] sm:pt-[4.2%] md:pt-[4.6%] pb-[11%] md:pb-[12%] px-6 sm:px-12 md:px-16">
+                            <div className="relative z-10 w-full h-full flex flex-col items-center justify-between text-center pt-[7%] sm:pt-[7.5%] md:pt-[8%] pb-[11%] md:pb-[12%] px-6 sm:px-10 md:px-14 lg:px-16">
 
                                 {/* Sello y Título Ubicación */}
-                                <div className="flex flex-col items-center w-full mb-8" data-reveal="down">
-                                    <div className="w-24 h-24 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-[22rem] lg:h-[22rem] mt-34 shrink-0 flex items-center justify-center drop-shadow-md mb-1 sm:mb-2 animate-pulse-subtle">
+                                <div className="flex flex-col items-center w-full" data-reveal="down">
+                                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-44 xl:h-44 shrink-0 flex items-center justify-center drop-shadow-md mb-1 sm:mb-2 animate-pulse-subtle">
                                         <img
                                             src="/images/canva_assets/sello_huellita.webp"
                                             alt="Sello de huellita"
@@ -1116,19 +1116,19 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                             className="w-full h-full object-contain"
                                         />
                                     </div>
-                                    <h2 className="font-script text-5xl sm:text-6xl md:text-7xl lg:text-[8.2rem] text-[#617485] leading-none mt-2 font-normal drop-shadow-sm">
+                                    <h2 className="font-script text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[5.2rem] text-[#617485] leading-none mt-1 sm:mt-2 font-normal drop-shadow-sm">
                                         Ubicación
                                     </h2>
                                 </div>
 
                                 {/* Contenedor de Ubicaciones y Mesa de regalos */}
-                                <div className="flex flex-col items-center gap-y-10 md:gap-y-8 lg:gap-y-12 w-full mt-6 sm:mt-8 md:mt-10 lg:mt-12">
+                                <div className="flex flex-col items-center justify-evenly flex-1 w-full py-2 sm:py-4 md:py-6">
                                     {/* Bloque 1: Ceremonia religiosa */}
-                                    <div className="flex flex-col items-center my-12" data-reveal="up" data-reveal-delay="100">
-                                        <span className="font-cardo text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] xl:text-[3.0rem] text-[#6d8293] leading-none mb-1 lg:mb-2 font-italic">
+                                    <div className="flex flex-col items-center" data-reveal="up" data-reveal-delay="100">
+                                        <span className="font-cardo text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-[2.6rem] text-[#6d8293] leading-none mb-1 lg:mb-2 font-italic">
                                             Ceremonia religiosa
                                         </span>
-                                        <h3 className="font-serif text-base sm:text-lg md:text-xl lg:text-[6.85rem] xl:text-[3.1rem] tracking-normal lg:tracking-[0.12em] text-[#3f5263] font-semibold uppercase mb-4 lg:mb-6">
+                                        <h3 className="font-serif text-xs sm:text-sm md:text-base lg:text-xl xl:text-[2.2rem] tracking-[0.1em] lg:tracking-[0.12em] text-[#3f5263] font-semibold uppercase mb-2.5 sm:mb-3 lg:mb-5">
                                             {(wedding?.locations?.ceremony && wedding.locations.ceremony !== 'NOMBRE DE LA IGLESIA')
                                                 ? wedding.locations.ceremony
                                                 : 'CASA DE LA CRISTIANDAD'}
@@ -1137,23 +1137,23 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                             href={wedding?.locations?.ceremony_maps || 'https://maps.google.com/?q=Casa+de+la+Cristiandad'}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center justify-center bg-white hover:bg-slate-50 text-[#4c6070] border-4 border-olive-400 shadow-sm rounded-[14px] lg:rounded-[20px] px-8 sm:px-10 md:px-12 lg:px-14 py-3 sm:py-3.5 md:py-4 lg:py-12 transition-all active:scale-95 group hover-lift"
+                                            className="inline-flex items-center justify-center bg-white hover:bg-slate-50 text-[#4c6070] border-2 lg:border-3 border-olive-400 shadow-sm rounded-[12px] lg:rounded-[16px] px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-2.5 md:py-3 lg:py-4 transition-all active:scale-95 group hover-lift"
                                         >
-                                            <span className="font-serif text-sm sm:text-base md:text-lg lg:text-xl xl:text-4xl  font-bold uppercase">
+                                            <span className="font-serif text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl font-bold uppercase">
                                                 VER EN GOOGLE MAPS
                                             </span>
-                                            <span className="ml-3 text-base md:text-lg lg:text-2xl xl:text-3xl text-[#4c6070] group-hover:translate-x-0.5 transition-transform">
+                                            <span className="ml-2 sm:ml-3 text-sm md:text-base lg:text-xl xl:text-2xl text-[#4c6070] group-hover:translate-x-0.5 transition-transform">
                                                 →
                                             </span>
                                         </a>
                                     </div>
 
                                     {/* Bloque 2: Recepción */}
-                                    <div className="flex flex-col items-center my-12" data-reveal="up" data-reveal-delay="200">
-                                        <span className="font-cardo text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] xl:text-[3.0rem] text-[#6d8293] leading-none mb-1 lg:mb-2 italic">
+                                    <div className="flex flex-col items-center" data-reveal="up" data-reveal-delay="200">
+                                        <span className="font-cardo text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-[2.6rem] text-[#6d8293] leading-none mb-1 lg:mb-2 italic">
                                             Recepción
                                         </span>
-                                        <h3 className="font-serif text-base sm:text-lg md:text-xl lg:text-[6.85rem] xl:text-[3.1rem] tracking-[0.14em] text-[#3f5263] font-semibold uppercase mb-4 lg:mb-6">
+                                        <h3 className="font-serif text-xs sm:text-sm md:text-base lg:text-xl xl:text-[2.2rem] tracking-[0.12em] text-[#3f5263] font-semibold uppercase mb-2.5 sm:mb-3 lg:mb-5">
                                             {(wedding?.locations?.reception && wedding.locations.reception !== 'NOMBRE DEL LOCAL')
                                                 ? wedding.locations.reception
                                                 : 'HOTEL HACIENDA SÁNCHEZ'}
@@ -1162,35 +1162,35 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                             href={wedding?.locations?.reception_maps || 'https://maps.google.com/?q=Hotel+Hacienda+Sanchez'}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center justify-center bg-white hover:bg-slate-50 text-[#4c6070] border-4 border-olive-400 shadow-sm rounded-[14px] lg:rounded-[20px] px-8 sm:px-10 md:px-12 lg:px-14 py-3 sm:py-3.5 md:py-4 lg:py-12 transition-all active:scale-95 group hover-lift"
+                                            className="inline-flex items-center justify-center bg-white hover:bg-slate-50 text-[#4c6070] border-2 lg:border-3 border-olive-400 shadow-sm rounded-[12px] lg:rounded-[16px] px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-2.5 md:py-3 lg:py-4 transition-all active:scale-95 group hover-lift"
                                         >
-                                            <span className="font-serif text-sm sm:text-base md:text-lg lg:text-xl xl:text-4xl tracking-[0.1em]  font-bold uppercase">
+                                            <span className="font-serif text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl tracking-[0.08em] font-bold uppercase">
                                                 VER EN GOOGLE MAPS
                                             </span>
-                                            <span className="ml-3 text-base md:text-lg lg:text-2xl xl:text-3xl text-[#4c6070] group-hover:translate-x-0.5 transition-transform">
+                                            <span className="ml-2 sm:ml-3 text-sm md:text-base lg:text-xl xl:text-2xl text-[#4c6070] group-hover:translate-x-0.5 transition-transform">
                                                 →
                                             </span>
                                         </a>
                                     </div>
 
                                     {/* Bloque 3: Mesa de regalos */}
-                                    <div className="flex flex-col items-center my-12" data-reveal="up" data-reveal-delay="300">
-                                        <h2 className="font-script text-4xl sm:text-5xl md:text-6xl lg:text-[6rem] text-[#617485] leading-none mb-4 tracking-normal lg:mb-6 font-normal drop-shadow-sm">
+                                    <div className="flex flex-col items-center" data-reveal="up" data-reveal-delay="300">
+                                        <h2 className="font-script text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[4.8rem] text-[#617485] leading-none mb-3 sm:mb-4 lg:mb-5 tracking-normal font-normal drop-shadow-sm">
                                             Mesa de regalos
                                         </h2>
-                                        <div className="flex flex-col gap-3.5 sm:gap-4 lg:gap-5 w-full min-w-[240px] sm:min-w-[280px] md:min-w-[340px] lg:min-w-[420px] max-w-[460px]">
+                                        <div className="flex flex-col gap-2.5 sm:gap-3 lg:gap-4 w-full min-w-[180px] sm:min-w-[220px] md:min-w-[260px] lg:min-w-[320px] max-w-[380px]">
                                             {giftRegistries.map((reg, idx) => (
                                                 <a
                                                     key={idx}
                                                     href={reg.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex items-center justify-center bg-white hover:bg-slate-50 text-[#4c6070] border-4 border-olive-400 shadow-sm rounded-[14px] lg:rounded-[20px] px-8 sm:px-10 md:px-12 lg:px-14 py-3 sm:py-3.5 md:py-4 lg:py-12 transition-all active:scale-95 group hover-lift"
+                                                    className="inline-flex items-center justify-center bg-white hover:bg-slate-50 text-[#4c6070] border-2 lg:border-3 border-olive-400 shadow-sm rounded-[12px] lg:rounded-[16px] px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-2.5 md:py-3 lg:py-4 transition-all active:scale-95 group hover-lift"
                                                 >
-                                                    <span className="font-serif text-sm sm:text-base md:text-lg lg:text-xl xl:text-4xl tracking-[0.1em] lg:tracking-[0.12em] font-bold uppercase truncate">
+                                                    <span className="font-serif text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl tracking-[0.08em] lg:tracking-[0.1em] font-bold uppercase truncate">
                                                         {reg.name}
                                                     </span>
-                                                    <span className="ml-3 text-base md:text-lg lg:text-2xl xl:text-3xl text-[#4c6070] group-hover:translate-x-0.5 transition-transform">
+                                                    <span className="ml-2 sm:ml-3 text-sm md:text-base lg:text-xl xl:text-2xl text-[#4c6070] group-hover:translate-x-0.5 transition-transform">
                                                         →
                                                     </span>
                                                 </a>
@@ -1220,11 +1220,11 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                 />
 
                                 {/* Monograma en la solapa superior (AJ escalonado con sutil palpitación) */}
-                                <div className="absolute top-[13%] left-1/2 -translate-x-1/2 flex items-center font-script text-[#f7f4ea] opacity-95 drop-shadow-sm pointer-events-none select-none whitespace-nowrap leading-none mt-2 mr-6 animate-pulse-subtle">
-                                    <span className="text-lg sm:text-[2.2rem] translate-x-[1px] -translate-y-[8px] sm:-translate-y-[10px]">
+                                <div className="absolute top-[15%] left-1/2 -translate-x-1/2 flex items-center font-script text-[#f7f4ea] opacity-95 drop-shadow-sm pointer-events-none select-none whitespace-nowrap leading-none mt-2 mr-6 animate-pulse-subtle">
+                                    <span className="text-[32px] sm:text-[34px] translate-x-[4px] -translate-y-[8px] sm:-translate-y-[9px]">
                                         A
                                     </span>
-                                    <span className="text-xs sm:text-[2.2rem] -translate-x-[18px] translate-y-[10px] sm:translate-y-[12px]">
+                                    <span className="text-[28px] sm:text-[30px] -translate-x-[12px] translate-y-[10px] sm:translate-y-[11px]">
                                         J
                                     </span>
                                 </div>
@@ -1412,8 +1412,11 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                             <img
                                 src="/images/canva_assets/novios_perrito.webp"
                                 alt="Adriana, Joaquín y su perrito"
-                                loading="lazy"
+                                width={1080}
+                                height={1350}
+                                loading="eager"
                                 decoding="async"
+                                style={{ aspectRatio: '1080 / 1350' }}
                                 className="w-full h-auto object-cover block select-none pointer-events-none -mt-4 sm:-mt-6 -mb-1"
                             />
 

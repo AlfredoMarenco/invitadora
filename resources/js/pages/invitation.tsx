@@ -18,6 +18,15 @@ export type { WeddingProps };
  *     http://localhost:8000/?view=desktop
  */
 export default function Invitation(props: WeddingProps) {
+    const isMobileOrTabletDevice = () => {
+        if (typeof window === 'undefined') return true;
+        const ua = navigator.userAgent || '';
+        const isPhoneOrTabletUA = /iPhone|iPod|iPad|Android|Mobile|Tablet|PlayBook|Silk|BlackBerry|IEMobile/i.test(ua);
+        const isIPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+        if (isPhoneOrTabletUA || isIPadOS) return true;
+        return window.innerWidth < 1024;
+    };
+
     const [isDesktop, setIsDesktop] = useState<boolean>(() => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
@@ -25,15 +34,9 @@ export default function Invitation(props: WeddingProps) {
             if (viewParam === 'desktop') return true;
             if (viewParam === 'mobile') return false;
 
-            // Si es un smartphone (iPhone, iPod, Android móvil), cargar SIEMPRE la versión móvil
-            // Esto evita que Safari en iOS cargue la vista de escritorio por 'Solicitar sitio web para computadoras'
-            // o por orientación horizontal en pantallas con ancho lógico > 768px.
-            const isMobileDevice = /iPhone|iPod|Android.*Mobile|Mobile.*Firefox|BlackBerry|IEMobile/i.test(
-                navigator.userAgent
-            );
-            if (isMobileDevice) return false;
+            if (isMobileOrTabletDevice()) return false;
 
-            return window.innerWidth >= 768;
+            return window.innerWidth >= 1024;
         }
         return false;
     });
@@ -51,26 +54,19 @@ export default function Invitation(props: WeddingProps) {
                 return;
             }
 
-            // Si es un smartphone, forzar siempre la versión móvil
-            const isMobileDevice = /iPhone|iPod|Android.*Mobile|Mobile.*Firefox|BlackBerry|IEMobile/i.test(
-                navigator.userAgent
-            );
-            if (isMobileDevice) {
+            if (isMobileOrTabletDevice()) {
                 setIsDesktop(false);
                 return;
             }
 
-            setIsDesktop(window.innerWidth >= 768);
+            setIsDesktop(window.innerWidth >= 1024);
         };
 
-        const mediaQuery = window.matchMedia('(min-width: 768px)');
+        const mediaQuery = window.matchMedia('(min-width: 1024px)');
         const handleChange = (e: MediaQueryListEvent) => {
             const params = new URLSearchParams(window.location.search);
             if (!params.get('view')) {
-                const isMobileDevice = /iPhone|iPod|Android.*Mobile|Mobile.*Firefox|BlackBerry|IEMobile/i.test(
-                    navigator.userAgent
-                );
-                if (isMobileDevice) {
+                if (isMobileOrTabletDevice()) {
                     setIsDesktop(false);
                 } else {
                     setIsDesktop(e.matches);

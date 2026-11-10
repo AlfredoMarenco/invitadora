@@ -1230,10 +1230,10 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
 
                                 {/* Monograma en la solapa superior (AJ escalonado con sutil palpitación) */}
                                 <div className="absolute top-[15%] left-1/2 -translate-x-1/2 flex items-center font-script text-[#f7f4ea] opacity-95 drop-shadow-sm pointer-events-none select-none whitespace-nowrap leading-none mt-2 mr-6 animate-pulse-subtle">
-                                    <span className="text-[32px] sm:text-[50px] translate-x-[4px] -translate-y-[8px] sm:-translate-y-[10px]">
+                                    <span className="text-[32px] sm:text-[34px] translate-x-[4px] -translate-y-[8px] sm:-translate-y-[9px]">
                                         A
                                     </span>
-                                    <span className="text-[28px] sm:text-[52px] -translate-x-[12px] translate-y-[10px] sm:translate-y-[12px]">
+                                    <span className="text-[28px] sm:text-[30px] -translate-x-[12px] translate-y-[10px] sm:translate-y-[11px]">
                                         J
                                     </span>
                                 </div>
@@ -1422,8 +1422,11 @@ export default function InvitationMobile({ wedding, invitation, rsvp }: WeddingP
                             <img
                                 src="/images/canva_assets/novios_perrito.webp"
                                 alt="Adriana, Joaquín y su perrito"
-                                loading="lazy"
+                                width={1080}
+                                height={1350}
+                                loading="eager"
                                 decoding="async"
+                                style={{ aspectRatio: '1080 / 1350' }}
                                 className="w-full h-auto object-cover block select-none pointer-events-none -mt-4 sm:-mt-6 -mb-1"
                             />
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Phone, X } from 'lucide-react';
 
 export interface HotelItem {
@@ -30,13 +31,13 @@ export default function HotelCarousel({
     const [reserveModalHotel, setReserveModalHotel] = useState<HotelItem | null>(null);
 
     const renderReservationModal = () => {
-        if (!reserveModalHotel) return null;
+        if (!reserveModalHotel || typeof document === 'undefined') return null;
         const cleanPhone = reserveModalHotel.phone ? reserveModalHotel.phone.replace(/[^+\d]/g, '') : '';
         const callHref = cleanPhone ? `tel:${cleanPhone}` : (reserveModalHotel.url || '#');
 
-        return (
+        return createPortal(
             <div
-                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs px-4 animate-in fade-in duration-200"
+                className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-xs px-4 animate-in fade-in duration-200"
                 onClick={() => setReserveModalHotel(null)}
             >
                 <div
@@ -101,7 +102,8 @@ export default function HotelCarousel({
                         </button>
                     </div>
                 </div>
-            </div>
+            </div>,
+            document.body
         );
     };
 
