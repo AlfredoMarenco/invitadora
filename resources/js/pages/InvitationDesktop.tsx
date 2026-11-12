@@ -1210,7 +1210,7 @@ export default function InvitationDesktop({
 
                         {/* Perrito con anillo asomándose en la esquina inferior derecha */}
                         <div
-                            className="pointer-events-none absolute -right-4 -bottom-2 z-30 w-[170px] select-none sm:right-0 sm:w-[215px]"
+                            className="pointer-events-none absolute -right-4 -bottom-2 z-30 w-[170px] select-none sm:-right-4 sm:w-[220px] md:-right-5 md:w-[260px] lg:-right-6 lg:w-[330px] xl:-right-8 xl:w-[480px] min-[1440px]:-right-9 min-[1440px]:w-[540px] min-[1920px]:-right-11 min-[1920px]:w-[640px]"
                             data-reveal="fade"
                             data-reveal-delay="250"
                         >
@@ -1408,7 +1408,7 @@ export default function InvitationDesktop({
                             </div>
 
                             {/* Planta lado derecho inferior con balanceo opuesto */}
-                            <div className="animate-float-reverse pointer-events-none absolute -right-[28.4%] bottom-[-8%] z-20 w-[59.2%] select-none">
+                            <div className="animate-float-reverse pointer-events-none absolute -right-[22%] bottom-[-7%] z-20 w-[38%] select-none">
                                 <img
                                     src="/images/canva_assets/hojasubicacionderecha.webp"
                                     alt="Decoración botánica derecha"
