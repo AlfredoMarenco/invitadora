@@ -4,16 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Wedding extends Model
 {
     protected $guarded = [];
 
-    protected $appends = ['music_url', 'gift_registries_list', 'timeline_list', 'venue_elements_list'];
+    protected $appends = ['music_url', 'og_image_url', 'gift_registries_list', 'timeline_list', 'venue_elements_list'];
 
     public function getVenueElementsListAttribute(): array
     {
-        if (!empty($this->venue_elements) && is_array($this->venue_elements) && count($this->venue_elements) > 0) {
+        if (! empty($this->venue_elements) && is_array($this->venue_elements) && count($this->venue_elements) > 0) {
             return $this->venue_elements;
         }
 
@@ -67,7 +68,7 @@ class Wedding extends Model
 
     public function getTimelineListAttribute(): array
     {
-        if (!empty($this->timeline) && is_array($this->timeline) && count($this->timeline) > 0) {
+        if (! empty($this->timeline) && is_array($this->timeline) && count($this->timeline) > 0) {
             return $this->timeline;
         }
 
@@ -115,41 +116,65 @@ class Wedding extends Model
     {
         $path = $this->background_audio_path ?? $this->background_music_path;
         if ($path) {
-            return str_starts_with($path, 'http') ? $path : \Illuminate\Support\Facades\Storage::url($path);
+            return str_starts_with($path, 'http') ? $path : Storage::url($path);
         }
+
         return null;
+    }
+
+    public function getOgImageUrlAttribute(): string
+    {
+        $version = $this->updated_at?->timestamp ?: 1;
+
+        if (! empty($this->og_image_path)) {
+            $path = (string) $this->og_image_path;
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                $fullUrl = $path;
+            } elseif (str_starts_with($path, '/')) {
+                $fullUrl = url($path);
+            } else {
+                $fullUrl = url(Storage::url($path));
+            }
+
+            return str_contains($fullUrl, '?')
+                ? "{$fullUrl}&v={$version}"
+                : "{$fullUrl}?v={$version}";
+        }
+
+        return url('/images/og-share.jpg').'?v=1';
     }
 
     public function getGiftRegistriesListAttribute(): array
     {
-        if (!empty($this->gift_registries) && is_array($this->gift_registries)) {
+        if (! empty($this->gift_registries) && is_array($this->gift_registries)) {
             $filtered = [];
             foreach ($this->gift_registries as $item) {
-                if (!empty($item['url'])) {
+                if (! empty($item['url'])) {
                     $filtered[] = [
-                        'name' => !empty($item['name']) ? $item['name'] : (!empty($item['title']) ? $item['title'] : 'MESA DE REGALOS'),
+                        'name' => ! empty($item['name']) ? $item['name'] : (! empty($item['title']) ? $item['title'] : 'MESA DE REGALOS'),
                         'url' => $item['url'],
                     ];
                 }
             }
-            if (!empty($filtered)) {
+            if (! empty($filtered)) {
                 return $filtered;
             }
         }
 
         $list = [];
-        if (!empty($this->gift_registry_url)) {
+        if (! empty($this->gift_registry_url)) {
             $list[] = [
                 'name' => $this->gift_registry_button_text ?: 'LIVERPOOL',
                 'url' => $this->gift_registry_url,
             ];
         }
-        if (!empty($this->gift_registry_url_2)) {
+        if (! empty($this->gift_registry_url_2)) {
             $list[] = [
                 'name' => $this->gift_registry_button_text_2 ?: 'AMAZON',
                 'url' => $this->gift_registry_url_2,
             ];
         }
+
         return $list;
     }
 

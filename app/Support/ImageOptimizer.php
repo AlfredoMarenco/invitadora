@@ -12,12 +12,12 @@ class ImageOptimizer
      */
     public static function toWebp(string $sourcePath, int $maxDim, int $quality): ?string
     {
-        if (!extension_loaded('gd') || !function_exists('imagewebp')) {
+        if (! extension_loaded('gd') || ! function_exists('imagewebp')) {
             return null;
         }
 
         $info = @getimagesize($sourcePath);
-        if (!$info) {
+        if (! $info) {
             return null;
         }
 
@@ -28,7 +28,7 @@ class ImageOptimizer
             IMAGETYPE_GIF => @imagecreatefromgif($sourcePath),
             default => false,
         };
-        if (!$src) {
+        if (! $src) {
             return null;
         }
 
@@ -75,10 +75,107 @@ class ImageOptimizer
         if ($data === null) {
             return null;
         }
-        $name = $dir . '/' . ($basename ?? Str::random(24)) . '.webp';
+        $name = $dir.'/'.($basename ?? Str::random(24)).'.webp';
+        Storage::disk('public')->put($name, $data);
+
+        return Storage::url($name);
+    }
+
+    /**
+     * Recorta (cover 1200x630 enfocado en rostros para fotos verticales) y codifica en JPEG (< 300 KB)
+     * compatible con vistas previas de WhatsApp, iMessage y redes sociales.
+     */
+    public static function toOgJpeg(string $sourcePath, int $targetW = 1200, int $targetH = 630, int $quality = 84): ?string
+    {
+        if (! extension_loaded('gd') || ! function_exists('imagejpeg')) {
+            return null;
+        }
+
+        $info = @getimagesize($sourcePath);
+        if (! $info) {
+            return null;
+        }
+
+        $src = match ($info[2]) {
+            IMAGETYPE_JPEG => @imagecreatefromjpeg($sourcePath),
+            IMAGETYPE_PNG => @imagecreatefrompng($sourcePath),
+            IMAGETYPE_WEBP => @imagecreatefromwebp($sourcePath),
+            IMAGETYPE_GIF => @imagecreatefromgif($sourcePath),
+            default => false,
+        };
+        if (! $src) {
+            return null;
+        }
+
+        if ($info[2] === IMAGETYPE_JPEG && function_exists('exif_read_data')) {
+            $exif = @exif_read_data($sourcePath);
+            $angle = match ($exif['Orientation'] ?? 1) {
+                3 => 180,
+                6 => -90,
+                8 => 90,
+                default => 0,
+            };
+            if ($angle) {
+                $src = imagerotate($src, $angle, 0);
+            }
+        }
+
+        $w = imagesx($src);
+        $h = imagesy($src);
+        $targetRatio = $targetW / $targetH;
+        $srcRatio = $w / max(1, $h);
+
+        if ($srcRatio > $targetRatio) {
+            $cropH = $h;
+            $cropW = max(1, (int) round($h * $targetRatio));
+            $cropX = (int) round(($w - $cropW) / 2);
+            $cropY = 0;
+        } else {
+            $cropW = $w;
+            $cropH = max(1, (int) round($w / $targetRatio));
+            $cropX = 0;
+            // En fotos verticales de retrato, priorizar el tercio superior (rostros)
+            $cropY = (int) round(($h - $cropH) * 0.24);
+        }
+
+        $dst = imagecreatetruecolor($targetW, $targetH);
+        $bg = imagecolorallocate($dst, 251, 249, 244); // #fbf9f4 por si el PNG tiene transparencia
+        imagefilledrectangle($dst, 0, 0, $targetW, $targetH, $bg);
+        imagecopyresampled($dst, $src, 0, 0, $cropX, $cropY, $targetW, $targetH, $cropW, $cropH);
+        imagedestroy($src);
+        imageinterlace($dst, true);
+
+        $data = null;
+        foreach ([$quality, 76, 68, 60] as $q) {
+            ob_start();
+            imagejpeg($dst, null, $q);
+            $candidate = ob_get_clean();
+            if ($candidate !== false && $candidate !== '') {
+                $data = $candidate;
+                if (strlen($data) <= 280000) {
+                    break;
+                }
+            }
+        }
+
+        imagedestroy($dst);
+
+        return $data ?: null;
+    }
+
+    /**
+     * Guarda la imagen Open Graph JPEG optimizada en el disco público y devuelve su URL relativa (/storage/...).
+     */
+    public static function storeOgJpeg(string $sourcePath, string $dir = 'og', ?string $basename = null): ?string
+    {
+        $data = self::toOgJpeg($sourcePath);
+        if ($data === null) {
+            return null;
+        }
+
+        $name = $dir.'/'.($basename ?? Str::random(24)).'.jpg';
         Storage::disk('public')->put($name, $data);
 
         return Storage::url($name);
     }
 }
-

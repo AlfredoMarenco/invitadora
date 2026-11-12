@@ -31,9 +31,38 @@
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <meta name="theme-color" content="#28362E">
+        <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+        <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+
+        @if(!empty($meta))
+            <meta name="description" content="{{ $meta['description'] }}">
+            <link rel="canonical" href="{{ $meta['url'] }}">
+
+            {{-- Open Graph / WhatsApp / Facebook / iMessage --}}
+            <meta property="og:type" content="{{ $meta['type'] ?? 'website' }}">
+            <meta property="og:locale" content="{{ $meta['locale'] ?? 'es_MX' }}">
+            <meta property="og:site_name" content="{{ $meta['site_name'] }}">
+            <meta property="og:url" content="{{ $meta['url'] }}">
+            <meta property="og:title" content="{{ $meta['title'] }}">
+            <meta property="og:description" content="{{ $meta['description'] }}">
+            <meta property="og:image" content="{{ $meta['image'] }}">
+            @if(str_starts_with($meta['image'], 'https://'))
+                <meta property="og:image:secure_url" content="{{ $meta['image'] }}">
+            @endif
+            <meta property="og:image:type" content="{{ $meta['image_type'] ?? 'image/jpeg' }}">
+            <meta property="og:image:width" content="{{ $meta['image_width'] ?? 1200 }}">
+            <meta property="og:image:height" content="{{ $meta['image_height'] ?? 630 }}">
+            <meta property="og:image:alt" content="{{ $meta['image_alt'] }}">
+
+            {{-- Twitter / X / Telegram --}}
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:title" content="{{ $meta['title'] }}">
+            <meta name="twitter:description" content="{{ $meta['description'] }}">
+            <meta name="twitter:image" content="{{ $meta['image'] }}">
+            <meta name="twitter:image:alt" content="{{ $meta['image_alt'] }}">
+        @endif
 
         @fonts
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,7 +72,7 @@
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         <x-inertia::head>
-            <title>{{ config('app.name', 'Laravel') }}</title>
+            <title>{{ $meta['title'] ?? (config('app.name') !== 'Laravel' ? config('app.name', 'Invitadora') : 'Invitadora') }}</title>
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">

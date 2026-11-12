@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, {
+    useState,
+    useEffect,
+    useRef,
+    useMemo,
+    useCallback,
+} from 'react';
 import { Head, router } from '@inertiajs/react';
 import { Ticket } from 'lucide-react';
 import InfiniteDesktopGallery from '../components/InfiniteDesktopGallery';
@@ -76,24 +82,50 @@ export interface WeddingProps {
         gift_registry_url_2?: string;
         gift_registry_button_text_2?: string;
         gift_registries_list?: Array<{ name: string; url: string }>;
-        timeline?: Array<{ time: string; title: string; description?: string; icon_url?: string }>;
+        timeline?: Array<{
+            time: string;
+            title: string;
+            description?: string;
+            icon_url?: string;
+        }>;
         timeline_mode?: string | null;
         timeline_image_path?: string | null;
-        timeline_list?: Array<{ time: string; title: string; description?: string; icon_url?: string }>;
+        timeline_list?: Array<{
+            time: string;
+            title: string;
+            description?: string;
+            icon_url?: string;
+        }>;
     };
     invitation?: InvitationData | null;
     /** Ventana de confirmación calculada en el servidor (fecha límite efectiva Y-m-d y si ya cerró) */
     rsvp?: { deadline: string | null; closed: boolean } | null;
+    meta?: {
+        title?: string;
+        description?: string;
+        image?: string;
+        url?: string;
+    } | null;
 }
 
-export default function InvitationDesktop({ wedding, invitation, rsvp }: WeddingProps) {
+export default function InvitationDesktop({
+    wedding,
+    invitation,
+    rsvp,
+    meta,
+}: WeddingProps) {
     const brideName = wedding?.bride_name || 'Adriana';
     const groomName = wedding?.groom_name || 'Joaquín';
     const dateText = wedding?.wedding_date
         ? new Date(wedding.wedding_date)
-            .toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
-            .toUpperCase()
-            .replace(/ DE /g, ' ')
+              .toLocaleDateString('es-ES', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                  timeZone: 'UTC',
+              })
+              .toUpperCase()
+              .replace(/ DE /g, ' ')
         : '20 FEBRERO 2027';
 
     // Fecha dinámica para el footer en formato: 20 | FEB | 2027
@@ -102,7 +134,20 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
         try {
             const d = new Date(wedding.wedding_date);
             if (isNaN(d.getTime())) return '20 | FEB | 2027';
-            const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+            const months = [
+                'ENE',
+                'FEB',
+                'MAR',
+                'ABR',
+                'MAY',
+                'JUN',
+                'JUL',
+                'AGO',
+                'SEP',
+                'OCT',
+                'NOV',
+                'DIC',
+            ];
             const day = d.getUTCDate();
             const month = months[d.getUTCMonth()] || 'FEB';
             const year = d.getUTCFullYear();
@@ -119,7 +164,10 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
         const [y, m, d] = rsvp.deadline.split('-').map(Number);
         if (!y || !m || !d) return '';
         return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('es-MX', {
-            day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'UTC',
         });
     }, [rsvp?.deadline]);
 
@@ -127,7 +175,10 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
 
     // Mesas de regalos configurables dinámicamente desde el panel
     const giftRegistries = useMemo(() => {
-        if (wedding?.gift_registries_list && wedding.gift_registries_list.length > 0) {
+        if (
+            wedding?.gift_registries_list &&
+            wedding.gift_registries_list.length > 0
+        ) {
             return wedding.gift_registries_list;
         }
         const list: Array<{ name: string; url: string }> = [];
@@ -145,8 +196,11 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
         }
         if (list.length === 0) {
             list.push(
-                { name: 'LIVERPOOL', url: 'https://mesaderegalos.liverpool.com.mx' },
-                { name: 'AMAZON', url: 'https://www.amazon.com.mx' }
+                {
+                    name: 'LIVERPOOL',
+                    url: 'https://mesaderegalos.liverpool.com.mx',
+                },
+                { name: 'AMAZON', url: 'https://www.amazon.com.mx' },
             );
         }
         return list;
@@ -185,31 +239,72 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
             return wedding.timeline_list;
         }
         return [
-            { time: '15:00', title: 'MISA', description: '', icon_url: '/resources_canvas/images/5.svg' },
-            { time: '16:30', title: 'ROMPEHIELOS', description: '', icon_url: '/resources_canvas/images/6.svg' },
-            { time: '17:30', title: 'BRINDIS', description: '', icon_url: '/resources_canvas/images/7.svg' },
-            { time: '18:30', title: 'CENA', description: '', icon_url: '/resources_canvas/images/8.svg' },
-            { time: '20:00', title: 'FIESTA', description: '', icon_url: '/resources_canvas/images/9.svg' },
-            { time: '02:00', title: 'CLAUSURA', description: '', icon_url: '/resources_canvas/images/10.svg' },
+            {
+                time: '15:00',
+                title: 'MISA',
+                description: '',
+                icon_url: '/resources_canvas/images/5.svg',
+            },
+            {
+                time: '16:30',
+                title: 'ROMPEHIELOS',
+                description: '',
+                icon_url: '/resources_canvas/images/6.svg',
+            },
+            {
+                time: '17:30',
+                title: 'BRINDIS',
+                description: '',
+                icon_url: '/resources_canvas/images/7.svg',
+            },
+            {
+                time: '18:30',
+                title: 'CENA',
+                description: '',
+                icon_url: '/resources_canvas/images/8.svg',
+            },
+            {
+                time: '20:00',
+                title: 'FIESTA',
+                description: '',
+                icon_url: '/resources_canvas/images/9.svg',
+            },
+            {
+                time: '02:00',
+                title: 'CLAUSURA',
+                description: '',
+                icon_url: '/resources_canvas/images/10.svg',
+            },
         ];
     }, [wedding?.timeline, wedding?.timeline_list]);
 
     // Nombres de los padres y padrinos
-    const brideParents = wedding?.bride_parents && wedding.bride_parents.length > 0
-        ? wedding.bride_parents
-        : ['MARÍA ERMITA SALAZAR PERERA', 'WILBERTH ALFREDO GUILLERMO AKÉ', 'CARLOS MANUEL HERNÁNDEZ GUILLERMO'];
+    const brideParents =
+        wedding?.bride_parents && wedding.bride_parents.length > 0
+            ? wedding.bride_parents
+            : [
+                  'MARÍA ERMITA SALAZAR PERERA',
+                  'WILBERTH ALFREDO GUILLERMO AKÉ',
+                  'CARLOS MANUEL HERNÁNDEZ GUILLERMO',
+              ];
 
-    const groomParents = wedding?.groom_parents && wedding.groom_parents.length > 0
-        ? wedding.groom_parents
-        : ['ANNA MARÍA BETANCOURT SERRANO', 'SATURNINO ROLANDO BAEZA ZETINA'];
+    const groomParents =
+        wedding?.groom_parents && wedding.groom_parents.length > 0
+            ? wedding.groom_parents
+            : [
+                  'ANNA MARÍA BETANCOURT SERRANO',
+                  'SATURNINO ROLANDO BAEZA ZETINA',
+              ];
 
-    const brideGodparents = wedding?.bride_godparents && wedding.bride_godparents.length > 0
-        ? wedding.bride_godparents
-        : ['ALFREDO ANTONIO ARCEO CASTILLO'];
+    const brideGodparents =
+        wedding?.bride_godparents && wedding.bride_godparents.length > 0
+            ? wedding.bride_godparents
+            : ['ALFREDO ANTONIO ARCEO CASTILLO'];
 
-    const groomGodparents = wedding?.groom_godparents && wedding.groom_godparents.length > 0
-        ? wedding.groom_godparents
-        : ['YARA IVONNE BAEZA ZETINA', 'VÍCTOR SÁNCHEZ GONZÁLEZ'];
+    const groomGodparents =
+        wedding?.groom_godparents && wedding.groom_godparents.length > 0
+            ? wedding.groom_godparents
+            : ['YARA IVONNE BAEZA ZETINA', 'VÍCTOR SÁNCHEZ GONZÁLEZ'];
 
     // Estado del reproductor de música
     const [isPlaying, setIsPlaying] = useState(false);
@@ -222,11 +317,14 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
             audioRef.current.pause();
             setIsPlaying(false);
         } else {
-            audioRef.current.play().then(() => {
-                setIsPlaying(true);
-            }).catch((err) => {
-                console.warn('Audio playback requires interaction:', err);
-            });
+            audioRef.current
+                .play()
+                .then(() => {
+                    setIsPlaying(true);
+                })
+                .catch((err) => {
+                    console.warn('Audio playback requires interaction:', err);
+                });
         }
     };
 
@@ -269,10 +367,18 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
         tryPlay();
 
         // 2. Si las políticas del navegador lo bloquean, escuchar interacciones reales del usuario
-        window.addEventListener('pointerdown', handleUserInteraction, { passive: true });
-        window.addEventListener('touchstart', handleUserInteraction, { passive: true });
-        window.addEventListener('click', handleUserInteraction, { passive: true });
-        window.addEventListener('keydown', handleUserInteraction, { passive: true });
+        window.addEventListener('pointerdown', handleUserInteraction, {
+            passive: true,
+        });
+        window.addEventListener('touchstart', handleUserInteraction, {
+            passive: true,
+        });
+        window.addEventListener('click', handleUserInteraction, {
+            passive: true,
+        });
+        window.addEventListener('keydown', handleUserInteraction, {
+            passive: true,
+        });
 
         return () => {
             removeListeners();
@@ -319,9 +425,10 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
     ];
 
     const rawGallery = wedding?.gallery_images || wedding?.galleryImages || [];
-    const galleryList = rawGallery.length > 0
-        ? rawGallery.map((img) => img.thumb_path || img.image_path)
-        : defaultGalleryImages;
+    const galleryList =
+        rawGallery.length > 0
+            ? rawGallery.map((img) => img.thumb_path || img.image_path)
+            : defaultGalleryImages;
 
     // Cuenta regresiva hacia wedding_date (o 20 de febrero de 2027 por defecto)
     const [timeLeft, setTimeLeft] = useState({
@@ -340,12 +447,19 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
             const difference = weddingTime - now;
 
             if (difference <= 0) {
-                setTimeLeft({ days: '00', hours: '00', minutes: '00', seconds: '00' });
+                setTimeLeft({
+                    days: '00',
+                    hours: '00',
+                    minutes: '00',
+                    seconds: '00',
+                });
                 return;
             }
 
             const d = Math.floor(difference / (1000 * 60 * 60 * 24));
-            const h = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const h = Math.floor(
+                (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+            );
             const m = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
             const s = Math.floor((difference % (1000 * 60)) / 1000);
 
@@ -364,12 +478,14 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
 
     // Transiciones y animaciones al hacer scroll (Scroll Reveal de alta gama)
     useEffect(() => {
-        const elements = document.querySelectorAll<HTMLElement>('[data-reveal]');
+        const elements =
+            document.querySelectorAll<HTMLElement>('[data-reveal]');
         if (elements.length === 0) return;
 
         // Revelar inmediatamente los que ya están en el viewport inicial
         const checkImmediate = () => {
-            const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+            const windowHeight =
+                window.innerHeight || document.documentElement.clientHeight;
             elements.forEach((el) => {
                 const rect = el.getBoundingClientRect();
                 if (rect.top <= windowHeight * 0.95 && rect.bottom >= 0) {
@@ -393,7 +509,7 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                 {
                     rootMargin: '0px 0px -30px 0px',
                     threshold: 0.05,
-                }
+                },
             );
 
             elements.forEach((el) => {
@@ -437,16 +553,22 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
     ];
 
     const rawHotels = wedding?.hotels || [];
-    const hotelList = rawHotels.length > 0
-        ? rawHotels.map((h) => ({
-            name: h.name,
-            description: h.location || h.description || '',
-            image: h.image_path || h.image || '/images/hotels/hotel_1.jpg',
-            url: h.url || '',
-            phone: h.phone || '',
-            mapsUrl: h.maps_url || (h.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.name + ' ' + h.location)}` : ''),
-        }))
-        : defaultHotels;
+    const hotelList =
+        rawHotels.length > 0
+            ? rawHotels.map((h) => ({
+                  name: h.name,
+                  description: h.location || h.description || '',
+                  image:
+                      h.image_path || h.image || '/images/hotels/hotel_1.jpg',
+                  url: h.url || '',
+                  phone: h.phone || '',
+                  mapsUrl:
+                      h.maps_url ||
+                      (h.location
+                          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.name + ' ' + h.location)}`
+                          : ''),
+              }))
+            : defaultHotels;
 
     // Estado del Formulario de Asistencia (RSVP / ¿Nos acompañas?)
     const [rsvpName, setRsvpName] = useState(invitation?.name || '');
@@ -454,20 +576,24 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
     // Determinar respuesta inicial si ya respondió previamente
     const getInitialAttending = (): 'yes' | 'no' | null => {
         if (!invitation?.guests || invitation.guests.length === 0) return null;
-        const allYes = invitation.guests.every(g => g.is_attending === true);
-        const allNo = invitation.guests.every(g => g.is_attending === false);
+        const allYes = invitation.guests.every((g) => g.is_attending === true);
+        const allNo = invitation.guests.every((g) => g.is_attending === false);
         if (allYes) return 'yes';
         if (allNo) return 'no';
         return null;
     };
 
-    const [rsvpAttending, setRsvpAttending] = useState<'yes' | 'no' | null>(getInitialAttending());
+    const [rsvpAttending, setRsvpAttending] = useState<'yes' | 'no' | null>(
+        getInitialAttending(),
+    );
 
     // Mapa de asistencia individual por invitado
-    const [guestAttendingMap, setGuestAttendingMap] = useState<Record<number, boolean>>(() => {
+    const [guestAttendingMap, setGuestAttendingMap] = useState<
+        Record<number, boolean>
+    >(() => {
         const map: Record<number, boolean> = {};
         if (invitation?.guests) {
-            invitation.guests.forEach(g => {
+            invitation.guests.forEach((g) => {
                 if (g.is_attending !== null && g.is_attending !== undefined) {
                     map[g.id] = g.is_attending;
                 }
@@ -476,18 +602,24 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
         return map;
     });
 
-    const [guestAllergiesMap, setGuestAllergiesMap] = useState<Record<number, string>>(() => {
+    const [guestAllergiesMap, setGuestAllergiesMap] = useState<
+        Record<number, string>
+    >(() => {
         const map: Record<number, string> = {};
         if (invitation?.guests) {
-            invitation.guests.forEach(g => {
+            invitation.guests.forEach((g) => {
                 map[g.id] = g.allergies || '';
             });
         }
         return map;
     });
 
-    const [rsvpMessage, setRsvpMessage] = useState(invitation?.message_to_couple || '');
-    const [rsvpSubmitted, setRsvpSubmitted] = useState(invitation?.status === 'responded');
+    const [rsvpMessage, setRsvpMessage] = useState(
+        invitation?.message_to_couple || '',
+    );
+    const [rsvpSubmitted, setRsvpSubmitted] = useState(
+        invitation?.status === 'responded',
+    );
     const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
     const [rsvpError, setRsvpError] = useState('');
 
@@ -495,13 +627,15 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
     const confirmedGuests = useMemo(() => {
         if (!invitation?.guests || invitation.guests.length === 0) {
             if (rsvpAttending === 'yes') {
-                return [{
-                    id: 0,
-                    full_name: rsvpName || 'Invitado de Honor',
-                    checkin_code: 'AJ-ACCESO',
-                    is_attending: true,
-                    type: 'adult' as const,
-                }];
+                return [
+                    {
+                        id: 0,
+                        full_name: rsvpName || 'Invitado de Honor',
+                        checkin_code: 'AJ-ACCESO',
+                        is_attending: true,
+                        type: 'adult' as const,
+                    },
+                ];
             }
             return [];
         }
@@ -521,12 +655,18 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
             return;
         }
 
-        const hasMultipleGuests = !!(invitation && invitation.guests && invitation.guests.length > 1);
+        const hasMultipleGuests = !!(
+            invitation &&
+            invitation.guests &&
+            invitation.guests.length > 1
+        );
 
         if (hasMultipleGuests) {
             const hasAnySelection = Object.keys(guestAttendingMap).length > 0;
             if (!hasAnySelection && !rsvpAttending) {
-                setRsvpError('Por favor confirma la asistencia de tus invitados');
+                setRsvpError(
+                    'Por favor confirma la asistencia de tus invitados',
+                );
                 return;
             }
         } else {
@@ -543,24 +683,25 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
             // Invitación personalizada con token
             const payload = hasMultipleGuests
                 ? {
-                    guests: invitation.guests?.map(g => ({
-                        id: g.id,
-                        is_attending: guestAttendingMap[g.id] !== undefined
-                            ? guestAttendingMap[g.id]
-                            : (rsvpAttending === 'yes'),
-                        allergies: guestAllergiesMap[g.id] || null,
-                    })),
-                    message_to_couple: rsvpMessage,
-                }
+                      guests: invitation.guests?.map((g) => ({
+                          id: g.id,
+                          is_attending:
+                              guestAttendingMap[g.id] !== undefined
+                                  ? guestAttendingMap[g.id]
+                                  : rsvpAttending === 'yes',
+                          allergies: guestAllergiesMap[g.id] || null,
+                      })),
+                      message_to_couple: rsvpMessage,
+                  }
                 : {
-                    is_attending: rsvpAttending === 'yes',
-                    guests: invitation.guests?.map(g => ({
-                        id: g.id,
-                        is_attending: rsvpAttending === 'yes',
-                        allergies: guestAllergiesMap[g.id] || null,
-                    })),
-                    message_to_couple: rsvpMessage,
-                };
+                      is_attending: rsvpAttending === 'yes',
+                      guests: invitation.guests?.map((g) => ({
+                          id: g.id,
+                          is_attending: rsvpAttending === 'yes',
+                          allergies: guestAllergiesMap[g.id] || null,
+                      })),
+                      message_to_couple: rsvpMessage,
+                  };
 
             router.put(`/public/rsvp/${invitation.token}`, payload, {
                 preserveScroll: true,
@@ -568,151 +709,215 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                     setRsvpSubmitted(true);
                 },
                 onError: (err: any) => {
-                    setRsvpError(err?.rsvp || 'Ocurrió un error al guardar tu respuesta. Intenta de nuevo.');
+                    setRsvpError(
+                        err?.rsvp ||
+                            'Ocurrió un error al guardar tu respuesta. Intenta de nuevo.',
+                    );
                 },
                 onFinish: () => {
                     setRsvpSubmitting(false);
-                }
+                },
             });
         } else {
             // Confirmación abierta en la landing (sin token)
-            router.post('/public/rsvp/submit', {
-                name: rsvpName.trim(),
-                is_attending: rsvpAttending === 'yes',
-                message: rsvpMessage,
-            }, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setRsvpSubmitted(true);
+            router.post(
+                '/public/rsvp/submit',
+                {
+                    name: rsvpName.trim(),
+                    is_attending: rsvpAttending === 'yes',
+                    message: rsvpMessage,
                 },
-                onError: (err: any) => {
-                    setRsvpError(err?.name || err?.message || 'Ocurrió un error al guardar tu confirmación.');
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setRsvpSubmitted(true);
+                    },
+                    onError: (err: any) => {
+                        setRsvpError(
+                            err?.name ||
+                                err?.message ||
+                                'Ocurrió un error al guardar tu confirmación.',
+                        );
+                    },
+                    onFinish: () => {
+                        setRsvpSubmitting(false);
+                    },
                 },
-                onFinish: () => {
-                    setRsvpSubmitting(false);
-                }
-            });
+            );
         }
     };
 
     return (
         <>
-            <Head title={`Boda de ${brideName} & ${groomName}`} />
+            <Head
+                title={
+                    meta?.title ||
+                    (invitation?.name
+                        ? `Invitación para ${invitation.name} • Boda de ${brideName} & ${groomName}`
+                        : `Boda de ${brideName} & ${groomName} • Nuestra Invitación`)
+                }
+            />
 
             {/* Contenedor principal a pantalla completa real (Edge-to-Edge) */}
-            <main className="min-h-screen w-full bg-[#fbf9f4] flex flex-col items-center justify-start select-none overflow-x-hidden">
-                <div className="relative w-full flex flex-col">
+            <main className="flex min-h-screen w-full flex-col items-center justify-start overflow-x-hidden bg-[#fbf9f4] select-none">
+                <div className="relative flex w-full flex-col">
                     {/* ========================================================= */}
                     {/* SECCIÓN 1: HERO NOVIOS (Cubre el 100% de la pantalla)     */}
                     {/* ========================================================= */}
-                    <section className="relative w-full h-auto min-h-0 flex flex-col justify-between shrink-0">
+                    <section className="relative flex h-auto min-h-0 w-full shrink-0 flex-col justify-between">
                         {/* Imagen de fondo ocupando todo el ancho de la pantalla y con altura proporcional */}
                         <div className="relative w-full">
                             <img
                                 src="/images/canva_assets/herooriginal.webp"
                                 alt={`${brideName} & ${groomName}`}
-                                className="w-full h-auto block hero-bg-reveal"
+                                className="hero-bg-reveal block h-auto w-full"
                             />
 
                             {/* Neblina / degradado superior blanco ultra suave y progresivo con mayor cobertura */}
-                            <div className="absolute top-0 inset-x-0 h-28 sm:h-36 md:h-44 lg:h-64 xl:h-[420px] bg-[linear-gradient(to_bottom,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.5)_40%,rgba(255,255,255,0.15)_75%,transparent_100%)] pointer-events-none z-10" />
+                            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-28 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.5)_40%,rgba(255,255,255,0.15)_75%,transparent_100%)] sm:h-36 md:h-44 lg:h-64 xl:h-[420px]" />
 
                             {/* Neblina / degradado inferior difuminado ultra suave hacia el tono crema #fbf9f4 con mayor cobertura */}
-                            <div className="absolute bottom-0 inset-x-0 h-32 sm:h-40 md:h-52 lg:h-72 xl:h-[520px] bg-[linear-gradient(to_top,#fbf9f4_0%,#fbf9f4_30%,rgba(251,249,244,0.75)_55%,rgba(251,249,244,0.35)_80%,rgba(251,249,244,0)_100%)] pointer-events-none z-10" />
+                            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32 bg-[linear-gradient(to_top,#fbf9f4_0%,#fbf9f4_30%,rgba(251,249,244,0.75)_55%,rgba(251,249,244,0.35)_80%,rgba(251,249,244,0)_100%)] sm:h-40 md:h-52 lg:h-72 xl:h-[520px]" />
 
                             {/* Los textos van en una capa absoluta por encima de la neblina (z-20) */}
-                            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none z-20">
+                            <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between">
                                 {/* Fecha arriba */}
-                                <header className="pt-10 sm:pt-14 md:pt-16 lg:pt-24 xl:pt-36 text-center px-4 text-xs sm:text-sm md:text-base lg:text-xl xl:text-3xl" data-reveal="down">
+                                <header
+                                    className="px-4 pt-10 text-center text-xs sm:pt-14 sm:text-sm md:pt-16 md:text-base lg:pt-24 lg:text-xl xl:pt-36 xl:text-3xl"
+                                    data-reveal="down"
+                                >
                                     <p className="font-serif tracking-[0.28em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
                                         {dateText}
                                     </p>
                                 </header>
 
                                 {/* Nombres de los novios en cursiva */}
-                                <div className="relative z-20 w-full max-w-[380px] md:max-w-[540px] lg:max-w-[680px] xl:max-w-[850px] mx-auto px-4 my-auto flex flex-col select-none" data-reveal="scale" data-reveal-delay="200">
+                                <div
+                                    className="relative z-20 mx-auto my-auto flex w-full max-w-[380px] flex-col px-4 select-none md:max-w-[540px] lg:max-w-[680px] xl:max-w-[850px]"
+                                    data-reveal="scale"
+                                    data-reveal-delay="200"
+                                >
                                     {/* Primera línea: Adriana & */}
                                     <div className="flex items-baseline justify-start pl-4 md:pl-8">
-                                        <span className="font-script text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7.5rem] leading-[1.15] py-2 px-2 -my-2 -mx-2 text-white [text-shadow:0_4px_14px_rgba(0,0,0,0.7)]">
+                                        <span className="-mx-2 -my-2 px-2 py-2 font-script text-5xl leading-[1.15] text-white [text-shadow:0_4px_14px_rgba(0,0,0,0.7)] sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7.5rem]">
                                             {brideName}
                                         </span>
-                                        <span className="font-script text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[4.5rem] leading-none py-2 px-2 -my-2 ml-2 md:ml-5 text-white [text-shadow:0_4px_14px_rgba(0,0,0,0.7)]">
+                                        <span className="-my-2 ml-2 px-2 py-2 font-script text-3xl leading-none text-white [text-shadow:0_4px_14px_rgba(0,0,0,0.7)] sm:text-4xl md:ml-5 md:text-5xl lg:text-6xl xl:text-[4.5rem]">
                                             &amp;
                                         </span>
                                     </div>
 
                                     {/* Segunda línea: Joaquín */}
-                                    <div className="flex justify-start pl-14 md:pl-28 lg:pl-36 mt-3 md:mt-6 lg:mt-8">
-                                        <span className="font-script text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7.5rem] leading-[1.15] py-2 px-2 -my-2 -mx-2 text-white [text-shadow:0_4px_14px_rgba(0,0,0,0.7)]">
+                                    <div className="mt-3 flex justify-start pl-14 md:mt-6 md:pl-28 lg:mt-8 lg:pl-36">
+                                        <span className="-mx-2 -my-2 px-2 py-2 font-script text-5xl leading-[1.15] text-white [text-shadow:0_4px_14px_rgba(0,0,0,0.7)] sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7.5rem]">
                                             {groomName}
                                         </span>
                                     </div>
                                 </div>
 
                                 {/* Espaciador inferior con indicación sutil de desplazamiento */}
-                                <div className="pb-8 text-center flex flex-col items-center justify-center pointer-events-none" data-reveal="fade" data-reveal-delay="400">
-                                    <span className="font-serif text-[11px] sm:text-[12px] tracking-[0.3em] text-white/90 uppercase font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] animate-pulse">
+                                <div
+                                    className="pointer-events-none flex flex-col items-center justify-center pb-8 text-center"
+                                    data-reveal="fade"
+                                    data-reveal-delay="400"
+                                >
+                                    <span className="animate-pulse font-serif text-[11px] font-medium tracking-[0.3em] text-white/90 uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] sm:text-[12px]">
                                         DESLIZA
                                     </span>
-                                    <svg className="w-4 h-4 text-white/90 animate-bounce mt-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                    <svg
+                                        className="mt-1 h-4 w-4 animate-bounce text-white/90 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M19 9l-7 7-7-7"
+                                        />
                                     </svg>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-
                     {/* ========================================================= */}
                     {/* SECCIÓN 2: NUESTROS PADRES & NUESTROS PADRINOS            */}
                     {/* (Pantalla completa tipo Canva con zoom en escritorio)     */}
                     {/* ========================================================= */}
-                    <section className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-center select-none shrink-0">
-                        <div className="canvas-container invitation-section flex flex-col justify-between px-6 pt-3 sm:pt-4 pb-0 select-none shrink-0">
+                    <section className="relative -mt-[1px] flex w-full shrink-0 flex-col items-center justify-center bg-[#fbf9f4] select-none">
+                        <div className="canvas-container flex invitation-section shrink-0 flex-col justify-between px-6 pt-3 pb-0 select-none sm:pt-4">
                             {/* Decoración botánica rama derecha con balanceo suave */}
                             <img
                                 src="/resources_canvas/images/plantaladoderecho.webp"
                                 alt="Decoración botánica"
                                 loading="lazy"
                                 decoding="async"
-                                className="absolute -top-26 -right-32 -rotate-12 w-28 sm:w-32 object-contain pointer-events-none select-none z-30 animate-float-slow"
+                                className="animate-float-slow pointer-events-none absolute -top-26 -right-32 z-30 w-28 -rotate-12 object-contain select-none sm:w-32"
                             />
 
                             {/* Top: REPRODUCTOR DE MÚSICA */}
-                            <div className="relative z-20 flex flex-col pt-1 sm:pt-2 items-center text-center" data-reveal="down">
-                                <span className="font-serif text-[10px] sm:text-[11px] tracking-[0.28em] text-[#788a80] uppercase font-medium mb-1 drop-shadow-sm">
+                            <div
+                                className="relative z-20 flex flex-col items-center pt-1 text-center sm:pt-2"
+                                data-reveal="down"
+                            >
+                                <span className="mb-1 font-serif text-[10px] font-medium tracking-[0.28em] text-[#788a80] uppercase drop-shadow-sm sm:text-[11px]">
                                     {songTitle}
                                 </span>
 
                                 {/* Barra de progreso de música interactiva */}
                                 <div
                                     onClick={togglePlay}
-                                    className="w-56 sm:w-64 py-1 cursor-pointer group flex items-center justify-center"
-                                    title={isPlaying ? 'Pausar música' : 'Reproducir música'}
+                                    className="group flex w-56 cursor-pointer items-center justify-center py-1 sm:w-64"
+                                    title={
+                                        isPlaying
+                                            ? 'Pausar música'
+                                            : 'Reproducir música'
+                                    }
                                 >
-                                    <div className="w-full h-[2.5px] bg-[#678d91]/50 group-hover:bg-[#678d91]/70 transition-colors rounded-full relative">
+                                    <div className="relative h-[2.5px] w-full rounded-full bg-[#678d91]/50 transition-colors group-hover:bg-[#678d91]/70">
                                         <div
-                                            className="h-full bg-[#52777c] rounded-full transition-all duration-300"
+                                            className="h-full rounded-full bg-[#52777c] transition-all duration-300"
                                             style={{ width: `${progress}%` }}
                                         />
                                         <div
-                                            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-[#597e83] border-2 border-white shadow-md group-hover:scale-110 transition-transform"
+                                            className="absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#597e83] shadow-md transition-transform group-hover:scale-110"
                                             style={{ left: `${progress}%` }}
                                         />
                                     </div>
                                 </div>
 
                                 {/* Botones de control del reproductor */}
-                                <div className="flex items-center justify-center gap-5 mt-1.5 text-[#6f8892]">
+                                <div className="mt-1.5 flex items-center justify-center gap-5 text-[#6f8892]">
                                     {/* Shuffle */}
-                                    <button type="button" className="text-[#78929b] hover:text-[#52777c] transition-colors cursor-pointer" title="Aleatorio">
-                                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <button
+                                        type="button"
+                                        className="cursor-pointer text-[#78929b] transition-colors hover:text-[#52777c]"
+                                        title="Aleatorio"
+                                    >
+                                        <svg
+                                            className="h-3.5 w-3.5"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
                                             <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
                                         </svg>
                                     </button>
                                     {/* Anterior */}
-                                    <button type="button" className="text-[#78929b] hover:text-[#52777c] transition-colors cursor-pointer" title="Anterior">
-                                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <button
+                                        type="button"
+                                        className="cursor-pointer text-[#78929b] transition-colors hover:text-[#52777c]"
+                                        title="Anterior"
+                                    >
+                                        <svg
+                                            className="h-4 w-4 fill-current"
+                                            viewBox="0 0 24 24"
+                                        >
                                             <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
                                         </svg>
                                     </button>
@@ -720,71 +925,108 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                     <button
                                         type="button"
                                         onClick={togglePlay}
-                                        className="w-10 h-10 rounded-full bg-[#728c96] hover:bg-[#5f7a84] text-white flex items-center justify-center shadow-md transition-all active:scale-95 cursor-pointer hover:shadow-lg hover:scale-105"
-                                        title={isPlaying ? "Pausar" : "Reproducir"}
+                                        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#728c96] text-white shadow-md transition-all hover:scale-105 hover:bg-[#5f7a84] hover:shadow-lg active:scale-95"
+                                        title={
+                                            isPlaying ? 'Pausar' : 'Reproducir'
+                                        }
                                     >
                                         {isPlaying ? (
-                                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                            <svg
+                                                className="h-4 w-4 fill-current"
+                                                viewBox="0 0 24 24"
+                                            >
                                                 <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                                             </svg>
                                         ) : (
-                                            <svg className="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24">
+                                            <svg
+                                                className="ml-0.5 h-4 w-4 fill-current"
+                                                viewBox="0 0 24 24"
+                                            >
                                                 <path d="M8 5v14l11-7z" />
                                             </svg>
                                         )}
                                     </button>
                                     {/* Siguiente */}
-                                    <button type="button" className="text-[#78929b] hover:text-[#52777c] transition-colors cursor-pointer" title="Siguiente">
-                                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <button
+                                        type="button"
+                                        className="cursor-pointer text-[#78929b] transition-colors hover:text-[#52777c]"
+                                        title="Siguiente"
+                                    >
+                                        <svg
+                                            className="h-4 w-4 fill-current"
+                                            viewBox="0 0 24 24"
+                                        >
                                             <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
                                         </svg>
                                     </button>
                                     {/* Repetir */}
-                                    <button type="button" className="text-[#78929b] hover:text-[#52777c] transition-colors cursor-pointer" title="Repetir">
-                                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <button
+                                        type="button"
+                                        className="cursor-pointer text-[#78929b] transition-colors hover:text-[#52777c]"
+                                        title="Repetir"
+                                    >
+                                        <svg
+                                            className="h-3.5 w-3.5"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
                                             <path d="M17 2l4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3" />
                                         </svg>
                                     </button>
                                 </div>
 
                                 {/* Icono de huellitas con corazón con suave palpitación */}
-                                <div className="w-18 h-18 sm:w-16 sm:h-16 mt-6 sm:mt-7 flex items-center justify-center">
+                                <div className="mt-6 flex h-18 w-18 items-center justify-center sm:mt-7 sm:h-16 sm:w-16">
                                     <img
                                         src="/resources_canvas/images/2.svg"
                                         alt="Huella de amor"
                                         loading="lazy"
                                         decoding="async"
-                                        className="w-full h-full object-contain opacity-90 animate-pulse-subtle"
+                                        className="animate-pulse-subtle h-full w-full object-contain opacity-90"
                                     />
                                 </div>
                             </div>
 
                             {/* Middle: Contenido de Padres y Padrinos en columna única centrada (idéntico a móvil) */}
-                            <div className="relative z-20 flex flex-col items-center justify-center my-auto py-2 mt-4 w-full">
+                            <div className="relative z-20 my-auto mt-4 flex w-full flex-col items-center justify-center py-2">
                                 {/* --- BLOQUE: NUESTROS PADRES --- */}
-                                <div className="flex flex-col items-center text-center w-full" data-reveal="up" data-reveal-delay="100">
-                                    <h2 className="font-script text-[2.1rem] sm:text-[2.4rem] text-[#698175] leading-[1.2] py-1.5 px-3 -my-1.5 mb-3 sm:mb-4 font-normal tracking-normal">
+                                <div
+                                    className="flex w-full flex-col items-center text-center"
+                                    data-reveal="up"
+                                    data-reveal-delay="100"
+                                >
+                                    <h2 className="-my-1.5 mb-3 px-3 py-1.5 font-script text-[2.1rem] leading-[1.2] font-normal tracking-normal text-[#698175] sm:mb-4 sm:text-[2.4rem]">
                                         Nuestros Padres
                                     </h2>
 
                                     {/* Padres de la novia */}
-                                    <div className="space-y-1 mb-1.5">
+                                    <div className="mb-1.5 space-y-1">
                                         {brideParents.map((name, i) => (
-                                            <p key={i} className="font-serif text-[10px] sm:text-[11px] tracking-normal text-[#788a80] font-medium uppercase">
+                                            <p
+                                                key={i}
+                                                className="font-serif text-[10px] font-medium tracking-normal text-[#788a80] uppercase sm:text-[11px]"
+                                            >
                                                 {name}
                                             </p>
                                         ))}
                                     </div>
 
                                     {/* Ampersand & */}
-                                    <span className="font-script text-2xl sm:text-3xl py-3 px-2 text-[#698175] leading-none my-1">
+                                    <span className="my-1 px-2 py-3 font-script text-2xl leading-none text-[#698175] sm:text-3xl">
                                         &amp;
                                     </span>
 
                                     {/* Padres del novio */}
-                                    <div className="space-y-1 mt-1">
+                                    <div className="mt-1 space-y-1">
                                         {groomParents.map((name, i) => (
-                                            <p key={i} className="font-serif text-[10px] sm:text-[11px] tracking-normal text-[#788a80] font-medium uppercase">
+                                            <p
+                                                key={i}
+                                                className="font-serif text-[10px] font-medium tracking-normal text-[#788a80] uppercase sm:text-[11px]"
+                                            >
                                                 {name}
                                             </p>
                                         ))}
@@ -792,29 +1034,39 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                 </div>
 
                                 {/* --- BLOQUE: NUESTROS PADRINOS --- */}
-                                <div className="flex flex-col items-center mt-12 sm:mt-8 text-center w-full" data-reveal="up" data-reveal-delay="200">
-                                    <h2 className="font-script text-[2.1rem] sm:text-[2.4rem] text-[#698175] leading-[1.2] py-1.5 px-3 -my-1.5 mb-6 sm:mb-8 font-normal tracking-normal">
+                                <div
+                                    className="mt-12 flex w-full flex-col items-center text-center sm:mt-8"
+                                    data-reveal="up"
+                                    data-reveal-delay="200"
+                                >
+                                    <h2 className="-my-1.5 mb-6 px-3 py-1.5 font-script text-[2.1rem] leading-[1.2] font-normal tracking-normal text-[#698175] sm:mb-8 sm:text-[2.4rem]">
                                         Nuestros Padrinos
                                     </h2>
 
                                     {/* Padrino(s) grupo 1 */}
-                                    <div className="space-y-1 mb-1.5">
+                                    <div className="mb-1.5 space-y-1">
                                         {brideGodparents.map((name, i) => (
-                                            <p key={i} className="font-serif text-[10px] sm:text-[11px] tracking-normal text-[#788a80] font-medium uppercase">
+                                            <p
+                                                key={i}
+                                                className="font-serif text-[10px] font-medium tracking-normal text-[#788a80] uppercase sm:text-[11px]"
+                                            >
                                                 {name}
                                             </p>
                                         ))}
                                     </div>
 
                                     {/* Ampersand & */}
-                                    <span className="font-script text-2xl sm:text-3xl text-[#698175] leading-none my-1 py-3 px-2">
+                                    <span className="my-1 px-2 py-3 font-script text-2xl leading-none text-[#698175] sm:text-3xl">
                                         &amp;
                                     </span>
 
                                     {/* Padrinos grupo 2 */}
-                                    <div className="space-y-1 mt-1">
+                                    <div className="mt-1 space-y-1">
                                         {groomGodparents.map((name, i) => (
-                                            <p key={i} className="font-serif text-[10px] sm:text-[11px] tracking-normal text-[#788a80] font-medium uppercase">
+                                            <p
+                                                key={i}
+                                                className="font-serif text-[10px] font-medium tracking-normal text-[#788a80] uppercase sm:text-[11px]"
+                                            >
                                                 {name}
                                             </p>
                                         ))}
@@ -823,9 +1075,13 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                             </div>
 
                             {/* Bottom: Perrito con el anillo en la cabeza asomándose */}
-                            <div className="relative z-20 w-full flex justify-center items-end -mb-1 pointer-events-none select-none" data-reveal="up" data-reveal-delay="250">
+                            <div
+                                className="pointer-events-none relative z-20 -mb-1 flex w-full items-end justify-center select-none"
+                                data-reveal="up"
+                                data-reveal-delay="250"
+                            >
                                 <div
-                                    className="w-[90%] max-w-[360px] sm:max-w-[390px] relative overflow-hidden"
+                                    className="relative w-[90%] max-w-[360px] overflow-hidden sm:max-w-[390px]"
                                     style={{ aspectRatio: '810 / 397' }}
                                 >
                                     <img
@@ -833,7 +1089,7 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                         alt="Perrito con anillo"
                                         loading="lazy"
                                         decoding="async"
-                                        className="w-full absolute bottom-0 left-0 drop-shadow-sm select-none pointer-events-none block"
+                                        className="pointer-events-none absolute bottom-0 left-0 block w-full drop-shadow-sm select-none"
                                     />
                                 </div>
                             </div>
@@ -844,77 +1100,84 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                     {/* SECCIÓN 3: GALERÍA & CUENTA REGRESIVA                     */}
                     {/* (Galería Full-Width con Carrusel Infinito y Enfoque Central) */}
                     {/* ========================================================= */}
-                    <section className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-start pt-6 pb-10 select-none shrink-0 overflow-hidden">
+                    <section className="relative -mt-[1px] flex w-full shrink-0 flex-col items-center justify-start overflow-hidden bg-[#fbf9f4] pt-6 pb-10 select-none">
                         {/* --- BLOQUE SUPERIOR: TÍTULO Y CARRUSEL INFINITO A TODO EL ANCHO --- */}
-                        <div className="w-full flex flex-col items-center mt-6 sm:mt-8" data-reveal="fade">
+                        <div
+                            className="mt-6 flex w-full flex-col items-center sm:mt-8"
+                            data-reveal="fade"
+                        >
                             {/* Carrusel Infinito Edge-to-Edge */}
                             <InfiniteDesktopGallery images={galleryList} />
                         </div>
 
                         {/* --- BLOQUE INFERIOR: CUENTA REGRESIVA DENTRO DEL CANVAS-CONTAINER --- */}
-                        <div className="canvas-container flex flex-col items-center text-center -mt-3 px-4 py-10 mb-2" data-reveal="up" data-reveal-delay="150">
+                        <div
+                            className="canvas-container -mt-3 mb-2 flex flex-col items-center px-4 py-10 text-center"
+                            data-reveal="up"
+                            data-reveal-delay="150"
+                        >
                             {/* "FALTAN" */}
-                            <span className="font-serif text-[10px] sm:text-[11px] tracking-[0.3em] text-[#788a80] uppercase font-medium mb-2 sm:mb-2.5">
+                            <span className="mb-2 font-serif text-[10px] font-medium tracking-[0.3em] text-[#788a80] uppercase sm:mb-2.5 sm:text-[11px]">
                                 FALTAN
                             </span>
 
                             {/* Contenedor de Tiempo: DÍAS, HORAS, MINS, SEGS */}
                             <div className="flex items-start justify-center gap-1 sm:gap-2">
                                 {/* Días */}
-                                <div className="flex flex-col items-center w-14 sm:w-16 group transition-transform hover:scale-105 duration-300">
-                                    <span className="font-serif text-[8.5px] sm:text-[9.5px] tracking-[0.22em] text-[#788a80] uppercase font-medium mb-1">
+                                <div className="group flex w-14 flex-col items-center transition-transform duration-300 hover:scale-105 sm:w-16">
+                                    <span className="mb-1 font-serif text-[8.5px] font-medium tracking-[0.22em] text-[#788a80] uppercase sm:text-[9.5px]">
                                         DÍAS
                                     </span>
-                                    <span className="font-serif text-3xl sm:text-4xl font-light text-[#698175] leading-none">
+                                    <span className="font-serif text-3xl leading-none font-light text-[#698175] sm:text-4xl">
                                         {timeLeft.days}
                                     </span>
                                 </div>
 
-                                <span className="font-serif text-2xl sm:text-3xl font-light text-[#698175] leading-none mt-3.5 sm:mt-4">
+                                <span className="mt-3.5 font-serif text-2xl leading-none font-light text-[#698175] sm:mt-4 sm:text-3xl">
                                     :
                                 </span>
 
                                 {/* Horas */}
-                                <div className="flex flex-col items-center w-14 sm:w-16 group transition-transform hover:scale-105 duration-300">
-                                    <span className="font-serif text-[8.5px] sm:text-[9.5px] tracking-[0.22em] text-[#788a80] uppercase font-medium mb-1">
+                                <div className="group flex w-14 flex-col items-center transition-transform duration-300 hover:scale-105 sm:w-16">
+                                    <span className="mb-1 font-serif text-[8.5px] font-medium tracking-[0.22em] text-[#788a80] uppercase sm:text-[9.5px]">
                                         HORAS
                                     </span>
-                                    <span className="font-serif text-3xl sm:text-4xl font-light text-[#698175] leading-none">
+                                    <span className="font-serif text-3xl leading-none font-light text-[#698175] sm:text-4xl">
                                         {timeLeft.hours}
                                     </span>
                                 </div>
 
-                                <span className="font-serif text-2xl sm:text-3xl font-light text-[#698175] leading-none mt-3.5 sm:mt-4">
+                                <span className="mt-3.5 font-serif text-2xl leading-none font-light text-[#698175] sm:mt-4 sm:text-3xl">
                                     :
                                 </span>
 
                                 {/* Minutos */}
-                                <div className="flex flex-col items-center w-14 sm:w-16 group transition-transform hover:scale-105 duration-300">
-                                    <span className="font-serif text-[8.5px] sm:text-[9.5px] tracking-[0.22em] text-[#788a80] uppercase font-medium mb-1">
+                                <div className="group flex w-14 flex-col items-center transition-transform duration-300 hover:scale-105 sm:w-16">
+                                    <span className="mb-1 font-serif text-[8.5px] font-medium tracking-[0.22em] text-[#788a80] uppercase sm:text-[9.5px]">
                                         MINS
                                     </span>
-                                    <span className="font-serif text-3xl sm:text-4xl font-light text-[#698175] leading-none">
+                                    <span className="font-serif text-3xl leading-none font-light text-[#698175] sm:text-4xl">
                                         {timeLeft.minutes}
                                     </span>
                                 </div>
 
-                                <span className="font-serif text-2xl sm:text-3xl font-light text-[#698175] leading-none mt-3.5 sm:mt-4">
+                                <span className="mt-3.5 font-serif text-2xl leading-none font-light text-[#698175] sm:mt-4 sm:text-3xl">
                                     :
                                 </span>
 
                                 {/* Segundos */}
-                                <div className="flex flex-col items-center w-14 sm:w-16 group transition-transform hover:scale-105 duration-300">
-                                    <span className="font-serif text-[8.5px] sm:text-[9.5px] tracking-[0.22em] text-[#788a80] uppercase font-medium mb-1">
+                                <div className="group flex w-14 flex-col items-center transition-transform duration-300 hover:scale-105 sm:w-16">
+                                    <span className="mb-1 font-serif text-[8.5px] font-medium tracking-[0.22em] text-[#788a80] uppercase sm:text-[9.5px]">
                                         SEGS
                                     </span>
-                                    <span className="font-serif text-3xl sm:text-4xl font-light text-[#698175] leading-none">
+                                    <span className="font-serif text-3xl leading-none font-light text-[#698175] sm:text-4xl">
                                         {timeLeft.seconds}
                                     </span>
                                 </div>
                             </div>
 
                             {/* "PARA EL GRAN DÍA" */}
-                            <span className="font-serif text-[9px] sm:text-[10px] tracking-[0.28em] text-[#788a80] uppercase font-medium mt-2.5 sm:mt-3">
+                            <span className="mt-2.5 font-serif text-[9px] font-medium tracking-[0.28em] text-[#788a80] uppercase sm:mt-3 sm:text-[10px]">
                                 PARA EL GRAN DÍA
                             </span>
                         </div>
@@ -924,142 +1187,196 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                     {/* SECCIÓN 4: ITINERARIO                                     */}
                     {/* (Camino punteado original de Canva con zoom en escritorio) */}
                     {/* ========================================================= */}
-                    <section className="relative w-full bg-[#748270] -mt-[1px] flex flex-col items-center justify-center select-none shrink-0 overflow-hidden">
+                    <section className="relative -mt-[1px] flex w-full shrink-0 flex-col items-center justify-center overflow-hidden bg-[#748270] select-none">
                         {/* Fondo de textura auténtica de Canva sobre el verde olivo extendido borde a borde */}
                         <img
                             src="/images/canva_assets/asset_17_9c5d7925.webp"
                             alt="Fondo textura Itinerario"
                             loading="lazy"
                             decoding="async"
-                            className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0 opacity-40 mix-blend-multiply"
+                            className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-40 mix-blend-multiply select-none"
                         />
 
                         {/* Huellitas decorativas en esquina superior izquierda */}
-                        <div className="absolute top-4 left-4 sm:top-6 sm:left-6 w-14 h-14 sm:w-16 sm:h-16 pointer-events-none select-none z-20 opacity-80 animate-pulse-subtle">
+                        <div className="animate-pulse-subtle pointer-events-none absolute top-4 left-4 z-20 h-14 w-14 opacity-80 select-none sm:top-6 sm:left-6 sm:h-16 sm:w-16">
                             <img
                                 src="/resources_canvas/images/4.svg"
                                 alt="Huellitas"
                                 loading="lazy"
                                 decoding="async"
-                                className="w-full h-full object-contain"
+                                className="h-full w-full object-contain"
                             />
                         </div>
 
                         {/* Perrito con anillo asomándose en la esquina inferior derecha */}
-                        <div className="absolute -bottom-2 -right-4 sm:right-0 w-[170px] sm:w-[215px] pointer-events-none select-none z-30" data-reveal="fade" data-reveal-delay="250">
+                        <div
+                            className="pointer-events-none absolute -right-4 -bottom-2 z-30 w-[170px] select-none sm:right-0 sm:w-[215px]"
+                            data-reveal="fade"
+                            data-reveal-delay="250"
+                        >
                             <img
                                 src="/images/canva_assets/asset_13_254b129a.webp"
                                 alt="Perrito asomándose"
                                 loading="lazy"
                                 decoding="async"
-                                className="w-full h-auto object-contain drop-shadow-md"
+                                className="h-auto w-full object-contain drop-shadow-md"
                             />
                         </div>
 
                         {/* Contenedor Canva con zoom proporcional */}
-                        <div className="canvas-container flex flex-col justify-between py-2 px-2 sm:px-4 select-none shrink-0 relative z-20 w-full max-w-[480px]">
+                        <div className="canvas-container relative z-20 flex w-full max-w-[480px] shrink-0 flex-col justify-between px-2 py-2 select-none sm:px-4">
                             {/* Título de la sección: Itinerario */}
-                            <div className="w-full text-center mb-6 sm:mb-8 mt-12" data-reveal="down">
-                                <h2 className="font-script text-[3rem] sm:text-[3.8rem] text-[#fbf9f4] tracking-normal font-normal leading-[1.2] py-2 px-3 -my-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.12)]">
+                            <div
+                                className="mt-12 mb-6 w-full text-center sm:mb-8"
+                                data-reveal="down"
+                            >
+                                <h2 className="-my-2 px-3 py-2 font-script text-[3rem] leading-[1.2] font-normal tracking-normal text-[#fbf9f4] [text-shadow:0_1px_2px_rgba(0,0,0,0.12)] sm:text-[3.8rem]">
                                     Itinerario
                                 </h2>
                             </div>
 
                             {wedding?.timeline_mode !== 'items' ? (
-                                <div className="w-full flex justify-center py-2 pb-16 sm:pb-20" data-reveal="up">
-                                    <img src={wedding?.timeline_image_path || '/images/canva_assets/itinerario_final.svg'} alt="Itinerario" loading="lazy" decoding="async" className="w-full max-w-[410px] h-auto object-contain drop-shadow-sm" />
+                                <div
+                                    className="flex w-full justify-center py-2 pb-16 sm:pb-20"
+                                    data-reveal="up"
+                                >
+                                    <img
+                                        src={
+                                            wedding?.timeline_image_path ||
+                                            '/images/canva_assets/itinerario_final.svg'
+                                        }
+                                        alt="Itinerario"
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="h-auto w-full max-w-[410px] object-contain drop-shadow-sm"
+                                    />
                                 </div>
-                            ) : (<>
-                            {/* TIMELINE VERTICAL CON CÍRCULOS UNIDOS POR UNA LÍNEA */}
-                            <div className="relative w-full py-2">
-                                {/* Línea vertical continua que une todos los nodos */}
-                                <div className="absolute left-1/2 top-7 bottom-7 -translate-x-1/2 w-[2px] bg-[#fbf9f4]/45 z-0" />
+                            ) : (
+                                <>
+                                    {/* TIMELINE VERTICAL CON CÍRCULOS UNIDOS POR UNA LÍNEA */}
+                                    <div className="relative w-full py-2">
+                                        {/* Línea vertical continua que une todos los nodos */}
+                                        <div className="absolute top-7 bottom-7 left-1/2 z-0 w-[2px] -translate-x-1/2 bg-[#fbf9f4]/45" />
 
-                                <div className="flex flex-col space-y-7 sm:space-y-8 relative z-10">
-                                    {timelineEvents.map((event, index) => {
-                                        const isEven = index % 2 === 0;
-                                        const formattedTime = formatTimelineTime(event.time);
-                                        const delay = Math.min((index % 4) * 100 + 100, 500);
+                                        <div className="relative z-10 flex flex-col space-y-7 sm:space-y-8">
+                                            {timelineEvents.map(
+                                                (event, index) => {
+                                                    const isEven =
+                                                        index % 2 === 0;
+                                                    const formattedTime =
+                                                        formatTimelineTime(
+                                                            event.time,
+                                                        );
+                                                    const delay = Math.min(
+                                                        (index % 4) * 100 + 100,
+                                                        500,
+                                                    );
 
-                                        return (
-                                            <div
-                                                key={index}
-                                                className="relative flex items-center justify-between w-full group"
-                                            >
-                                                {/* COLUMNA IZQUIERDA */}
-                                                <div 
-                                                    className="w-[calc(50%-2rem)] sm:w-[calc(50%-2.5rem)] text-right pr-2 sm:pr-4"
-                                                    data-reveal="left"
-                                                    data-reveal-delay={String(delay)}
-                                                >
-                                                    {isEven ? (
-                                                        <div className="flex flex-col items-end">
-                                                            <span className="font-serif text-[12.5px] sm:text-[14px] tracking-[0.2em] text-[#fbf9f4] font-bold uppercase drop-shadow-xs leading-tight">
-                                                                {event.title}
-                                                            </span>
-                                                            {event.description && (
-                                                                <span className="font-serif text-[10.5px] sm:text-[11.5px] text-[#fbf9f4]/85 font-light mt-0.5 leading-snug">
-                                                                    {event.description}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex justify-end">
-                                                            <span className="font-serif text-[11px] sm:text-[12px] tracking-[0.14em] text-[#fbf9f4] font-medium bg-[#fbf9f4]/15 px-3 py-1 rounded-full border border-[#fbf9f4]/25 shadow-xs backdrop-blur-xs">
-                                                                {formattedTime}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                    return (
+                                                        <div
+                                                            key={index}
+                                                            className="group relative flex w-full items-center justify-between"
+                                                        >
+                                                            {/* COLUMNA IZQUIERDA */}
+                                                            <div
+                                                                className="w-[calc(50%-2rem)] pr-2 text-right sm:w-[calc(50%-2.5rem)] sm:pr-4"
+                                                                data-reveal="left"
+                                                                data-reveal-delay={String(
+                                                                    delay,
+                                                                )}
+                                                            >
+                                                                {isEven ? (
+                                                                    <div className="flex flex-col items-end">
+                                                                        <span className="font-serif text-[12.5px] leading-tight font-bold tracking-[0.2em] text-[#fbf9f4] uppercase drop-shadow-xs sm:text-[14px]">
+                                                                            {
+                                                                                event.title
+                                                                            }
+                                                                        </span>
+                                                                        {event.description && (
+                                                                            <span className="mt-0.5 font-serif text-[10.5px] leading-snug font-light text-[#fbf9f4]/85 sm:text-[11.5px]">
+                                                                                {
+                                                                                    event.description
+                                                                                }
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex justify-end">
+                                                                        <span className="rounded-full border border-[#fbf9f4]/25 bg-[#fbf9f4]/15 px-3 py-1 font-serif text-[11px] font-medium tracking-[0.14em] text-[#fbf9f4] shadow-xs backdrop-blur-xs sm:text-[12px]">
+                                                                            {
+                                                                                formattedTime
+                                                                            }
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
 
-                                                {/* CÍRCULO CENTRAL CON ICONO */}
-                                                <div 
-                                                    className="relative z-10 flex items-center justify-center shrink-0"
-                                                    data-reveal="scale"
-                                                    data-reveal-delay={String(delay)}
-                                                >
-                                                    <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full bg-[#586755] border-2 border-[#fbf9f4] shadow-[0_4px_14px_rgba(0,0,0,0.18)] flex items-center justify-center p-2.5 sm:p-3 transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_6px_20px_rgba(0,0,0,0.25)]">
-                                                        <img
-                                                            src={event.icon_url || '/resources_canvas/images/5.svg'}
-                                                            alt={event.title || 'Itinerario'}
-                                                            loading="lazy"
-                                                            decoding="async"
-                                                            className="w-full h-full object-contain filter drop-shadow-xs"
-                                                        />
-                                                    </div>
-                                                </div>
+                                                            {/* CÍRCULO CENTRAL CON ICONO */}
+                                                            <div
+                                                                className="relative z-10 flex shrink-0 items-center justify-center"
+                                                                data-reveal="scale"
+                                                                data-reveal-delay={String(
+                                                                    delay,
+                                                                )}
+                                                            >
+                                                                <div className="flex h-13 w-13 items-center justify-center rounded-full border-2 border-[#fbf9f4] bg-[#586755] p-2.5 shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_6px_20px_rgba(0,0,0,0.25)] sm:h-16 sm:w-16 sm:p-3">
+                                                                    <img
+                                                                        src={
+                                                                            event.icon_url ||
+                                                                            '/resources_canvas/images/5.svg'
+                                                                        }
+                                                                        alt={
+                                                                            event.title ||
+                                                                            'Itinerario'
+                                                                        }
+                                                                        loading="lazy"
+                                                                        decoding="async"
+                                                                        className="h-full w-full object-contain drop-shadow-xs filter"
+                                                                    />
+                                                                </div>
+                                                            </div>
 
-                                                {/* COLUMNA DERECHA */}
-                                                <div 
-                                                    className="w-[calc(50%-2rem)] sm:w-[calc(50%-2.5rem)] text-left pl-2 sm:pl-4"
-                                                    data-reveal="right"
-                                                    data-reveal-delay={String(delay)}
-                                                >
-                                                    {isEven ? (
-                                                        <div className="flex justify-start">
-                                                            <span className="font-serif text-[11px] sm:text-[12px] tracking-[0.14em] text-[#fbf9f4] font-medium bg-[#fbf9f4]/15 px-3 py-1 rounded-full border border-[#fbf9f4]/25 shadow-xs backdrop-blur-xs">
-                                                                {formattedTime}
-                                                            </span>
+                                                            {/* COLUMNA DERECHA */}
+                                                            <div
+                                                                className="w-[calc(50%-2rem)] pl-2 text-left sm:w-[calc(50%-2.5rem)] sm:pl-4"
+                                                                data-reveal="right"
+                                                                data-reveal-delay={String(
+                                                                    delay,
+                                                                )}
+                                                            >
+                                                                {isEven ? (
+                                                                    <div className="flex justify-start">
+                                                                        <span className="rounded-full border border-[#fbf9f4]/25 bg-[#fbf9f4]/15 px-3 py-1 font-serif text-[11px] font-medium tracking-[0.14em] text-[#fbf9f4] shadow-xs backdrop-blur-xs sm:text-[12px]">
+                                                                            {
+                                                                                formattedTime
+                                                                            }
+                                                                        </span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex flex-col items-start">
+                                                                        <span className="font-serif text-[12.5px] leading-tight font-bold tracking-[0.2em] text-[#fbf9f4] uppercase drop-shadow-xs sm:text-[14px]">
+                                                                            {
+                                                                                event.title
+                                                                            }
+                                                                        </span>
+                                                                        {event.description && (
+                                                                            <span className="mt-0.5 font-serif text-[10.5px] leading-snug font-light text-[#fbf9f4]/85 sm:text-[11.5px]">
+                                                                                {
+                                                                                    event.description
+                                                                                }
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    ) : (
-                                                        <div className="flex flex-col items-start">
-                                                            <span className="font-serif text-[12.5px] sm:text-[14px] tracking-[0.2em] text-[#fbf9f4] font-bold uppercase drop-shadow-xs leading-tight">
-                                                                {event.title}
-                                                            </span>
-                                                            {event.description && (
-                                                                <span className="font-serif text-[10.5px] sm:text-[11.5px] text-[#fbf9f4]/85 font-light mt-0.5 leading-snug">
-                                                                    {event.description}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                            </>)}
+                                                    );
+                                                },
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </section>
 
@@ -1067,130 +1384,155 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                     {/* SECCIÓN 5: UBICACIÓN & MESA DE REGALOS                    */}
                     {/* (Pantalla tipo Canva: Marco de encaje con sello y plantas) */}
                     {/* ========================================================= */}
-                    <section className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-center py-10 sm:py-14 md:py-16 px-2 sm:px-4 md:px-6 select-none shrink-0 overflow-hidden">
+                    <section className="relative -mt-[1px] flex w-full shrink-0 flex-col items-center justify-center overflow-hidden bg-[#fbf9f4] px-2 py-10 select-none sm:px-4 sm:py-14 md:px-6 md:py-16">
                         {/* Contenedor del marco en formato grande similar a la referencia */}
-                        <div className="relative w-[94%] sm:w-[92%] max-w-[1150px] xl:max-w-[1350px] 2xl:max-w-[1500px] aspect-[500/810] flex items-center justify-center">
-
+                        <div className="relative flex aspect-[500/810] w-[94%] max-w-[1150px] items-center justify-center sm:w-[92%] xl:max-w-[1350px] 2xl:max-w-[1500px]">
                             {/* 10_desktop.svg: Marco y fondo de encaje completo */}
                             <img
                                 src="/resources_canvas/images/10_desktop.svg"
                                 alt="Marco de encaje"
                                 loading="lazy"
                                 decoding="async"
-                                className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none z-0"
+                                className="pointer-events-none absolute inset-0 z-0 h-full w-full object-contain select-none"
                             />
 
                             {/* Planta lado izquierdo con balanceo suave */}
-                            <div className="absolute -left-6 sm:-left-8 md:-left-12 lg:-left-[16rem] top-[45%] w-42 sm:w-36 md:w-48 lg:w-[32.4rem] pointer-events-none select-none z-20 animate-float-slow">
+                            <div className="animate-float-slow pointer-events-none absolute top-[45%] -left-6 z-20 w-42 select-none sm:-left-8 sm:w-36 md:-left-12 md:w-48 lg:-left-[16rem] lg:w-[32.4rem]">
                                 <img
                                     src="/images/canva_assets/hojasubicacionizquierda.webp"
                                     alt="Decoración botánica izquierda"
                                     loading="lazy"
                                     decoding="async"
-                                    className="w-full h-auto"
+                                    className="h-auto w-full"
                                 />
                             </div>
 
                             {/* Planta lado derecho inferior con balanceo opuesto */}
-                            <div className="absolute -right-6 sm:-right-8 md:-right-12 lg:-right-[24rem] bottom-[-8%] w-40 sm:w-52 md:w-64 lg:w-[50rem] pointer-events-none select-none z-20 animate-float-reverse">
+                            <div className="animate-float-reverse pointer-events-none absolute -right-6 bottom-[-8%] z-20 w-40 select-none sm:-right-8 sm:w-52 md:-right-12 md:w-64 lg:-right-[24rem] lg:w-[50rem]">
                                 <img
                                     src="/images/canva_assets/hojasubicacionderecha.webp"
                                     alt="Decoración botánica derecha"
                                     loading="lazy"
                                     decoding="async"
-                                    className="w-full h-auto"
+                                    className="h-auto w-full"
                                 />
                             </div>
 
                             {/* Contenido Interior: Sello, Ubicación, Botones de mapa y Mesa de regalos */}
-                            <div className="relative z-10 w-full h-full flex flex-col items-center justify-between text-center pt-[7%] sm:pt-[7.5%] md:pt-[8%] pb-[11%] md:pb-[12%] px-6 sm:px-10 md:px-14 lg:px-16">
-
+                            <div className="relative z-10 flex h-full w-full flex-col items-center justify-between px-6 pt-[7%] pb-[11%] text-center sm:px-10 sm:pt-[7.5%] md:px-14 md:pt-[8%] md:pb-[12%] lg:px-16">
                                 {/* Sello y Título Ubicación */}
-                                <div className="flex flex-col items-center w-full" data-reveal="down">
-                                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-44 xl:h-44 shrink-0 flex items-center justify-center drop-shadow-md mb-1 sm:mb-2 animate-pulse-subtle">
+                                <div
+                                    className="flex w-full flex-col items-center"
+                                    data-reveal="down"
+                                >
+                                    <div className="animate-pulse-subtle mb-1 flex h-16 w-16 shrink-0 items-center justify-center drop-shadow-md sm:mb-2 sm:h-20 sm:w-20 md:h-24 md:w-24 lg:h-32 lg:w-32 xl:h-44 xl:w-44">
                                         <img
                                             src="/images/canva_assets/sello_huellita.webp"
                                             alt="Sello de huellita"
                                             loading="lazy"
                                             decoding="async"
-                                            className="w-full h-full object-contain"
+                                            className="h-full w-full object-contain"
                                         />
                                     </div>
-                                    <h2 className="font-script text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[5.2rem] text-[#617485] leading-[1.2] py-2 px-3 -my-2 mt-1 sm:mt-2 font-normal [text-shadow:0_1px_2px_rgba(0,0,0,0.08)]">
+                                    <h2 className="-my-2 mt-1 px-3 py-2 font-script text-3xl leading-[1.2] font-normal text-[#617485] [text-shadow:0_1px_2px_rgba(0,0,0,0.08)] sm:mt-2 sm:text-4xl md:text-5xl lg:text-6xl xl:text-[5.2rem]">
                                         Ubicación
                                     </h2>
                                 </div>
 
                                 {/* Contenedor de Ubicaciones y Mesa de regalos */}
-                                <div className="flex flex-col items-center justify-evenly flex-1 w-full py-2 sm:py-4 md:py-6">
+                                <div className="flex w-full flex-1 flex-col items-center justify-evenly py-2 sm:py-4 md:py-6">
                                     {/* Bloque 1: Ceremonia religiosa */}
-                                    <div className="flex flex-col items-center" data-reveal="up" data-reveal-delay="100">
-                                        <span className="font-cardo text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-[2.6rem] text-[#6d8293] leading-none mb-1 lg:mb-2 font-italic">
+                                    <div
+                                        className="flex flex-col items-center"
+                                        data-reveal="up"
+                                        data-reveal-delay="100"
+                                    >
+                                        <span className="mb-1 font-cardo text-lg leading-none text-[#6d8293] font-italic sm:text-xl md:text-2xl lg:mb-2 lg:text-3xl xl:text-[2.6rem]">
                                             Ceremonia religiosa
                                         </span>
-                                        <h3 className="font-serif text-xs sm:text-sm md:text-base lg:text-xl xl:text-[2.2rem] tracking-[0.1em] lg:tracking-[0.12em] text-[#3f5263] font-semibold uppercase mb-2.5 sm:mb-3 lg:mb-5">
-                                            {(wedding?.locations?.ceremony && wedding.locations.ceremony !== 'NOMBRE DE LA IGLESIA')
+                                        <h3 className="mb-2.5 font-serif text-xs font-semibold tracking-[0.1em] text-[#3f5263] uppercase sm:mb-3 sm:text-sm md:text-base lg:mb-5 lg:text-xl lg:tracking-[0.12em] xl:text-[2.2rem]">
+                                            {wedding?.locations?.ceremony &&
+                                            wedding.locations.ceremony !==
+                                                'NOMBRE DE LA IGLESIA'
                                                 ? wedding.locations.ceremony
                                                 : 'CASA DE LA CRISTIANDAD'}
                                         </h3>
                                         <a
-                                            href={wedding?.locations?.ceremony_maps || 'https://maps.google.com/?q=Casa+de+la+Cristiandad'}
+                                            href={
+                                                wedding?.locations
+                                                    ?.ceremony_maps ||
+                                                'https://maps.google.com/?q=Casa+de+la+Cristiandad'
+                                            }
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center justify-center bg-white hover:bg-slate-50 text-[#4c6070] border-2 lg:border-3 border-olive-400 shadow-sm rounded-[12px] lg:rounded-[16px] px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-2.5 md:py-3 lg:py-4 transition-all active:scale-95 group hover-lift"
+                                            className="group hover-lift inline-flex items-center justify-center rounded-[12px] border-2 border-olive-400 bg-white px-4 py-2 text-[#4c6070] shadow-sm transition-all hover:bg-slate-50 active:scale-95 sm:px-6 sm:py-2.5 md:px-8 md:py-3 lg:rounded-[16px] lg:border-3 lg:px-10 lg:py-4"
                                         >
-                                            <span className="font-serif text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl font-bold uppercase">
+                                            <span className="font-serif text-xs font-bold uppercase sm:text-sm md:text-base lg:text-lg xl:text-2xl">
                                                 VER EN GOOGLE MAPS
                                             </span>
-                                            <span className="ml-2 sm:ml-3 text-sm md:text-base lg:text-xl xl:text-2xl text-[#4c6070] group-hover:translate-x-0.5 transition-transform">
+                                            <span className="ml-2 text-sm text-[#4c6070] transition-transform group-hover:translate-x-0.5 sm:ml-3 md:text-base lg:text-xl xl:text-2xl">
                                                 →
                                             </span>
                                         </a>
                                     </div>
 
                                     {/* Bloque 2: Recepción */}
-                                    <div className="flex flex-col items-center" data-reveal="up" data-reveal-delay="200">
-                                        <span className="font-cardo text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-[2.6rem] text-[#6d8293] leading-none mb-1 lg:mb-2 italic">
+                                    <div
+                                        className="flex flex-col items-center"
+                                        data-reveal="up"
+                                        data-reveal-delay="200"
+                                    >
+                                        <span className="mb-1 font-cardo text-lg leading-none text-[#6d8293] italic sm:text-xl md:text-2xl lg:mb-2 lg:text-3xl xl:text-[2.6rem]">
                                             Recepción
                                         </span>
-                                        <h3 className="font-serif text-xs sm:text-sm md:text-base lg:text-xl xl:text-[2.2rem] tracking-[0.12em] text-[#3f5263] font-semibold uppercase mb-2.5 sm:mb-3 lg:mb-5">
-                                            {(wedding?.locations?.reception && wedding.locations.reception !== 'NOMBRE DEL LOCAL')
+                                        <h3 className="mb-2.5 font-serif text-xs font-semibold tracking-[0.12em] text-[#3f5263] uppercase sm:mb-3 sm:text-sm md:text-base lg:mb-5 lg:text-xl xl:text-[2.2rem]">
+                                            {wedding?.locations?.reception &&
+                                            wedding.locations.reception !==
+                                                'NOMBRE DEL LOCAL'
                                                 ? wedding.locations.reception
                                                 : 'HOTEL HACIENDA SÁNCHEZ'}
                                         </h3>
                                         <a
-                                            href={wedding?.locations?.reception_maps || 'https://maps.google.com/?q=Hotel+Hacienda+Sanchez'}
+                                            href={
+                                                wedding?.locations
+                                                    ?.reception_maps ||
+                                                'https://maps.google.com/?q=Hotel+Hacienda+Sanchez'
+                                            }
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center justify-center bg-white hover:bg-slate-50 text-[#4c6070] border-2 lg:border-3 border-olive-400 shadow-sm rounded-[12px] lg:rounded-[16px] px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-2.5 md:py-3 lg:py-4 transition-all active:scale-95 group hover-lift"
+                                            className="group hover-lift inline-flex items-center justify-center rounded-[12px] border-2 border-olive-400 bg-white px-4 py-2 text-[#4c6070] shadow-sm transition-all hover:bg-slate-50 active:scale-95 sm:px-6 sm:py-2.5 md:px-8 md:py-3 lg:rounded-[16px] lg:border-3 lg:px-10 lg:py-4"
                                         >
-                                            <span className="font-serif text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl tracking-[0.08em] font-bold uppercase">
+                                            <span className="font-serif text-xs font-bold tracking-[0.08em] uppercase sm:text-sm md:text-base lg:text-lg xl:text-2xl">
                                                 VER EN GOOGLE MAPS
                                             </span>
-                                            <span className="ml-2 sm:ml-3 text-sm md:text-base lg:text-xl xl:text-2xl text-[#4c6070] group-hover:translate-x-0.5 transition-transform">
+                                            <span className="ml-2 text-sm text-[#4c6070] transition-transform group-hover:translate-x-0.5 sm:ml-3 md:text-base lg:text-xl xl:text-2xl">
                                                 →
                                             </span>
                                         </a>
                                     </div>
 
                                     {/* Bloque 3: Mesa de regalos */}
-                                    <div className="flex flex-col items-center" data-reveal="up" data-reveal-delay="300">
-                                        <h2 className="font-script text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[4.8rem] text-[#617485] leading-[1.2] py-2 px-3 -my-2 mb-3 sm:mb-4 lg:mb-5 tracking-normal font-normal [text-shadow:0_1px_2px_rgba(0,0,0,0.08)]">
+                                    <div
+                                        className="flex flex-col items-center"
+                                        data-reveal="up"
+                                        data-reveal-delay="300"
+                                    >
+                                        <h2 className="-my-2 mb-3 px-3 py-2 font-script text-3xl leading-[1.2] font-normal tracking-normal text-[#617485] [text-shadow:0_1px_2px_rgba(0,0,0,0.08)] sm:mb-4 sm:text-4xl md:text-5xl lg:mb-5 lg:text-6xl xl:text-[4.8rem]">
                                             Mesa de regalos
                                         </h2>
-                                        <div className="flex flex-col gap-2.5 sm:gap-3 lg:gap-4 w-full min-w-[180px] sm:min-w-[220px] md:min-w-[260px] lg:min-w-[320px] max-w-[380px]">
+                                        <div className="flex w-full max-w-[380px] min-w-[180px] flex-col gap-2.5 sm:min-w-[220px] sm:gap-3 md:min-w-[260px] lg:min-w-[320px] lg:gap-4">
                                             {giftRegistries.map((reg, idx) => (
                                                 <a
                                                     key={idx}
                                                     href={reg.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex items-center justify-center bg-white hover:bg-slate-50 text-[#4c6070] border-2 lg:border-3 border-olive-400 shadow-sm rounded-[12px] lg:rounded-[16px] px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-2.5 md:py-3 lg:py-4 transition-all active:scale-95 group hover-lift"
+                                                    className="group hover-lift inline-flex items-center justify-center rounded-[12px] border-2 border-olive-400 bg-white px-4 py-2 text-[#4c6070] shadow-sm transition-all hover:bg-slate-50 active:scale-95 sm:px-6 sm:py-2.5 md:px-8 md:py-3 lg:rounded-[16px] lg:border-3 lg:px-10 lg:py-4"
                                                 >
-                                                    <span className="font-serif text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl tracking-[0.08em] lg:tracking-[0.1em] font-bold uppercase truncate">
+                                                    <span className="truncate font-serif text-xs font-bold tracking-[0.08em] uppercase sm:text-sm md:text-base lg:text-lg lg:tracking-[0.1em] xl:text-2xl">
                                                         {reg.name}
                                                     </span>
-                                                    <span className="ml-2 sm:ml-3 text-sm md:text-base lg:text-xl xl:text-2xl text-[#4c6070] group-hover:translate-x-0.5 transition-transform">
+                                                    <span className="ml-2 text-sm text-[#4c6070] transition-transform group-hover:translate-x-0.5 sm:ml-3 md:text-base lg:text-xl xl:text-2xl">
                                                         →
                                                     </span>
                                                 </a>
@@ -1198,7 +1540,6 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </section>
@@ -1207,47 +1548,69 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                     {/* SECCIÓN 6: LLUVIA DE SOBRES / REGALO                      */}
                     {/* (Sobre abierto con solapa monograma AJ y tarjeta con texto) */}
                     {/* ========================================================= */}
-                    <section className="relative w-full bg-[#fbf9f4] flex flex-col items-center justify-center py-10 sm:py-16 px-4 sm:px-6 select-none shrink-0">
+                    <section className="relative flex w-full shrink-0 flex-col items-center justify-center bg-[#fbf9f4] px-4 py-10 select-none sm:px-6 sm:py-16">
                         <div className="canvas-container flex flex-col items-center justify-center">
-                            <div className="relative w-full max-w-[420px] aspect-square flex items-center justify-center" data-reveal="scale" data-reveal-delay="100">
+                            <div
+                                className="relative flex aspect-square w-full max-w-[420px] items-center justify-center"
+                                data-reveal="scale"
+                                data-reveal-delay="100"
+                            >
                                 {/* Sobre abierto con solapa monograma */}
                                 <img
                                     src="/images/canva_assets/sobre.webp"
                                     alt="Sobre de regalos"
                                     loading="lazy"
                                     decoding="async"
-                                    className="w-full h-full object-contain pointer-events-none select-none envelope-shadow"
+                                    className="envelope-shadow pointer-events-none h-full w-full object-contain select-none"
                                 />
 
                                 {/* Monograma en la solapa superior (AJ escalonado con sutil palpitación) */}
-                                <div className="absolute top-[15%] left-1/2 -translate-x-1/2 flex items-center font-script text-[#f7f4ea] opacity-95 drop-shadow-sm pointer-events-none select-none whitespace-nowrap leading-none mt-2 mr-6 animate-pulse-subtle">
-                                    <span className="text-[32px] sm:text-[34px] translate-x-[4px] -translate-y-[8px] sm:-translate-y-[9px]">
+                                <div className="animate-pulse-subtle pointer-events-none absolute top-[15%] left-1/2 mt-2 mr-6 flex -translate-x-1/2 items-center font-script leading-none whitespace-nowrap text-[#f7f4ea] opacity-95 drop-shadow-sm select-none">
+                                    <span className="translate-x-[4px] -translate-y-[8px] text-[32px] sm:-translate-y-[9px] sm:text-[34px]">
                                         A
                                     </span>
-                                    <span className="text-[28px] sm:text-[30px] -translate-x-[12px] translate-y-[10px] sm:translate-y-[11px]">
+                                    <span className="-translate-x-[12px] translate-y-[10px] text-[28px] sm:translate-y-[11px] sm:text-[30px]">
                                         J
                                     </span>
                                 </div>
 
                                 {/* Mensaje dentro de la tarjeta blanca del sobre */}
-                                <div className="absolute top-[39.5%] left-1/2 -translate-x-1/2 -translate-y-3 w-[64%] sm:w-[58%] text-center pointer-events-none select-none" data-reveal="fade" data-reveal-delay="250">
-                                    <p className="font-serif text-[8px] min-[360px]:text-[8.5px] sm:text-[10px] font-semibold tracking-[0.08em] uppercase text-[#556268] leading-[1.38]">
-                                        <span className="block whitespace-nowrap">Tu presencia es nuestro mejor</span>
-                                        <span className="block whitespace-nowrap">regalo. Si desean tener un</span>
-                                        <span className="block whitespace-nowrap">detalle con nosotros,</span>
-                                        <span className="block whitespace-nowrap">contaremos con mesa de regalos</span>
-                                        <span className="block whitespace-nowrap">y lluvia de sobres.</span>
+                                <div
+                                    className="pointer-events-none absolute top-[39.5%] left-1/2 w-[64%] -translate-x-1/2 -translate-y-3 text-center select-none sm:w-[58%]"
+                                    data-reveal="fade"
+                                    data-reveal-delay="250"
+                                >
+                                    <p className="font-serif text-[8px] leading-[1.38] font-semibold tracking-[0.08em] text-[#556268] uppercase min-[360px]:text-[8.5px] sm:text-[10px]">
+                                        <span className="block whitespace-nowrap">
+                                            Tu presencia es nuestro mejor
+                                        </span>
+                                        <span className="block whitespace-nowrap">
+                                            regalo. Si desean tener un
+                                        </span>
+                                        <span className="block whitespace-nowrap">
+                                            detalle con nosotros,
+                                        </span>
+                                        <span className="block whitespace-nowrap">
+                                            contaremos con mesa de regalos
+                                        </span>
+                                        <span className="block whitespace-nowrap">
+                                            y lluvia de sobres.
+                                        </span>
                                     </p>
                                 </div>
 
                                 {/* Sello de cera en el cierre del sobre verde */}
-                                <div className="absolute top-[55%] left-1/2 -translate-x-1/2 w-[92px] h-[92px] sm:w-[115px] sm:h-[115px] pointer-events-none select-none z-20 drop-shadow-[0_6px_14px_rgba(0,0,0,0.28)]" data-reveal="scale" data-reveal-delay="300">
+                                <div
+                                    className="pointer-events-none absolute top-[55%] left-1/2 z-20 h-[92px] w-[92px] -translate-x-1/2 drop-shadow-[0_6px_14px_rgba(0,0,0,0.28)] select-none sm:h-[115px] sm:w-[115px]"
+                                    data-reveal="scale"
+                                    data-reveal-delay="300"
+                                >
                                     <img
                                         src="/images/canva_assets/sello_sobre.webp"
                                         alt="Sello del sobre"
                                         loading="lazy"
                                         decoding="async"
-                                        className="w-full h-full object-contain"
+                                        className="h-full w-full object-contain"
                                     />
                                 </div>
                             </div>
@@ -1258,157 +1621,199 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                     {/* SECCIÓN 7: CÓDIGO DE VESTIMENTA / DRESSCODE               */}
                     {/* (Foto novios con degradados, nombres, título e iconos)     */}
                     {/* ========================================================= */}
-                    <section className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-center pt-8 sm:pt-12 pb-0 px-0 select-none shrink-0 overflow-hidden min-h-0">
+                    <section className="relative -mt-[1px] flex min-h-0 w-full shrink-0 flex-col items-center justify-center overflow-hidden bg-[#fbf9f4] px-0 pt-8 pb-0 select-none sm:pt-12">
                         {/* Foto de los novios a ancho completo de pantalla */}
-                        <div className="relative w-full flex flex-col items-center overflow-hidden" data-reveal="fade">
+                        <div
+                            className="relative flex w-full flex-col items-center overflow-hidden"
+                            data-reveal="fade"
+                        >
                             <img
                                 src="/images/canva_assets/asset_16_31fee922.jpeg"
                                 alt="Adriana & Joaquín"
                                 loading="lazy"
                                 decoding="async"
-                                className="w-full h-auto block select-none pointer-events-none"
+                                className="pointer-events-none block h-auto w-full select-none"
                             />
 
                             {/* Degradado superior y Nombres de los novios */}
-                            <div className="absolute top-0 inset-x-0 h-44 sm:h-52 bg-gradient-to-b from-[#fbf9f4] via-[#fbf9f4]/80 to-transparent flex flex-col items-center justify-start pt-5 sm:pt-7 z-10 pointer-events-none select-none">
-                                <h2 className="font-script text-[2.8rem] sm:text-[3.4rem] text-[#788e80] leading-[1.15] pt-3 pb-2 px-4 text-center flex flex-col items-center [text-shadow:0_1px_2px_rgba(0,0,0,0.06)] font-normal" data-reveal="down" data-reveal-delay="150">
-                                    <span className="block px-2 pt-1">Adriana &amp;</span>
-                                    <span className="block px-2 pb-1 -mt-3 sm:-mt-3.5">Joaquín</span>
+                            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex h-44 flex-col items-center justify-start bg-gradient-to-b from-[#fbf9f4] via-[#fbf9f4]/80 to-transparent pt-5 select-none sm:h-52 sm:pt-7">
+                                <h2
+                                    className="flex flex-col items-center px-4 pt-3 pb-2 text-center font-script text-[2.8rem] leading-[1.15] font-normal text-[#788e80] [text-shadow:0_1px_2px_rgba(0,0,0,0.06)] sm:text-[3.4rem]"
+                                    data-reveal="down"
+                                    data-reveal-delay="150"
+                                >
+                                    <span className="block px-2 pt-1">
+                                        Adriana &amp;
+                                    </span>
+                                    <span className="-mt-3 block px-2 pb-1 sm:-mt-3.5">
+                                        Joaquín
+                                    </span>
                                 </h2>
                             </div>
 
                             {/* Degradado inferior difuminando hacia el fondo */}
-                            <div className="absolute bottom-0 inset-x-0 h-36 sm:h-44 bg-gradient-to-t from-[#fbf9f4] via-[#fbf9f4]/85 to-transparent pointer-events-none z-0" />
+                            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-[#fbf9f4] via-[#fbf9f4]/85 to-transparent sm:h-44" />
                         </div>
 
                         {/* Bloque de Dresscode, Iconos y Paletas de Color */}
-                        <div className="canvas-container relative z-10 -mt-16 sm:-mt-20 w-full flex flex-col items-center px-4 pb-14 sm:pb-20">
-                                {/* Título: Dresscode */}
-                                <h3 className="font-script text-[3.0rem] sm:text-[3.6rem] text-[#556c7d] leading-[1.2] pt-3 pb-2 px-4 -mt-3 mb-3 sm:mb-4 [text-shadow:0_1px_2px_rgba(0,0,0,0.06)] font-normal text-center tracking-normal" data-reveal="down">
-                                    Dresscode
-                                </h3>
+                        <div className="canvas-container relative z-10 -mt-16 flex w-full flex-col items-center px-4 pb-14 sm:-mt-20 sm:pb-20">
+                            {/* Título: Dresscode */}
+                            <h3
+                                className="-mt-3 mb-3 px-4 pt-3 pb-2 text-center font-script text-[3.0rem] leading-[1.2] font-normal tracking-normal text-[#556c7d] [text-shadow:0_1px_2px_rgba(0,0,0,0.06)] sm:mb-4 sm:text-[3.6rem]"
+                                data-reveal="down"
+                            >
+                                Dresscode
+                            </h3>
 
-                                {/* Columnas de Guayabera y Vestido */}
-                                <div className="grid grid-cols-2 gap-6 sm:gap-8 w-full max-w-[340px] sm:max-w-[360px] mb-8 sm:mb-9" data-reveal="up" data-reveal-delay="100">
-                                    {/* 17.svg: Guayabera */}
-                                    <div className="flex items-center gap-2.5 sm:gap-3 justify-center group transition-transform hover:scale-105 duration-300">
-                                        <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center transition-transform group-hover:scale-110">
-                                            <img
-                                                src="/resources_canvas/images/17.svg"
-                                                alt="Guayabera"
-                                                loading="lazy"
-                                                decoding="async"
-                                                className="w-full h-full object-contain"
-                                            />
-                                        </div>
-                                        <div className="font-serif text-[9.5px] sm:text-[11px] font-semibold tracking-[0.1em] uppercase text-[#556c7d] leading-[1.3] text-left">
-                                            GUAYABERA<br />
-                                            (MANGA LARGA<br />
-                                             O CORTA)
-                                        </div>
+                            {/* Columnas de Guayabera y Vestido */}
+                            <div
+                                className="mb-8 grid w-full max-w-[340px] grid-cols-2 gap-6 sm:mb-9 sm:max-w-[360px] sm:gap-8"
+                                data-reveal="up"
+                                data-reveal-delay="100"
+                            >
+                                {/* 17.svg: Guayabera */}
+                                <div className="group flex items-center justify-center gap-2.5 transition-transform duration-300 hover:scale-105 sm:gap-3">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center transition-transform group-hover:scale-110 sm:h-12 sm:w-12">
+                                        <img
+                                            src="/resources_canvas/images/17.svg"
+                                            alt="Guayabera"
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="h-full w-full object-contain"
+                                        />
                                     </div>
-
-                                    {/* 18.svg: Vestido de cóctel */}
-                                    <div className="flex items-center gap-2.5 sm:gap-3 justify-center group transition-transform hover:scale-105 duration-300">
-                                        <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center transition-transform group-hover:scale-110">
-                                            <img
-                                                src="/resources_canvas/images/18.svg"
-                                                alt="Vestido de cóctel"
-                                                loading="lazy"
-                                                decoding="async"
-                                                className="w-full h-full object-contain"
-                                            />
-                                        </div>
-                                        <div className="font-serif text-[9.5px] sm:text-[11px] font-semibold tracking-[0.1em] uppercase text-[#556c7d] leading-[1.3] text-left">
-                                            VESTIDO<br />
-                                            DE COCTEL
-                                        </div>
+                                    <div className="text-left font-serif text-[9.5px] leading-[1.3] font-semibold tracking-[0.1em] text-[#556c7d] uppercase sm:text-[11px]">
+                                        GUAYABERA
+                                        <br />
+                                        (MANGA LARGA
+                                        <br />
+                                        O CORTA)
                                     </div>
                                 </div>
 
-                                {/* EXCLUSIVO NOVIOS */}
-                                <h4 className="font-serif text-[11px] sm:text-[12.5px] font-semibold tracking-[0.2em] uppercase text-[#556c7d] text-center mb-3" data-reveal="up" data-reveal-delay="200">
-                                    COLORES A EVITAR
-                                </h4>
-
-                                {/* 6 Círculos de color */}
-                                <div className="flex items-center justify-center gap-2.5 sm:gap-3 mb-6 sm:mb-7" data-reveal="scale" data-reveal-delay="250">
-                                    <div
-                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#ffffff] border border-[#d6cfc2] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg cursor-pointer"
-                                        title="Blanco"
-                                    />
-                                    <div
-                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#f4f1ec] border border-[#d6cfc2] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg cursor-pointer"
-                                        title="Blanco hueso"
-                                    />
-                                    <div
-                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#fff7ed] border border-[#d6cfc2] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg cursor-pointer"
-                                        title="Marfil"
-                                    />
-                                    <div
-                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#b0c5ac] border border-[#9eb39a] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg cursor-pointer"
-                                        title="Verde sage claro"
-                                    />
-                                    <div
-                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#9ba998] border border-[#8a9887] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg cursor-pointer"
-                                        title="Verde sage medio"
-                                    />
-                                    <div
-                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#727f6e] border border-[#616e5d] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg cursor-pointer"
-                                        title="Verde olivo oscuro"
-                                    />
-                                    <div
-                                        className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-[#a90f0f] border border-[#8f0c0c] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg cursor-pointer"
-                                        title="Rojo intenso"
-                                    />
+                                {/* 18.svg: Vestido de cóctel */}
+                                <div className="group flex items-center justify-center gap-2.5 transition-transform duration-300 hover:scale-105 sm:gap-3">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center transition-transform group-hover:scale-110 sm:h-12 sm:w-12">
+                                        <img
+                                            src="/resources_canvas/images/18.svg"
+                                            alt="Vestido de cóctel"
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="h-full w-full object-contain"
+                                        />
+                                    </div>
+                                    <div className="text-left font-serif text-[9.5px] leading-[1.3] font-semibold tracking-[0.1em] text-[#556c7d] uppercase sm:text-[11px]">
+                                        VESTIDO
+                                        <br />
+                                        DE COCTEL
+                                    </div>
                                 </div>
                             </div>
+
+                            {/* EXCLUSIVO NOVIOS */}
+                            <h4
+                                className="mb-3 text-center font-serif text-[11px] font-semibold tracking-[0.2em] text-[#556c7d] uppercase sm:text-[12.5px]"
+                                data-reveal="up"
+                                data-reveal-delay="200"
+                            >
+                                COLORES A EVITAR
+                            </h4>
+
+                            {/* 6 Círculos de color */}
+                            <div
+                                className="mb-6 flex items-center justify-center gap-2.5 sm:mb-7 sm:gap-3"
+                                data-reveal="scale"
+                                data-reveal-delay="250"
+                            >
+                                <div
+                                    className="h-7 w-7 cursor-pointer rounded-full border border-[#d6cfc2] bg-[#ffffff] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg sm:h-8 sm:w-8"
+                                    title="Blanco"
+                                />
+                                <div
+                                    className="h-7 w-7 cursor-pointer rounded-full border border-[#d6cfc2] bg-[#f4f1ec] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg sm:h-8 sm:w-8"
+                                    title="Blanco hueso"
+                                />
+                                <div
+                                    className="h-7 w-7 cursor-pointer rounded-full border border-[#d6cfc2] bg-[#fff7ed] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg sm:h-8 sm:w-8"
+                                    title="Marfil"
+                                />
+                                <div
+                                    className="h-7 w-7 cursor-pointer rounded-full border border-[#9eb39a] bg-[#b0c5ac] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg sm:h-8 sm:w-8"
+                                    title="Verde sage claro"
+                                />
+                                <div
+                                    className="h-7 w-7 cursor-pointer rounded-full border border-[#8a9887] bg-[#9ba998] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg sm:h-8 sm:w-8"
+                                    title="Verde sage medio"
+                                />
+                                <div
+                                    className="h-7 w-7 cursor-pointer rounded-full border border-[#616e5d] bg-[#727f6e] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg sm:h-8 sm:w-8"
+                                    title="Verde olivo oscuro"
+                                />
+                                <div
+                                    className="h-7 w-7 cursor-pointer rounded-full border border-[#8f0c0c] bg-[#a90f0f] shadow-md transition-all duration-300 hover:scale-125 hover:shadow-lg sm:h-9 sm:w-9"
+                                    title="Rojo intenso"
+                                />
+                            </div>
+                        </div>
                     </section>
 
                     {/* ========================================================= */}
                     {/* SECCIÓN 8: CELEBRACIÓN PARA HUMANOS GRANDES (SOLO ADULTOS) */}
                     {/* ========================================================= */}
-                    <section className="relative w-full bg-[#8e9fae] -mt-[1px] flex flex-col items-center justify-start pt-10 sm:pt-14 pb-0 px-0 select-none shrink-0 overflow-hidden min-h-0">
+                    <section className="relative -mt-[1px] flex min-h-0 w-full shrink-0 flex-col items-center justify-start overflow-hidden bg-[#8e9fae] px-0 pt-10 pb-0 select-none sm:pt-14">
                         {/* Fondo con textura/patrón de huellitas y huesitos */}
                         <div
-                            className="absolute inset-0 bg-repeat opacity-20 mix-blend-screen pointer-events-none z-0"
+                            className="pointer-events-none absolute inset-0 z-0 bg-repeat opacity-20 mix-blend-screen"
                             style={{
-                                backgroundImage: "url('/images/canva_assets/asset_3_429a9a59.png')",
-                                backgroundSize: "280px 280px",
+                                backgroundImage:
+                                    "url('/images/canva_assets/asset_3_429a9a59.png')",
+                                backgroundSize: '280px 280px',
                             }}
                         />
 
                         {/* Contenido superior: Icono, Título y Mensaje */}
-                        <div className="canvas-container flex flex-col items-center relative z-10" data-reveal="up">
+                        <div
+                            className="canvas-container relative z-10 flex flex-col items-center"
+                            data-reveal="up"
+                        >
                             {/* Icono: Corazón con huella de perrito (26.svg) */}
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 mb-4 sm:mb-5 flex items-center justify-center animate-pulse-subtle">
+                            <div className="animate-pulse-subtle mb-4 flex h-12 w-12 items-center justify-center sm:mb-5 sm:h-14 sm:w-14">
                                 <img
                                     src="/resources_canvas/images/26.svg"
                                     alt="Corazón con huella"
                                     loading="lazy"
                                     decoding="async"
-                                    className="w-full h-full object-contain drop-shadow-sm"
+                                    className="h-full w-full object-contain drop-shadow-sm"
                                 />
                             </div>
 
                             {/* Título: UNA CELEBRACIÓN PARA HUMANOS GRANDES */}
-                            <h3 className="font-serif text-[12.5px] sm:text-[14.5px] font-semibold tracking-[0.2em] uppercase text-white/95 text-center leading-[1.35] mb-3 sm:mb-4 drop-shadow-sm">
-                                UNA CELEBRACIÓN PARA<br />
+                            <h3 className="mb-3 text-center font-serif text-[12.5px] leading-[1.35] font-semibold tracking-[0.2em] text-white/95 uppercase drop-shadow-sm sm:mb-4 sm:text-[14.5px]">
+                                UNA CELEBRACIÓN PARA
+                                <br />
                                 HUMANOS GRANDES
                             </h3>
 
                             {/* Mensaje en Cormorant Garamond */}
                             <p
-                                className="text-[14.5px] sm:text-[16px] font-normal text-white/95 leading-[1.35] text-center max-w-[360px] px-2 mb-2 sm:mb-3 drop-shadow-sm"
-                                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+                                className="mb-2 max-w-[360px] px-2 text-center text-[14.5px] leading-[1.35] font-normal text-white/95 drop-shadow-sm sm:mb-3 sm:text-[16px]"
+                                style={{
+                                    fontFamily:
+                                        "'Cormorant Garamond', Georgia, serif",
+                                }}
                             >
-                                Con cariño, les pedimos que esta ocasión<br />
+                                Con cariño, les pedimos que esta ocasión
+                                <br />
                                 sea disfrutada únicamente por adultos.
                             </p>
                         </div>
 
                         {/* Imagen de los novios con su perrito a ancho completo */}
-                        <div className="relative w-full flex flex-col items-center overflow-hidden z-10" data-reveal="up" data-reveal-delay="200">
+                        <div
+                            className="relative z-10 flex w-full flex-col items-center overflow-hidden"
+                            data-reveal="up"
+                            data-reveal-delay="200"
+                        >
                             <img
                                 src="/images/canva_assets/novios_perrito.webp"
                                 alt="Adriana, Joaquín y su perrito"
@@ -1417,36 +1822,58 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                 loading="eager"
                                 decoding="async"
                                 style={{ aspectRatio: '1080 / 1350' }}
-                                className="w-full h-auto object-cover block select-none pointer-events-none -mt-4 sm:-mt-6 -mb-1"
+                                className="pointer-events-none -mt-4 -mb-1 block h-auto w-full object-cover select-none sm:-mt-6"
                             />
 
                             {/* Degradado inferior suave hacia el siguiente fondo (#fbf9f4) */}
-                            <div className="absolute bottom-0 inset-x-0 h-28 sm:h-36 bg-gradient-to-t from-[#fbf9f4] via-[#fbf9f4]/80 to-transparent pointer-events-none z-20" />
+                            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-28 bg-gradient-to-t from-[#fbf9f4] via-[#fbf9f4]/80 to-transparent sm:h-36" />
                         </div>
                     </section>
 
                     {/* ========================================================= */}
                     {/* SECCIÓN 9: HOSPEDAJE (Hoteles recomendados con carrusel)  */}
                     {/* ========================================================= */}
-                    <section className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-start pt-10 sm:pt-14 pb-12 sm:pb-14 px-0 select-none overflow-hidden">
+                    <section className="relative -mt-[1px] flex w-full flex-col items-center justify-start overflow-hidden bg-[#fbf9f4] px-0 pt-10 pb-12 select-none sm:pt-14 sm:pb-14">
                         <div className="canvas-container flex flex-col items-center">
                             {/* Título: Hospedaje */}
-                            <h2 className="font-script text-[3rem] sm:text-[3.6rem] text-[#788e80] leading-[1.2] pt-3 pb-2 px-4 -mt-3 mb-1 text-center tracking-normal" data-reveal="down">
+                            <h2
+                                className="-mt-3 mb-1 px-4 pt-3 pb-2 text-center font-script text-[3rem] leading-[1.2] tracking-normal text-[#788e80] sm:text-[3.6rem]"
+                                data-reveal="down"
+                            >
                                 Hospedaje
                             </h2>
 
                             {/* Subtítulo */}
-                            <p className="font-serif text-[9.5px] sm:text-[11px] text-[#788a80] font-medium uppercase text-center max-w-[320px] sm:max-w-[390px] leading-relaxed mb-6 sm:mb-8 px-4 tracking-normal" data-reveal="down" data-reveal-delay="100">
-                                ESTAREMOS ENCANTADOS QUE NOS ACOMPAÑES Y DISFRUTES TODA LA EXPERIENCIA
+                            <p
+                                className="mb-6 max-w-[320px] px-4 text-center font-serif text-[9.5px] leading-relaxed font-medium tracking-normal text-[#788a80] uppercase sm:mb-8 sm:max-w-[390px] sm:text-[11px]"
+                                data-reveal="down"
+                                data-reveal-delay="100"
+                            >
+                                ESTAREMOS ENCANTADOS QUE NOS ACOMPAÑES Y
+                                DISFRUTES TODA LA EXPERIENCIA
                             </p>
 
                             {/* Disclaimer de descuento en hoteles */}
-                            <p className="font-serif text-[10.5px] sm:text-[12px] italic text-[#476070] text-center max-w-[300px] sm:max-w-[380px] leading-relaxed mb-5 sm:mb-6 px-4 py-2 rounded-xl bg-white/70 border border-[#788a80]/40" data-reveal="down" data-reveal-delay="150">
-                                Menciona <strong className="font-semibold not-italic">&ldquo;Reserva para la boda de {brideName} y {groomName}&rdquo;</strong> para recibir un descuento o precio preferencial en los hoteles.
+                            <p
+                                className="mb-5 max-w-[300px] rounded-xl border border-[#788a80]/40 bg-white/70 px-4 py-2 text-center font-serif text-[10.5px] leading-relaxed text-[#476070] italic sm:mb-6 sm:max-w-[380px] sm:text-[12px]"
+                                data-reveal="down"
+                                data-reveal-delay="150"
+                            >
+                                Menciona{' '}
+                                <strong className="font-semibold not-italic">
+                                    &ldquo;Reserva para la boda de {brideName} y{' '}
+                                    {groomName}&rdquo;
+                                </strong>{' '}
+                                para recibir un descuento o precio preferencial
+                                en los hoteles.
                             </p>
 
                             {/* Carrusel fluido y accesible de hoteles */}
-                            <div className="w-full" data-reveal="up" data-reveal-delay="200">
+                            <div
+                                className="w-full"
+                                data-reveal="up"
+                                data-reveal-delay="200"
+                            >
                                 <HotelCarousel hotels={hotelList} />
                             </div>
                         </div>
@@ -1455,35 +1882,47 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                     {/* ========================================================= */}
                     {/* SECCIÓN 10: CONFIRMACIÓN DE ASISTENCIA ("¿Nos acompañas?") */}
                     {/* ========================================================= */}
-                    <section className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-start pt-6 sm:pt-8 pb-14 sm:pb-16 px-4 select-none overflow-hidden">
+                    <section className="relative -mt-[1px] flex w-full flex-col items-center justify-start overflow-hidden bg-[#fbf9f4] px-4 pt-6 pb-14 select-none sm:pt-8 sm:pb-16">
                         <div className="canvas-container flex flex-col items-center">
                             {/* Título en letra cursiva */}
-                            <h2 className="font-script text-[3.2rem] sm:text-[3.9rem] text-[#788e80] leading-[1.2] pt-3 pb-2 px-4 -mt-3 mb-0.5 text-center tracking-normal" data-reveal="down">
+                            <h2
+                                className="-mt-3 mb-0.5 px-4 pt-3 pb-2 text-center font-script text-[3.2rem] leading-[1.2] tracking-normal text-[#788e80] sm:text-[3.9rem]"
+                                data-reveal="down"
+                            >
                                 ¿Nos acompañas?
                             </h2>
 
                             {/* Subtítulo */}
-                            <p className="font-serif text-[9.5px] sm:text-[11px] tracking-[0.24em] text-[#788a80] font-medium uppercase text-center mb-6 sm:mb-8 px-2" data-reveal="down" data-reveal-delay="100">
+                            <p
+                                className="mb-6 px-2 text-center font-serif text-[9.5px] font-medium tracking-[0.24em] text-[#788a80] uppercase sm:mb-8 sm:text-[11px]"
+                                data-reveal="down"
+                                data-reveal-delay="100"
+                            >
                                 QUEREMOS CONTAR CONTIGO EN ESTE DÍA TAN ESPECIAL
                             </p>
 
                             {/* Tarjeta del formulario con borde suave azul/gris */}
-                            <div className="w-full max-w-[420px] bg-white rounded-2xl border border-[#b8c9d9] shadow-sm p-5 sm:p-7" data-reveal="up" data-reveal-delay="200">
+                            <div
+                                className="w-full max-w-[420px] rounded-2xl border border-[#b8c9d9] bg-white p-5 shadow-sm sm:p-7"
+                                data-reveal="up"
+                                data-reveal-delay="200"
+                            >
                                 {rsvpSubmitted ? (
-                                    <div className="flex flex-col items-center text-center py-4 animate-fadeIn">
-                                        <div className="w-12 h-12 rounded-full bg-[#edf4f0] text-[#788e80] flex items-center justify-center text-2xl mb-3 shadow-xs">
+                                    <div className="animate-fadeIn flex flex-col items-center py-4 text-center">
+                                        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#edf4f0] text-2xl text-[#788e80] shadow-xs">
                                             ✓
                                         </div>
-                                        <h4 className="font-script text-3xl md:text-4xl text-[#788e80] mb-2">
-                                            ¡Muchas Gracias, {rsvpName || invitation?.name}!
+                                        <h4 className="mb-2 font-script text-3xl text-[#788e80] md:text-4xl">
+                                            ¡Muchas Gracias,{' '}
+                                            {rsvpName || invitation?.name}!
                                         </h4>
-                                        <p className="font-serif text-[12px] sm:text-[13px] md:text-[14px] text-stone-600 tracking-wide mb-3 leading-relaxed">
+                                        <p className="mb-3 font-serif text-[12px] leading-relaxed tracking-wide text-stone-600 sm:text-[13px] md:text-[14px]">
                                             {confirmedGuests.length > 0
                                                 ? '¡Nos emociona muchísimo contar con tu presencia en nuestro gran día!'
                                                 : 'Lamentamos que no puedas acompañarnos físicamente, ¡te llevaremos en el corazón!'}
                                         </p>
                                         {rsvpMessage && (
-                                            <p className="text-[12px] md:text-[13px] italic text-stone-500 bg-[#fbf9f4] p-3.5 md:p-4 rounded-xl border border-stone-200/60 mb-4 max-w-[340px]">
+                                            <p className="mb-4 max-w-[340px] rounded-xl border border-stone-200/60 bg-[#fbf9f4] p-3.5 text-[12px] text-stone-500 italic md:p-4 md:text-[13px]">
                                                 "{rsvpMessage}"
                                             </p>
                                         )}
@@ -1492,49 +1931,82 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                         {/* PASES DE ACCESO INDIVIDUALES PARA CONFIRMADOS             */}
                                         {/* ========================================================= */}
                                         {confirmedGuests.length > 0 && (
-                                            <div className="w-full mt-4 pt-5 border-t border-[#ded8cd] space-y-4">
-                                                <div className="text-center px-1">
-                                                    <span className="font-serif text-[10px] tracking-[0.25em] text-[#698175] uppercase font-bold block mb-1">
-                                                        {confirmedGuests.length === 1 ? 'Tu Pase de Acceso Oficial' : `Pases Oficiales de Acceso (${confirmedGuests.length})`}
+                                            <div className="mt-4 w-full space-y-4 border-t border-[#ded8cd] pt-5">
+                                                <div className="px-1 text-center">
+                                                    <span className="mb-1 block font-serif text-[10px] font-bold tracking-[0.25em] text-[#698175] uppercase">
+                                                        {confirmedGuests.length ===
+                                                        1
+                                                            ? 'Tu Pase de Acceso Oficial'
+                                                            : `Pases Oficiales de Acceso (${confirmedGuests.length})`}
                                                     </span>
-                                                    <p className="text-[11px] font-serif text-stone-500 leading-snug">
-                                                        Presenta tu código QR al llegar a la recepción. Cada pase es personal y no requiere esperas.
+                                                    <p className="font-serif text-[11px] leading-snug text-stone-500">
+                                                        Presenta tu código QR al
+                                                        llegar a la recepción.
+                                                        Cada pase es personal y
+                                                        no requiere esperas.
                                                     </p>
                                                 </div>
 
                                                 <div className="space-y-6 pt-1">
-                                                    {confirmedGuests.map((cg) => (
-                                                        <DigitalPassCard
-                                                            key={cg.id || cg.checkin_code}
-                                                            guest={{
-                                                                id: cg.id,
-                                                                full_name: cg.full_name,
-                                                                checkin_code: cg.checkin_code || 'AJ-ACCESO',
-                                                                table_name: cg.table_name,
-                                                                type: cg.type,
-                                                                allergies: cg.allergies,
-                                                                special_notes: cg.special_notes,
-                                                            }}
-                                                            weddingName={`${brideName} & ${groomName}`}
-                                                            weddingDate={dateText}
-                                                            receptionLocation={wedding?.locations?.reception || 'Hacienda San Diego Cutz'}
-                                                            invitationName={invitation?.name}
-                                                        />
-                                                    ))}
+                                                    {confirmedGuests.map(
+                                                        (cg) => (
+                                                            <DigitalPassCard
+                                                                key={
+                                                                    cg.id ||
+                                                                    cg.checkin_code
+                                                                }
+                                                                guest={{
+                                                                    id: cg.id,
+                                                                    full_name:
+                                                                        cg.full_name,
+                                                                    checkin_code:
+                                                                        cg.checkin_code ||
+                                                                        'AJ-ACCESO',
+                                                                    table_name:
+                                                                        cg.table_name,
+                                                                    type: cg.type,
+                                                                    allergies:
+                                                                        cg.allergies,
+                                                                    special_notes:
+                                                                        cg.special_notes,
+                                                                }}
+                                                                weddingName={`${brideName} & ${groomName}`}
+                                                                weddingDate={
+                                                                    dateText
+                                                                }
+                                                                receptionLocation={
+                                                                    wedding
+                                                                        ?.locations
+                                                                        ?.reception ||
+                                                                    'Hacienda San Diego Cutz'
+                                                                }
+                                                                invitationName={
+                                                                    invitation?.name
+                                                                }
+                                                            />
+                                                        ),
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
 
-                                        <div className="mt-6 pt-3 border-t border-stone-100 w-full text-center">
+                                        <div className="mt-6 w-full border-t border-stone-100 pt-3 text-center">
                                             {rsvpClosed ? (
                                                 <p className="font-serif text-[11px] text-stone-400 italic">
-                                                    Las confirmaciones cerraron{rsvpDeadlineText ? ` el ${rsvpDeadlineText}` : ''}. Para cualquier cambio, contacta a los novios.
+                                                    Las confirmaciones cerraron
+                                                    {rsvpDeadlineText
+                                                        ? ` el ${rsvpDeadlineText}`
+                                                        : ''}
+                                                    . Para cualquier cambio,
+                                                    contacta a los novios.
                                                 </p>
                                             ) : (
                                                 <button
                                                     type="button"
-                                                    onClick={() => setRsvpSubmitted(false)}
-                                                    className="font-serif text-[11px] tracking-wider uppercase text-[#788a80] underline hover:text-[#556c7d] cursor-pointer"
+                                                    onClick={() =>
+                                                        setRsvpSubmitted(false)
+                                                    }
+                                                    className="cursor-pointer font-serif text-[11px] tracking-wider text-[#788a80] uppercase underline hover:text-[#556c7d]"
                                                 >
                                                     Modificar respuesta
                                                 </button>
@@ -1543,174 +2015,289 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                     </div>
                                 ) : !invitation ? (
                                     /* Si se visita la página general sin token de invitación privada */
-                                    <div className="flex flex-col items-center text-center py-5 px-3 animate-fadeIn space-y-4">
+                                    <div className="animate-fadeIn flex flex-col items-center space-y-4 px-3 py-5 text-center">
                                         {/* Monograma de Gala */}
-                                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#28362e] via-[#33443a] to-[#28362e] text-[#f4ecd8] border-2 border-[#d4af37]/50 flex items-center justify-center font-serif font-bold text-lg shadow-lg">
+                                        <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#d4af37]/50 bg-gradient-to-br from-[#28362e] via-[#33443a] to-[#28362e] font-serif text-lg font-bold text-[#f4ecd8] shadow-lg">
                                             A&amp;J
                                         </div>
 
                                         <div>
-                                            <span className="font-sans text-[10.5px] sm:text-[11px] tracking-[0.25em] text-[#698175] uppercase font-bold block mb-1">
+                                            <span className="mb-1 block font-sans text-[10.5px] font-bold tracking-[0.25em] text-[#698175] uppercase sm:text-[11px]">
                                                 CONFIRMACIÓN PRIVADA
                                             </span>
-                                            <h3 className="font-sans font-bold text-stone-900 text-lg sm:text-xl leading-tight">
+                                            <h3 className="font-sans text-lg leading-tight font-bold text-stone-900 sm:text-xl">
                                                 Invitación Personal Requerida
                                             </h3>
                                         </div>
 
-                                        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#ded8cd] to-transparent my-1" />
+                                        <div className="my-1 h-px w-full bg-gradient-to-r from-transparent via-[#ded8cd] to-transparent" />
 
-                                        <p className="font-sans text-[13px] text-stone-600 leading-relaxed max-w-[340px]">
-                                            Para confirmar tu asistencia y obtener tus <strong className="font-semibold text-stone-800">pases de acceso oficiales</strong>, por favor ingresa únicamente a través del <strong className="font-semibold text-stone-800">enlace personalizado</strong> que te compartieron directamente <strong className="font-semibold text-[#28362e]">{brideName} &amp; {groomName}</strong>.
+                                        <p className="max-w-[340px] font-sans text-[13px] leading-relaxed text-stone-600">
+                                            Para confirmar tu asistencia y
+                                            obtener tus{' '}
+                                            <strong className="font-semibold text-stone-800">
+                                                pases de acceso oficiales
+                                            </strong>
+                                            , por favor ingresa únicamente a
+                                            través del{' '}
+                                            <strong className="font-semibold text-stone-800">
+                                                enlace personalizado
+                                            </strong>{' '}
+                                            que te compartieron directamente{' '}
+                                            <strong className="font-semibold text-[#28362e]">
+                                                {brideName} &amp; {groomName}
+                                            </strong>
+                                            .
                                         </p>
 
                                         {/* Tarjeta explicativa con icono */}
-                                        <div className="bg-[#f7faf8] rounded-2xl border border-[#d2dfd7] p-3.5 text-stone-600 text-xs font-sans leading-relaxed w-full shadow-2xs">
-                                            <div className="flex items-center justify-center gap-1.5 text-[#28362e] font-semibold text-[12px] mb-1">
-                                                <Ticket className="w-4 h-4 text-[#698175]" />
-                                                <span>Pases de Acceso Exclusivos</span>
+                                        <div className="w-full rounded-2xl border border-[#d2dfd7] bg-[#f7faf8] p-3.5 font-sans text-xs leading-relaxed text-stone-600 shadow-2xs">
+                                            <div className="mb-1 flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#28362e]">
+                                                <Ticket className="h-4 w-4 text-[#698175]" />
+                                                <span>
+                                                    Pases de Acceso Exclusivos
+                                                </span>
                                             </div>
-                                            Cada invitación cuenta con boletos y códigos QR individuales asignados a los integrantes de tu familia o pase.
+                                            Cada invitación cuenta con boletos y
+                                            códigos QR individuales asignados a
+                                            los integrantes de tu familia o
+                                            pase.
                                         </div>
 
-                                        <p className="text-[11px] font-sans text-stone-400 italic max-w-[300px]">
-                                            ¿No encuentras tu enlace privado? Comunícate con los novios para compartirte tu pase personalizado.
+                                        <p className="max-w-[300px] font-sans text-[11px] text-stone-400 italic">
+                                            ¿No encuentras tu enlace privado?
+                                            Comunícate con los novios para
+                                            compartirte tu pase personalizado.
                                         </p>
                                     </div>
                                 ) : rsvpClosed ? (
                                     /* La fecha límite para confirmar ya pasó */
-                                    <div className="flex flex-col items-center text-center py-5 px-3 animate-fadeIn space-y-3">
-                                        <div className="w-12 h-12 rounded-full bg-[#f3efe6] text-[#a08a5c] border border-[#e2d6bd] flex items-center justify-center text-xl shadow-xs">
+                                    <div className="animate-fadeIn flex flex-col items-center space-y-3 px-3 py-5 text-center">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#e2d6bd] bg-[#f3efe6] text-xl text-[#a08a5c] shadow-xs">
                                             ⏳
                                         </div>
-                                        <span className="font-serif text-[10px] tracking-[0.25em] text-[#698175] uppercase font-bold">
+                                        <span className="font-serif text-[10px] font-bold tracking-[0.25em] text-[#698175] uppercase">
                                             Confirmaciones cerradas
                                         </span>
-                                        <h3 className="font-serif font-bold text-stone-800 text-base">
+                                        <h3 className="font-serif text-base font-bold text-stone-800">
                                             {invitation.name}
                                         </h3>
-                                        <p className="font-serif text-[12.5px] text-stone-600 leading-relaxed max-w-[320px]">
-                                            La fecha límite para confirmar {rsvpDeadlineText ? <>fue el <strong className="text-[#28362e]">{rsvpDeadlineText}</strong></> : 'ya pasó'}. Si necesitas hacer algún cambio, comunícate directamente con <strong className="text-[#28362e]">{brideName} &amp; {groomName}</strong>.
+                                        <p className="max-w-[320px] font-serif text-[12.5px] leading-relaxed text-stone-600">
+                                            La fecha límite para confirmar{' '}
+                                            {rsvpDeadlineText ? (
+                                                <>
+                                                    fue el{' '}
+                                                    <strong className="text-[#28362e]">
+                                                        {rsvpDeadlineText}
+                                                    </strong>
+                                                </>
+                                            ) : (
+                                                'ya pasó'
+                                            )}
+                                            . Si necesitas hacer algún cambio,
+                                            comunícate directamente con{' '}
+                                            <strong className="text-[#28362e]">
+                                                {brideName} &amp; {groomName}
+                                            </strong>
+                                            .
                                         </p>
                                     </div>
                                 ) : (
-                                    <form onSubmit={handleRsvpSubmit} className="flex flex-col space-y-4 sm:space-y-5">
+                                    <form
+                                        onSubmit={handleRsvpSubmit}
+                                        className="flex flex-col space-y-4 sm:space-y-5"
+                                    >
                                         {/* Encabezado de la invitación personalizada */}
-                                        <div className="bg-[#f0f4f2] border border-[#d2dfd7] rounded-xl p-3 text-center">
-                                            <span className="font-serif text-[10px] tracking-[0.2em] uppercase text-[#698175] font-semibold block mb-0.5">
-                                                {invitation.guests && invitation.guests.length > 1 ? 'Invitación Familiar' : 'Invitación Personal'}
+                                        <div className="rounded-xl border border-[#d2dfd7] bg-[#f0f4f2] p-3 text-center">
+                                            <span className="mb-0.5 block font-serif text-[10px] font-semibold tracking-[0.2em] text-[#698175] uppercase">
+                                                {invitation.guests &&
+                                                invitation.guests.length > 1
+                                                    ? 'Invitación Familiar'
+                                                    : 'Invitación Personal'}
                                             </span>
-                                            <h3 className="font-serif font-bold text-stone-800 text-sm">
+                                            <h3 className="font-serif text-sm font-bold text-stone-800">
                                                 {invitation.name}
                                             </h3>
-                                            <p className="font-serif text-[11px] text-stone-600 mt-0.5">
-                                                Hemos reservado <strong className="text-[#556c7d]">{invitation.guests?.length || 1} {invitation.guests?.length === 1 ? 'pase' : 'pases'}</strong> en su honor
+                                            <p className="mt-0.5 font-serif text-[11px] text-stone-600">
+                                                Hemos reservado{' '}
+                                                <strong className="text-[#556c7d]">
+                                                    {invitation.guests
+                                                        ?.length || 1}{' '}
+                                                    {invitation.guests
+                                                        ?.length === 1
+                                                        ? 'pase'
+                                                        : 'pases'}
+                                                </strong>{' '}
+                                                en su honor
                                             </p>
                                             {rsvpDeadlineText && (
-                                                <p className="font-serif text-[10.5px] text-[#a08a5c] mt-1.5 tracking-wide">
-                                                    Por favor confirma antes del <strong className="font-semibold">{rsvpDeadlineText}</strong>
+                                                <p className="mt-1.5 font-serif text-[10.5px] tracking-wide text-[#a08a5c]">
+                                                    Por favor confirma antes del{' '}
+                                                    <strong className="font-semibold">
+                                                        {rsvpDeadlineText}
+                                                    </strong>
                                                 </p>
                                             )}
                                         </div>
 
                                         {/* Si hay múltiples integrantes asignados a la invitación */}
-                                        {invitation?.guests && invitation.guests.length > 1 ? (
+                                        {invitation?.guests &&
+                                        invitation.guests.length > 1 ? (
                                             <div className="space-y-2">
-                                                <label className="font-serif text-[11px] sm:text-[11.5px] tracking-[0.12em] text-[#556c7d] uppercase font-semibold block mb-1">
-                                                    Confirma la asistencia de cada persona:
+                                                <label className="mb-1 block font-serif text-[11px] font-semibold tracking-[0.12em] text-[#556c7d] uppercase sm:text-[11.5px]">
+                                                    Confirma la asistencia de
+                                                    cada persona:
                                                 </label>
                                                 <div className="space-y-2.5">
-                                                    {invitation.guests.map((guest) => {
-                                                        const isAtt = guestAttendingMap[guest.id];
-                                                        return (
-                                                            <div key={guest.id} className="p-2.5 rounded-xl border border-[#b8c9d9] bg-[#fafbfc] flex items-center justify-between">
-                                                                <div className="pr-2">
-                                                                    <p className="text-[12.5px] font-medium text-stone-800 leading-tight">
-                                                                        {guest.full_name}
-                                                                    </p>
-                                                                    <span className="text-[9.5px] text-stone-400">
-                                                                        {guest.type === 'child' ? 'Niño/a' : 'Adulto'}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="flex gap-1.5 shrink-0">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setGuestAttendingMap(prev => ({ ...prev, [guest.id]: true }))}
-                                                                        className={`px-3 py-1.5 rounded-full text-[11px] font-serif transition-all cursor-pointer ${isAtt === true
-                                                                            ? 'bg-[#698175] text-white shadow-xs font-semibold'
-                                                                            : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
+                                                    {invitation.guests.map(
+                                                        (guest) => {
+                                                            const isAtt =
+                                                                guestAttendingMap[
+                                                                    guest.id
+                                                                ];
+                                                            return (
+                                                                <div
+                                                                    key={
+                                                                        guest.id
+                                                                    }
+                                                                    className="flex items-center justify-between rounded-xl border border-[#b8c9d9] bg-[#fafbfc] p-2.5"
+                                                                >
+                                                                    <div className="pr-2">
+                                                                        <p className="text-[12.5px] leading-tight font-medium text-stone-800">
+                                                                            {
+                                                                                guest.full_name
+                                                                            }
+                                                                        </p>
+                                                                        <span className="text-[9.5px] text-stone-400">
+                                                                            {guest.type ===
+                                                                            'child'
+                                                                                ? 'Niño/a'
+                                                                                : 'Adulto'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex shrink-0 gap-1.5">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                setGuestAttendingMap(
+                                                                                    (
+                                                                                        prev,
+                                                                                    ) => ({
+                                                                                        ...prev,
+                                                                                        [guest.id]: true,
+                                                                                    }),
+                                                                                )
+                                                                            }
+                                                                            className={`cursor-pointer rounded-full px-3 py-1.5 font-serif text-[11px] transition-all ${
+                                                                                isAtt ===
+                                                                                true
+                                                                                    ? 'bg-[#698175] font-semibold text-white shadow-xs'
+                                                                                    : 'border border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
                                                                             }`}
-                                                                    >
-                                                                        ✓ Sí
-                                                                    </button>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setGuestAttendingMap(prev => ({ ...prev, [guest.id]: false }))}
-                                                                        className={`px-3 py-1.5 rounded-full text-[11px] font-serif transition-all cursor-pointer ${isAtt === false
-                                                                            ? 'bg-rose-600 text-white shadow-xs font-semibold'
-                                                                            : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
+                                                                        >
+                                                                            ✓ Sí
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                setGuestAttendingMap(
+                                                                                    (
+                                                                                        prev,
+                                                                                    ) => ({
+                                                                                        ...prev,
+                                                                                        [guest.id]: false,
+                                                                                    }),
+                                                                                )
+                                                                            }
+                                                                            className={`cursor-pointer rounded-full px-3 py-1.5 font-serif text-[11px] transition-all ${
+                                                                                isAtt ===
+                                                                                false
+                                                                                    ? 'bg-rose-600 font-semibold text-white shadow-xs'
+                                                                                    : 'border border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
                                                                             }`}
-                                                                    >
-                                                                        ✗ No
-                                                                    </button>
+                                                                        >
+                                                                            ✗ No
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        );
-                                                    })}
+                                                            );
+                                                        },
+                                                    )}
                                                 </div>
                                             </div>
                                         ) : (
                                             /* Campo: ¿Confirmas tu asistencia a nuestra boda? */
                                             <div>
-                                                <label className="font-serif text-[11px] sm:text-[11.5px] tracking-[0.12em] text-[#556c7d] uppercase font-semibold block mb-2 leading-snug">
-                                                    ¿Confirmas tu asistencia a nuestra boda?
+                                                <label className="mb-2 block font-serif text-[11px] leading-snug font-semibold tracking-[0.12em] text-[#556c7d] uppercase sm:text-[11.5px]">
+                                                    ¿Confirmas tu asistencia a
+                                                    nuestra boda?
                                                 </label>
                                                 <div className="space-y-2">
                                                     {/* Opción 1: Acepto con mucho gusto */}
                                                     <button
                                                         type="button"
-                                                        onClick={() => setRsvpAttending('yes')}
-                                                        className={`w-full flex items-center px-3.5 py-2.5 rounded-xl border transition-all duration-200 text-left cursor-pointer ${rsvpAttending === 'yes'
-                                                            ? 'bg-[#edf3f7] border-[#6f879a] text-[#3c5061] shadow-xs'
-                                                            : 'bg-[#fafbfc] border-[#b8c9d9] text-stone-600 hover:bg-stone-50'
-                                                            }`}
+                                                        onClick={() =>
+                                                            setRsvpAttending(
+                                                                'yes',
+                                                            )
+                                                        }
+                                                        className={`flex w-full cursor-pointer items-center rounded-xl border px-3.5 py-2.5 text-left transition-all duration-200 ${
+                                                            rsvpAttending ===
+                                                            'yes'
+                                                                ? 'border-[#6f879a] bg-[#edf3f7] text-[#3c5061] shadow-xs'
+                                                                : 'border-[#b8c9d9] bg-[#fafbfc] text-stone-600 hover:bg-stone-50'
+                                                        }`}
                                                     >
                                                         <span
-                                                            className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2.5 shrink-0 ${rsvpAttending === 'yes'
-                                                                ? 'border-[#6f879a] bg-[#6f879a]'
-                                                                : 'border-[#94a3b8] bg-white'
-                                                                }`}
+                                                            className={`mr-2.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                                                                rsvpAttending ===
+                                                                'yes'
+                                                                    ? 'border-[#6f879a] bg-[#6f879a]'
+                                                                    : 'border-[#94a3b8] bg-white'
+                                                            }`}
                                                         >
-                                                            {rsvpAttending === 'yes' && (
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                            {rsvpAttending ===
+                                                                'yes' && (
+                                                                <span className="h-1.5 w-1.5 rounded-full bg-white" />
                                                             )}
                                                         </span>
-                                                        <span className="text-[12.5px] sm:text-[13px] font-medium tracking-wide">
-                                                            Acepto con mucho gusto
+                                                        <span className="text-[12.5px] font-medium tracking-wide sm:text-[13px]">
+                                                            Acepto con mucho
+                                                            gusto
                                                         </span>
                                                     </button>
 
                                                     {/* Opción 2: Lamentablemente no puedo asistir */}
                                                     <button
                                                         type="button"
-                                                        onClick={() => setRsvpAttending('no')}
-                                                        className={`w-full flex items-center px-3.5 py-2.5 rounded-xl border transition-all duration-200 text-left cursor-pointer ${rsvpAttending === 'no'
-                                                            ? 'bg-[#edf3f7] border-[#6f879a] text-[#3c5061] shadow-xs'
-                                                            : 'bg-[#fafbfc] border-[#b8c9d9] text-stone-600 hover:bg-stone-50'
-                                                            }`}
+                                                        onClick={() =>
+                                                            setRsvpAttending(
+                                                                'no',
+                                                            )
+                                                        }
+                                                        className={`flex w-full cursor-pointer items-center rounded-xl border px-3.5 py-2.5 text-left transition-all duration-200 ${
+                                                            rsvpAttending ===
+                                                            'no'
+                                                                ? 'border-[#6f879a] bg-[#edf3f7] text-[#3c5061] shadow-xs'
+                                                                : 'border-[#b8c9d9] bg-[#fafbfc] text-stone-600 hover:bg-stone-50'
+                                                        }`}
                                                     >
                                                         <span
-                                                            className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2.5 shrink-0 ${rsvpAttending === 'no'
-                                                                ? 'border-[#6f879a] bg-[#6f879a]'
-                                                                : 'border-[#94a3b8] bg-white'
-                                                                }`}
+                                                            className={`mr-2.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                                                                rsvpAttending ===
+                                                                'no'
+                                                                    ? 'border-[#6f879a] bg-[#6f879a]'
+                                                                    : 'border-[#94a3b8] bg-white'
+                                                            }`}
                                                         >
-                                                            {rsvpAttending === 'no' && (
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                            {rsvpAttending ===
+                                                                'no' && (
+                                                                <span className="h-1.5 w-1.5 rounded-full bg-white" />
                                                             )}
                                                         </span>
-                                                        <span className="text-[12.5px] sm:text-[13px] font-medium tracking-wide">
-                                                            Lamentablemente no puedo asistir
+                                                        <span className="text-[12.5px] font-medium tracking-wide sm:text-[13px]">
+                                                            Lamentablemente no
+                                                            puedo asistir
                                                         </span>
                                                     </button>
                                                 </div>
@@ -1719,21 +2306,26 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
 
                                         {/* Campo: Escribe una dedicatoria a los novios */}
                                         <div>
-                                            <label className="font-serif text-[11px] sm:text-[11.5px] tracking-[0.12em] text-[#556c7d] uppercase font-semibold block mb-1.5">
-                                                Escribe una dedicatoria a los novios
+                                            <label className="mb-1.5 block font-serif text-[11px] font-semibold tracking-[0.12em] text-[#556c7d] uppercase sm:text-[11.5px]">
+                                                Escribe una dedicatoria a los
+                                                novios
                                             </label>
                                             <textarea
                                                 value={rsvpMessage}
-                                                onChange={(e) => setRsvpMessage(e.target.value)}
+                                                onChange={(e) =>
+                                                    setRsvpMessage(
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 rows={3}
                                                 placeholder="Déjanos unas palabras de cariño..."
-                                                className="w-full px-3.5 py-2.5 rounded-xl border border-[#b8c9d9] text-[13px] text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-[#788a80] focus:border-[#788a80] bg-[#fafbfc] resize-none transition-all"
+                                                className="w-full resize-none rounded-xl border border-[#b8c9d9] bg-[#fafbfc] px-3.5 py-2.5 text-[13px] text-stone-700 transition-all placeholder:text-stone-400 focus:border-[#788a80] focus:ring-1 focus:ring-[#788a80] focus:outline-none"
                                             />
                                         </div>
 
                                         {/* Mensaje de error si falta llenar algo */}
                                         {rsvpError && (
-                                            <p className="text-[11.5px] text-rose-500 font-serif tracking-wide text-center">
+                                            <p className="text-center font-serif text-[11.5px] tracking-wide text-rose-500">
                                                 {rsvpError}
                                             </p>
                                         )}
@@ -1742,9 +2334,11 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                                         <button
                                             type="submit"
                                             disabled={rsvpSubmitting}
-                                            className="w-full py-3 px-6 rounded-full bg-[#6f879a] hover:bg-[#5c7385] text-white font-serif text-[12px] sm:text-[13px] tracking-[0.18em] uppercase font-medium shadow transition-all duration-300 mt-2 disabled:opacity-60 cursor-pointer hover-lift active:scale-95"
+                                            className="hover-lift mt-2 w-full cursor-pointer rounded-full bg-[#6f879a] px-6 py-3 font-serif text-[12px] font-medium tracking-[0.18em] text-white uppercase shadow transition-all duration-300 hover:bg-[#5c7385] active:scale-95 disabled:opacity-60 sm:text-[13px]"
                                         >
-                                            {rsvpSubmitting ? 'Guardando confirmación...' : 'Confirmar asistencia'}
+                                            {rsvpSubmitting
+                                                ? 'Guardando confirmación...'
+                                                : 'Confirmar asistencia'}
                                         </button>
                                     </form>
                                 )}
@@ -1755,22 +2349,27 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                     {/* ========================================================= */}
                     {/* FOOTER: BANNER DE CIERRE CON HOJAS DE EUCALIPTO            */}
                     {/* ========================================================= */}
-                    <footer className="relative w-full bg-[#fbf9f4] -mt-[1px] flex flex-col items-center justify-center pt-10 sm:pt-14 pb-16 sm:pb-20 px-4 select-none overflow-hidden">
-                        <div className="canvas-container flex flex-col items-center justify-center text-center relative z-10 pb-2" data-reveal="up">
+                    <footer className="relative -mt-[1px] flex w-full flex-col items-center justify-center overflow-hidden bg-[#fbf9f4] px-4 pt-10 pb-16 select-none sm:pt-14 sm:pb-20">
+                        <div
+                            className="canvas-container relative z-10 flex flex-col items-center justify-center pb-2 text-center"
+                            data-reveal="up"
+                        >
                             {/* "NUESTRA BODA" */}
-                            <span className="font-serif text-[10.5px] sm:text-[12px] tracking-[0.32em] text-[#788a80] uppercase font-medium mb-1 drop-shadow-xs text-center">
+                            <span className="mb-1 text-center font-serif text-[10.5px] font-medium tracking-[0.32em] text-[#788a80] uppercase drop-shadow-xs sm:text-[12px]">
                                 NUESTRA BODA
                             </span>
 
                             {/* Nombres en cursiva centrados: Adriana & Joaquín */}
-                            <h2 className="font-script text-[3.2rem] sm:text-[4.2rem] text-[#788e80] leading-[1.2] py-2 px-3 -my-1 [text-shadow:0_1px_2px_rgba(0,0,0,0.05)] tracking-normal text-center flex items-center justify-center gap-2 flex-wrap">
+                            <h2 className="-my-1 flex flex-wrap items-center justify-center gap-2 px-3 py-2 text-center font-script text-[3.2rem] leading-[1.2] tracking-normal text-[#788e80] [text-shadow:0_1px_2px_rgba(0,0,0,0.05)] sm:text-[4.2rem]">
                                 <span className="px-1">{brideName}</span>
-                                <span className="text-[18px] sm:text-[22px] font-serif font-light text-[#788e80] -translate-y-0.5">&amp;</span>
+                                <span className="-translate-y-0.5 font-serif text-[18px] font-light text-[#788e80] sm:text-[22px]">
+                                    &amp;
+                                </span>
                                 <span className="px-1">{groomName}</span>
                             </h2>
 
                             {/* Fecha más grande y dinámica: 20 | FEB | 2027 */}
-                            <span className="font-serif text-[13.5px] sm:text-[16px] md:text-[18px] tracking-[0.28em] text-[#788a80] uppercase font-medium mt-1.5 mb-2 text-center">
+                            <span className="mt-1.5 mb-2 text-center font-serif text-[13.5px] font-medium tracking-[0.28em] text-[#788a80] uppercase sm:text-[16px] md:text-[18px]">
                                 {footerDateText}
                             </span>
                         </div>
@@ -1781,7 +2380,7 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                             alt="Hojas de eucalipto"
                             loading="lazy"
                             decoding="async"
-                            className="absolute bottom-0 right-0 w-44 sm:w-60 md:w-72 lg:w-80 h-auto object-contain pointer-events-none select-none z-0 opacity-90 animate-float-slow"
+                            className="animate-float-slow pointer-events-none absolute right-0 bottom-0 z-0 h-auto w-44 object-contain opacity-90 select-none sm:w-60 md:w-72 lg:w-80"
                             data-reveal="fade"
                             data-reveal-delay="200"
                         />
@@ -1790,30 +2389,43 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
                     {/* Audio element y Botón flotante de control musical */}
                     {wedding?.music_url && (
                         <>
-                            <audio ref={audioRef} src={wedding.music_url} loop preload="metadata" playsInline />
-                            <aside className="fixed bottom-6 right-6 z-50 select-none pointer-events-auto">
+                            <audio
+                                ref={audioRef}
+                                src={wedding.music_url}
+                                loop
+                                preload="metadata"
+                                playsInline
+                            />
+                            <aside className="pointer-events-auto fixed right-6 bottom-6 z-50 select-none">
                                 <button
                                     type="button"
                                     onClick={togglePlay}
-                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-full shadow-2xl backdrop-blur-md transition-all duration-300 border cursor-pointer hover:scale-105 active:scale-95 ${
+                                    className={`flex cursor-pointer items-center gap-3 rounded-full border px-4 py-2.5 shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 ${
                                         isPlaying
-                                            ? 'bg-[#2c4537]/90 text-[#fcf8ed] border-[#cfbe95]/60 hover:bg-[#2c4537] animate-glow-breathe'
-                                            : 'bg-white/95 text-stone-700 border-[#ded8cd] hover:border-[#cfbe95] animate-pulse'
+                                            ? 'animate-glow-breathe border-[#cfbe95]/60 bg-[#2c4537]/90 text-[#fcf8ed] hover:bg-[#2c4537]'
+                                            : 'animate-pulse border-[#ded8cd] bg-white/95 text-stone-700 hover:border-[#cfbe95]'
                                     }`}
-                                    title={isPlaying ? "Pausar música" : "Reproducir nuestra canción"}
+                                    title={
+                                        isPlaying
+                                            ? 'Pausar música'
+                                            : 'Reproducir nuestra canción'
+                                    }
                                 >
-                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center ${isPlaying ? 'bg-[#cfbe95] text-[#2c4537] animate-spin' : 'bg-stone-200 text-stone-600'}`} style={{ animationDuration: '4s' }}>
+                                    <div
+                                        className={`flex h-7 w-7 items-center justify-center rounded-full ${isPlaying ? 'animate-spin bg-[#cfbe95] text-[#2c4537]' : 'bg-stone-200 text-stone-600'}`}
+                                        style={{ animationDuration: '4s' }}
+                                    >
                                         <span className="text-xs">🎵</span>
                                     </div>
                                     <div className="flex flex-col text-left">
-                                        <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#cfbe95] leading-none">
+                                        <span className="font-sans text-[10px] leading-none font-bold tracking-wider text-[#cfbe95] uppercase">
                                             {isPlaying ? 'Sonando' : 'Música'}
                                         </span>
-                                        <span className="text-xs font-sans font-medium truncate max-w-[140px] leading-tight">
+                                        <span className="max-w-[140px] truncate font-sans text-xs leading-tight font-medium">
                                             {songTitle}
                                         </span>
                                     </div>
-                                    <span className="text-xs opacity-75 font-mono ml-0.5">
+                                    <span className="ml-0.5 font-mono text-xs opacity-75">
                                         {isPlaying ? '⏸' : '▶'}
                                     </span>
                                 </button>
@@ -1825,4 +2437,3 @@ export default function InvitationDesktop({ wedding, invitation, rsvp }: Wedding
         </>
     );
 }
-

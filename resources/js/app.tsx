@@ -6,10 +6,16 @@ import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const rawAppName = import.meta.env.VITE_APP_NAME;
+const appName =
+    rawAppName && rawAppName !== 'Laravel' ? rawAppName : 'Invitadora';
 
 void createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title) => {
+        if (!title) return appName;
+        if (title.includes('Boda de')) return title;
+        return `${title} - ${appName}`;
+    },
     layout: (name) => {
         switch (true) {
             case name === 'welcome':

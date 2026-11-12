@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Wedding;
+use App\Support\ImageOptimizer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class WeddingController extends Controller
@@ -13,8 +14,9 @@ class WeddingController extends Controller
     public function edit()
     {
         $wedding = Wedding::firstOrFail();
+
         return Inertia::render('Admin/WeddingForm', [
-            'wedding' => $wedding
+            'wedding' => $wedding,
         ]);
     }
 
@@ -52,15 +54,22 @@ class WeddingController extends Controller
             'song_artist' => 'nullable|string|max:255',
             'background_audio' => 'nullable|file|mimes:mp3,wav,m4a,aac,ogg|max:51200', // max 50mb
             'delete_audio' => 'nullable|boolean',
+            'og_image' => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:25600',
+            'delete_og_image' => 'nullable|boolean',
         ]);
 
         $normalizeUrl = function (?string $url) {
-            if (!$url) return null;
-            $url = trim($url);
-            if ($url === '') return null;
-            if (!str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
-                return 'https://' . $url;
+            if (! $url) {
+                return null;
             }
+            $url = trim($url);
+            if ($url === '') {
+                return null;
+            }
+            if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+                return 'https://'.$url;
+            }
+
             return $url;
         };
 
@@ -73,9 +82,9 @@ class WeddingController extends Controller
         if (isset($validated['gift_registries']) && is_array($validated['gift_registries'])) {
             $cleaned = [];
             foreach ($validated['gift_registries'] as $item) {
-                if (!empty($item['url'])) {
+                if (! empty($item['url'])) {
                     $cleaned[] = [
-                        'name' => trim(!empty($item['name']) ? $item['name'] : (!empty($item['title']) ? $item['title'] : 'MESA DE REGALOS')),
+                        'name' => trim(! empty($item['name']) ? $item['name'] : (! empty($item['title']) ? $item['title'] : 'MESA DE REGALOS')),
                         'url' => $normalizeUrl($item['url']),
                     ];
                 }
@@ -83,15 +92,15 @@ class WeddingController extends Controller
             $validated['gift_registries'] = $cleaned;
         }
 
-        if (!empty($request->delete_audio)) {
+        if (! empty($request->delete_audio)) {
             if ($wedding->background_audio_path) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($wedding->background_audio_path);
+                Storage::disk('public')->delete($wedding->background_audio_path);
             }
             $validated['background_audio_path'] = null;
             $validated['background_music_path'] = null;
         } elseif ($request->hasFile('background_audio')) {
             if ($wedding->background_audio_path) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($wedding->background_audio_path);
+                Storage::disk('public')->delete($wedding->background_audio_path);
             }
             $path = $request->file('background_audio')->store('audio', 'public');
             $validated['background_audio_path'] = $path;
@@ -100,8 +109,38 @@ class WeddingController extends Controller
 
         unset($validated['background_audio']);
         unset($validated['delete_audio']);
-        
+
+        $deleteStoredOgImage = function (?string $storedPath): void {
+            if (empty($storedPath)) {
+                return;
+            }
+            if (str_starts_with($storedPath, 'http://') || str_starts_with($storedPath, 'https://')) {
+                return;
+            }
+            $relative = ltrim((string) preg_replace('#^/storage/#', '', $storedPath), '/');
+            if ($relative !== '') {
+                Storage::disk('public')->delete($relative);
+            }
+        };
+
+        if (! empty($request->delete_og_image)) {
+            $deleteStoredOgImage($wedding->og_image_path);
+            $validated['og_image_path'] = null;
+        } elseif ($request->hasFile('og_image')) {
+            $deleteStoredOgImage($wedding->og_image_path);
+            $file = $request->file('og_image');
+            $ogUrl = ImageOptimizer::storeOgJpeg($file->getRealPath(), 'og');
+            if (! $ogUrl) {
+                $ogUrl = Storage::url($file->store('og', 'public'));
+            }
+            $validated['og_image_path'] = $ogUrl;
+        }
+
+        unset($validated['og_image']);
+        unset($validated['delete_og_image']);
+
         $wedding->update($validated);
+
         return redirect()->back()->with('success', 'Configuración de la boda actualizada exitosamente.');
     }
 
@@ -114,10 +153,10 @@ class WeddingController extends Controller
         $file = $request->file('icon');
         $url = null;
         if (strtolower($file->getClientOriginalExtension()) !== 'svg') {
-            $url = \App\Support\ImageOptimizer::store($file->getRealPath(), 'timeline_icons', 1600, 75);
+            $url = ImageOptimizer::store($file->getRealPath(), 'timeline_icons', 1600, 75);
         }
-        if (!$url) {
-            $url = \Illuminate\Support\Facades\Storage::url($file->store('timeline_icons', 'public'));
+        if (! $url) {
+            $url = Storage::url($file->store('timeline_icons', 'public'));
         }
 
         return response()->json([

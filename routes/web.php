@@ -1,27 +1,33 @@
 <?php
 
+use App\Models\Guest;
+use App\Models\Wedding;
+use App\Support\ShareMeta;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-use App\Models\Wedding;
-
 // La vista pública de la invitación
-Route::get('/', function () {
+Route::get('/', function (Request $request) {
     $wedding = Wedding::with(['galleryImages', 'hotels' => function ($q) {
         $q->where('is_active', true)->orderBy('order');
     }])->first();
+
+    $meta = ShareMeta::forInvitation($wedding, null, $request->url());
+
     return Inertia::render('invitation', [
         'wedding' => $wedding,
         'invitation' => null,
         'rsvp' => $wedding?->rsvpWindow() ?? ['deadline' => null, 'closed' => false],
-    ]);
+        'meta' => $meta,
+    ])->withViewData(['meta' => $meta]);
 })->name('home');
 
 // El panel de administración para configurar ESTA invitación
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         $wedding = Wedding::with(['invitations.guests', 'galleryImages', 'hotels'])->first();
-        
+
         $totalInvitations = $wedding ? $wedding->invitations->count() : 0;
         $totalGuests = 0;
         $confirmedGuests = 0;
@@ -49,7 +55,7 @@ Route::middleware(['auth'])->group(function () {
 
         $totalTables = $wedding ? $wedding->tables()->count() : 0;
         $tablesCapacity = $wedding ? (int) $wedding->tables()->sum('capacity') : 0;
-        $assignedGuests = $wedding ? \App\Models\Guest::whereHas('invitation', function($q) use ($wedding) {
+        $assignedGuests = $wedding ? Guest::whereHas('invitation', function ($q) use ($wedding) {
             $q->where('wedding_id', $wedding->id);
         })->whereNotNull('table_id')->count() : 0;
 
@@ -68,8 +74,8 @@ Route::middleware(['auth'])->group(function () {
                 'tables_capacity' => $tablesCapacity,
                 'assigned_guests' => $assignedGuests,
             ],
-            'recentInvitations' => $wedding 
-                ? $wedding->invitations()->with('guests')->latest()->take(6)->get() 
+            'recentInvitations' => $wedding
+                ? $wedding->invitations()->with('guests')->latest()->take(6)->get()
                 : [],
         ]);
     })->name('dashboard');
