@@ -350,6 +350,15 @@ html {
     filter: drop-shadow(0 20px 24px rgba(0, 0, 0, 0.18)) drop-shadow(0 8px 10px rgba(44, 69, 55, 0.12));
 }
 
+/* Sombra lateral exclusiva para el sobre en escritorio (sin sombra inferior) */
+.envelope-shadow-sides {
+    box-shadow:
+        -12px 0 20px -2px rgba(0, 0, 0, 0.18),
+        12px 0 20px -2px rgba(0, 0, 0, 0.18),
+        -5px 0 10px -1px rgba(44, 69, 55, 0.14),
+        5px 0 10px -1px rgba(44, 69, 55, 0.14);
+}
+
 [data-reveal-delay="50"]  { transition-delay: 50ms; }
 [data-reveal-delay="100"] { transition-delay: 100ms; }
 [data-reveal-delay="150"] { transition-delay: 150ms; }

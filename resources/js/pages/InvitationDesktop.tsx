@@ -1397,7 +1397,7 @@ export default function InvitationDesktop({
                             />
 
                             {/* Planta lado izquierdo con balanceo suave */}
-                            <div className="animate-float-slow pointer-events-none absolute top-[45%] -left-6 z-20 w-42 select-none sm:-left-8 sm:w-36 md:-left-12 md:w-48 lg:-left-[16rem] lg:w-[32.4rem]">
+                            <div className="animate-float-slow pointer-events-none absolute top-[45%] -left-[19%] z-20 w-[38.4%] select-none">
                                 <img
                                     src="/images/canva_assets/hojasubicacionizquierda.webp"
                                     alt="Decoración botánica izquierda"
@@ -1408,7 +1408,7 @@ export default function InvitationDesktop({
                             </div>
 
                             {/* Planta lado derecho inferior con balanceo opuesto */}
-                            <div className="animate-float-reverse pointer-events-none absolute -right-6 bottom-[-8%] z-20 w-40 select-none sm:-right-8 sm:w-52 md:-right-12 md:w-64 lg:-right-[24rem] lg:w-[50rem]">
+                            <div className="animate-float-reverse pointer-events-none absolute -right-[28.4%] bottom-[-8%] z-20 w-[59.2%] select-none">
                                 <img
                                     src="/images/canva_assets/hojasubicacionderecha.webp"
                                     alt="Decoración botánica derecha"
@@ -1419,38 +1419,37 @@ export default function InvitationDesktop({
                             </div>
 
                             {/* Contenido Interior: Sello, Ubicación, Botones de mapa y Mesa de regalos */}
-                            <div className="relative z-10 flex h-full w-full flex-col items-center justify-between px-6 pt-[7%] pb-[11%] text-center sm:px-10 sm:pt-[7.5%] md:px-14 md:pt-[8%] md:pb-[12%] lg:px-16">
-                                {/* Sello y Título Ubicación */}
-                                <div
-                                    className="flex w-full flex-col items-center"
-                                    data-reveal="down"
-                                >
-                                    <div className="animate-pulse-subtle mb-1 flex h-16 w-16 shrink-0 items-center justify-center drop-shadow-md sm:mb-2 sm:h-20 sm:w-20 md:h-24 md:w-24 lg:h-32 lg:w-32 xl:h-44 xl:w-44">
-                                        <img
-                                            src="/images/canva_assets/sello_huellita.webp"
-                                            alt="Sello de huellita"
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="h-full w-full object-contain"
-                                        />
+                            <div className="@container absolute inset-0 z-10">
+                                <div className="flex h-full w-full flex-col items-center justify-between px-[16cqw] pt-[15.5cqw] pb-[19.5cqw] text-center">
+                                    {/* Sello y Título Ubicación */}
+                                    <div
+                                        className="flex w-full flex-col items-center"
+                                        data-reveal="down"
+                                    >
+                                        <div className="animate-pulse-subtle mb-[0.8cqw] flex h-[18.5cqw] w-[18.5cqw] shrink-0 items-center justify-center drop-shadow-md">
+                                            <img
+                                                src="/images/canva_assets/sello_huellita.webp"
+                                                alt="Sello de huellita"
+                                                loading="lazy"
+                                                decoding="async"
+                                                className="h-full w-full object-contain"
+                                            />
+                                        </div>
+                                        <h2 className="-my-[0.8cqw] px-[1.5cqw] py-[0.8cqw] font-script text-[7.6cqw] leading-[1.15] font-normal text-[#617485] [text-shadow:0_1px_2px_rgba(0,0,0,0.08)]">
+                                            Ubicación
+                                        </h2>
                                     </div>
-                                    <h2 className="-my-2 mt-1 px-3 py-2 font-script text-3xl leading-[1.2] font-normal text-[#617485] [text-shadow:0_1px_2px_rgba(0,0,0,0.08)] sm:mt-2 sm:text-4xl md:text-5xl lg:text-6xl xl:text-[5.2rem]">
-                                        Ubicación
-                                    </h2>
-                                </div>
 
-                                {/* Contenedor de Ubicaciones y Mesa de regalos */}
-                                <div className="flex w-full flex-1 flex-col items-center justify-evenly py-2 sm:py-4 md:py-6">
                                     {/* Bloque 1: Ceremonia religiosa */}
                                     <div
-                                        className="flex flex-col items-center"
+                                        className="flex w-full flex-col items-center"
                                         data-reveal="up"
                                         data-reveal-delay="100"
                                     >
-                                        <span className="mb-1 font-cardo text-lg leading-none text-[#6d8293] font-italic sm:text-xl md:text-2xl lg:mb-2 lg:text-3xl xl:text-[2.6rem]">
+                                        <span className="mb-[0.7cqw] font-cardo text-[3.7cqw] leading-[1.15] text-[#6d8293] italic">
                                             Ceremonia religiosa
                                         </span>
-                                        <h3 className="mb-2.5 font-serif text-xs font-semibold tracking-[0.1em] text-[#3f5263] uppercase sm:mb-3 sm:text-sm md:text-base lg:mb-5 lg:text-xl lg:tracking-[0.12em] xl:text-[2.2rem]">
+                                        <h3 className="mb-[1.8cqw] font-serif text-[2.5cqw] leading-[1.25] font-semibold tracking-[0.12em] text-[#3f5263] uppercase">
                                             {wedding?.locations?.ceremony &&
                                             wedding.locations.ceremony !==
                                                 'NOMBRE DE LA IGLESIA'
@@ -1465,12 +1464,12 @@ export default function InvitationDesktop({
                                             }
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="group hover-lift inline-flex items-center justify-center rounded-[12px] border-2 border-olive-400 bg-white px-4 py-2 text-[#4c6070] shadow-sm transition-all hover:bg-slate-50 active:scale-95 sm:px-6 sm:py-2.5 md:px-8 md:py-3 lg:rounded-[16px] lg:border-3 lg:px-10 lg:py-4"
+                                            className="group hover-lift inline-flex items-center justify-center rounded-[1.2cqw] border-2 border-olive-400 bg-white px-[3.8cqw] py-[1.45cqw] text-[#4c6070] shadow-sm transition-all hover:bg-slate-50 active:scale-95 lg:border-3"
                                         >
-                                            <span className="font-serif text-xs font-bold uppercase sm:text-sm md:text-base lg:text-lg xl:text-2xl">
+                                            <span className="font-serif text-[2cqw] font-bold tracking-[0.08em] uppercase">
                                                 VER EN GOOGLE MAPS
                                             </span>
-                                            <span className="ml-2 text-sm text-[#4c6070] transition-transform group-hover:translate-x-0.5 sm:ml-3 md:text-base lg:text-xl xl:text-2xl">
+                                            <span className="ml-[1.1cqw] text-[2.1cqw] leading-none text-[#4c6070] transition-transform group-hover:translate-x-0.5">
                                                 →
                                             </span>
                                         </a>
@@ -1478,14 +1477,14 @@ export default function InvitationDesktop({
 
                                     {/* Bloque 2: Recepción */}
                                     <div
-                                        className="flex flex-col items-center"
+                                        className="flex w-full flex-col items-center"
                                         data-reveal="up"
                                         data-reveal-delay="200"
                                     >
-                                        <span className="mb-1 font-cardo text-lg leading-none text-[#6d8293] italic sm:text-xl md:text-2xl lg:mb-2 lg:text-3xl xl:text-[2.6rem]">
+                                        <span className="mb-[0.7cqw] font-cardo text-[3.7cqw] leading-[1.15] text-[#6d8293] italic">
                                             Recepción
                                         </span>
-                                        <h3 className="mb-2.5 font-serif text-xs font-semibold tracking-[0.12em] text-[#3f5263] uppercase sm:mb-3 sm:text-sm md:text-base lg:mb-5 lg:text-xl xl:text-[2.2rem]">
+                                        <h3 className="mb-[1.8cqw] font-serif text-[2.5cqw] leading-[1.25] font-semibold tracking-[0.12em] text-[#3f5263] uppercase">
                                             {wedding?.locations?.reception &&
                                             wedding.locations.reception !==
                                                 'NOMBRE DEL LOCAL'
@@ -1500,12 +1499,12 @@ export default function InvitationDesktop({
                                             }
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="group hover-lift inline-flex items-center justify-center rounded-[12px] border-2 border-olive-400 bg-white px-4 py-2 text-[#4c6070] shadow-sm transition-all hover:bg-slate-50 active:scale-95 sm:px-6 sm:py-2.5 md:px-8 md:py-3 lg:rounded-[16px] lg:border-3 lg:px-10 lg:py-4"
+                                            className="group hover-lift inline-flex items-center justify-center rounded-[1.2cqw] border-2 border-olive-400 bg-white px-[3.8cqw] py-[1.45cqw] text-[#4c6070] shadow-sm transition-all hover:bg-slate-50 active:scale-95 lg:border-3"
                                         >
-                                            <span className="font-serif text-xs font-bold tracking-[0.08em] uppercase sm:text-sm md:text-base lg:text-lg xl:text-2xl">
+                                            <span className="font-serif text-[2cqw] font-bold tracking-[0.08em] uppercase">
                                                 VER EN GOOGLE MAPS
                                             </span>
-                                            <span className="ml-2 text-sm text-[#4c6070] transition-transform group-hover:translate-x-0.5 sm:ml-3 md:text-base lg:text-xl xl:text-2xl">
+                                            <span className="ml-[1.1cqw] text-[2.1cqw] leading-none text-[#4c6070] transition-transform group-hover:translate-x-0.5">
                                                 →
                                             </span>
                                         </a>
@@ -1513,26 +1512,26 @@ export default function InvitationDesktop({
 
                                     {/* Bloque 3: Mesa de regalos */}
                                     <div
-                                        className="flex flex-col items-center"
+                                        className="flex w-full flex-col items-center"
                                         data-reveal="up"
                                         data-reveal-delay="300"
                                     >
-                                        <h2 className="-my-2 mb-3 px-3 py-2 font-script text-3xl leading-[1.2] font-normal tracking-normal text-[#617485] [text-shadow:0_1px_2px_rgba(0,0,0,0.08)] sm:mb-4 sm:text-4xl md:text-5xl lg:mb-5 lg:text-6xl xl:text-[4.8rem]">
+                                        <h2 className="-my-[0.8cqw] mb-[1.8cqw] px-[1.5cqw] py-[0.8cqw] font-script text-[6.8cqw] leading-[1.15] font-normal tracking-normal text-[#617485] [text-shadow:0_1px_2px_rgba(0,0,0,0.08)]">
                                             Mesa de regalos
                                         </h2>
-                                        <div className="flex w-full max-w-[380px] min-w-[180px] flex-col gap-2.5 sm:min-w-[220px] sm:gap-3 md:min-w-[260px] lg:min-w-[320px] lg:gap-4">
+                                        <div className="flex w-[28cqw] max-w-[46cqw] min-w-[26cqw] flex-col gap-[1.4cqw]">
                                             {giftRegistries.map((reg, idx) => (
                                                 <a
                                                     key={idx}
                                                     href={reg.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="group hover-lift inline-flex items-center justify-center rounded-[12px] border-2 border-olive-400 bg-white px-4 py-2 text-[#4c6070] shadow-sm transition-all hover:bg-slate-50 active:scale-95 sm:px-6 sm:py-2.5 md:px-8 md:py-3 lg:rounded-[16px] lg:border-3 lg:px-10 lg:py-4"
+                                                    className="group hover-lift inline-flex items-center justify-center rounded-[1.2cqw] border-2 border-olive-400 bg-white px-[3.8cqw] py-[1.45cqw] text-[#4c6070] shadow-sm transition-all hover:bg-slate-50 active:scale-95 lg:border-3"
                                                 >
-                                                    <span className="truncate font-serif text-xs font-bold tracking-[0.08em] uppercase sm:text-sm md:text-base lg:text-lg lg:tracking-[0.1em] xl:text-2xl">
+                                                    <span className="truncate font-serif text-[2cqw] font-bold tracking-[0.08em] uppercase">
                                                         {reg.name}
                                                     </span>
-                                                    <span className="ml-2 text-sm text-[#4c6070] transition-transform group-hover:translate-x-0.5 sm:ml-3 md:text-base lg:text-xl xl:text-2xl">
+                                                    <span className="ml-[1.1cqw] text-[2.1cqw] leading-none text-[#4c6070] transition-transform group-hover:translate-x-0.5">
                                                         →
                                                     </span>
                                                 </a>
@@ -1555,17 +1554,23 @@ export default function InvitationDesktop({
                                 data-reveal="scale"
                                 data-reveal-delay="100"
                             >
+                                {/* Sombra lateral exclusiva para los costados del sobre (sin sombra en la parte inferior) */}
+                                <div
+                                    aria-hidden="true"
+                                    className="envelope-shadow-sides pointer-events-none absolute top-[41%] right-[5.2%] bottom-[5.2%] left-[5.2%] z-0"
+                                />
+
                                 {/* Sobre abierto con solapa monograma */}
                                 <img
                                     src="/images/canva_assets/sobre.webp"
                                     alt="Sobre de regalos"
                                     loading="lazy"
                                     decoding="async"
-                                    className="envelope-shadow pointer-events-none h-full w-full object-contain select-none"
+                                    className="pointer-events-none relative z-10 h-full w-full object-contain select-none"
                                 />
 
                                 {/* Monograma en la solapa superior (AJ escalonado con sutil palpitación) */}
-                                <div className="animate-pulse-subtle pointer-events-none absolute top-[15%] left-1/2 mt-2 mr-6 flex -translate-x-1/2 items-center font-script leading-none whitespace-nowrap text-[#f7f4ea] opacity-95 drop-shadow-sm select-none">
+                                <div className="animate-pulse-subtle pointer-events-none absolute top-[15%] left-1/2 z-20 mt-2 mr-6 flex -translate-x-1/2 items-center font-script leading-none whitespace-nowrap text-[#f7f4ea] opacity-95 drop-shadow-sm select-none">
                                     <span className="translate-x-[4px] -translate-y-[8px] text-[32px] sm:-translate-y-[9px] sm:text-[34px]">
                                         A
                                     </span>
@@ -1576,7 +1581,7 @@ export default function InvitationDesktop({
 
                                 {/* Mensaje dentro de la tarjeta blanca del sobre */}
                                 <div
-                                    className="pointer-events-none absolute top-[39.5%] left-1/2 w-[64%] -translate-x-1/2 -translate-y-3 text-center select-none sm:w-[58%]"
+                                    className="pointer-events-none absolute top-[39.5%] left-1/2 z-20 w-[64%] -translate-x-1/2 -translate-y-3 text-center select-none sm:w-[58%]"
                                     data-reveal="fade"
                                     data-reveal-delay="250"
                                 >
@@ -1601,7 +1606,7 @@ export default function InvitationDesktop({
 
                                 {/* Sello de cera en el cierre del sobre verde */}
                                 <div
-                                    className="pointer-events-none absolute top-[55%] left-1/2 z-20 h-[92px] w-[92px] -translate-x-1/2 drop-shadow-[0_6px_14px_rgba(0,0,0,0.28)] select-none sm:h-[115px] sm:w-[115px]"
+                                    className="pointer-events-none absolute top-[55%] left-1/2 z-30 h-[92px] w-[92px] -translate-x-1/2 drop-shadow-[0_6px_14px_rgba(0,0,0,0.28)] select-none sm:h-[115px] sm:w-[115px]"
                                     data-reveal="scale"
                                     data-reveal-delay="300"
                                 >
