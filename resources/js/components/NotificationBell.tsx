@@ -242,6 +242,22 @@ export function NotificationBell() {
                                             "{item.data.message}"
                                         </div>
                                     )}
+
+                                    <div className="mt-2 ml-6 flex justify-end">
+                                        <Link
+                                            href={`/admin/invitations?search=${encodeURIComponent(item.data.invitation_name)}`}
+                                            onClick={() => {
+                                                if (!item.read) {
+                                                    void handleMarkAsRead(item.id);
+                                                }
+                                                setIsOpen(false);
+                                            }}
+                                            className="text-[11px] font-semibold text-[#698175] hover:text-[#28362e] dark:text-[#a5b8ad] inline-flex items-center gap-1 hover:underline"
+                                        >
+                                            <span>Ver familia</span>
+                                            <ExternalLink className="w-2.5 h-2.5" />
+                                        </Link>
+                                    </div>
                                 </div>
                             );
                         })

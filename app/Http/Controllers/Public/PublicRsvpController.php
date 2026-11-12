@@ -12,26 +12,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
-use Inertia\Inertia;
 
 class PublicRsvpController extends Controller
 {
     private const CLOSED_MESSAGE = 'La fecha límite para confirmar ha expirado.';
-
-    public function show($token)
-    {
-        $invitation = Invitation::where('token', $token)
-            ->with(['guests', 'wedding'])
-            ->firstOrFail();
-
-        if ($invitation->status === 'pending') {
-            $invitation->update(['status' => 'viewed']);
-        }
-
-        return Inertia::render('Public/RsvpPage', [
-            'invitation' => $invitation
-        ]);
-    }
 
     public function update(Request $request, $token)
     {

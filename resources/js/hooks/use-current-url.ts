@@ -28,12 +28,13 @@ export type UseCurrentUrlReturn = {
 
 export function useCurrentUrl(): UseCurrentUrlReturn {
     const page = usePage();
-    const currentUrlPath = new URL(
+    const parsedPageUrl = new URL(
         page.url,
         typeof window !== 'undefined'
             ? window.location.origin
             : 'http://localhost',
-    ).pathname;
+    );
+    const currentUrlPath = parsedPageUrl.pathname;
 
     const isCurrentUrl: IsCurrentUrlFn = (
         urlToCheck: NonNullable<InertiaLinkProps['href']>,
@@ -43,19 +44,44 @@ export function useCurrentUrl(): UseCurrentUrlReturn {
         const urlToCompare = currentUrl ?? currentUrlPath;
         const urlString = toUrl(urlToCheck);
 
-        const comparePath = (path: string): boolean =>
-            startsWith ? urlToCompare.startsWith(path) : path === urlToCompare;
-
-        if (!urlString.startsWith('http')) {
-            return comparePath(urlString);
-        }
-
         try {
-            const absoluteUrl = new URL(urlString);
+            const targetUrl = new URL(
+                urlString,
+                typeof window !== 'undefined'
+                    ? window.location.origin
+                    : 'http://localhost',
+            );
+            const pathMatches = startsWith
+                ? urlToCompare.startsWith(targetUrl.pathname)
+                : targetUrl.pathname === urlToCompare;
 
-            return comparePath(absoluteUrl.pathname);
+            if (!pathMatches) {
+                return false;
+            }
+
+            if (currentUrl === undefined && targetUrl.search) {
+                for (const [key, val] of targetUrl.searchParams.entries()) {
+                    if (parsedPageUrl.searchParams.get(key) !== val) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            if (
+                currentUrl === undefined &&
+                targetUrl.pathname === '/admin/invitations' &&
+                !targetUrl.searchParams.has('tab') &&
+                parsedPageUrl.searchParams.get('tab') === 'tables'
+            ) {
+                return false;
+            }
+
+            return true;
         } catch {
-            return false;
+            return startsWith
+                ? urlToCompare.startsWith(urlString)
+                : urlString === urlToCompare;
         }
     };
 

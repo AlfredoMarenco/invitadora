@@ -1,5 +1,14 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    ExternalLink,
+    Hotel,
+    Image as ImageIcon,
+    LayoutGrid,
+    QrCode,
+    Settings,
+    Users,
+    UtensilsCrossed,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -15,8 +24,6 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
-
-import { Users, Image as ImageIcon, Settings, ExternalLink, Hotel, UtensilsCrossed } from 'lucide-react';
 
 const mainNavItems: NavItem[] = [
     {
@@ -47,10 +54,10 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Check-in (Puerta)',
         href: '/admin/checkin',
-        icon: BookOpen,
+        icon: QrCode,
     },
     {
-        title: 'Configuración',
+        title: 'Configuración de Boda',
         href: '/admin/settings',
         icon: Settings,
     },

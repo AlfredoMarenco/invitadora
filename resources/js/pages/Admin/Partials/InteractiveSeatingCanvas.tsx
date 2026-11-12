@@ -26,9 +26,7 @@ import {
     Sliders,
     Maximize2,
     Maximize,
-    Minimize,
-    Eye,
-    EyeOff
+    Minimize
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,6 +98,7 @@ interface InteractiveSeatingCanvasProps {
     handleDeleteTable: (tableId: number) => void;
     openCreateTable: () => void;
     venueElements?: VenueElement[];
+    isPlanner?: boolean;
 }
 
 const DEFAULT_VENUE_ELEMENTS: VenueElement[] = [
@@ -161,11 +160,22 @@ export default function InteractiveSeatingCanvas({
     startEditTable,
     handleDeleteTable,
     openCreateTable,
-    venueElements = []
+    venueElements,
+    isPlanner = false,
 }: InteractiveSeatingCanvasProps) {
     // Zoom del plano
     const [zoom, setZoom] = useState(1);
     const canvasRef = useRef<HTMLDivElement>(null);
+
+    const scrollCanvasToCenter = (centerX: number, centerY: number) => {
+        requestAnimationFrame(() => {
+            const container = canvasRef.current;
+            if (!container) return;
+            const targetLeft = Math.max(0, centerX * zoom - container.clientWidth / 2);
+            const targetTop = Math.max(0, centerY * zoom - container.clientHeight / 2);
+            container.scrollTo({ left: targetLeft, top: targetTop, behavior: 'smooth' });
+        });
+    };
 
     // Modo Pantalla Completa / Ampliado
     const [isExpandedMode, setIsExpandedMode] = useState(false);
@@ -263,51 +273,144 @@ export default function InteractiveSeatingCanvas({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isExpandedMode]);
 
-    // Estado local optimista de posiciones de mesas
-    const [localPositions, setLocalPositions] = useState<Record<number, { x: number; y: number }>>(() => {
-        const map: Record<number, { x: number; y: number }> = {};
-        tables.forEach((t, i) => {
-            const defaultCol = i % 4;
-            const defaultRow = Math.floor(i / 4);
-            const defX = 140 + defaultCol * 240;
-            const defY = 280 + defaultRow * 230;
-
-            map[t.id] = {
-                x: typeof t.pos_x === 'number' && t.pos_x > 0 ? t.pos_x : defX,
-                y: typeof t.pos_y === 'number' && t.pos_y > 0 ? t.pos_y : defY,
-            };
-        });
-        return map;
-    });
-
-    useEffect(() => {
-        setLocalPositions(prev => {
-            const next = { ...prev };
-            tables.forEach((t, i) => {
-                if (!next[t.id]) {
-                    const defaultCol = i % 4;
-                    const defaultRow = Math.floor(i / 4);
-                    next[t.id] = {
-                        x: typeof t.pos_x === 'number' && t.pos_x > 0 ? t.pos_x : 140 + defaultCol * 240,
-                        y: typeof t.pos_y === 'number' && t.pos_y > 0 ? t.pos_y : 280 + defaultRow * 230,
-                    };
-                }
-            });
-            return next;
-        });
-    }, [tables]);
-
     // Estado de ZONAS DEL SALÓN (Escenario, Pista, Barra, etc.)
     const [venueList, setVenueList] = useState<VenueElement[]>(() => {
-        if (venueElements && venueElements.length > 0) return venueElements;
+        if (Array.isArray(venueElements)) return venueElements;
         return DEFAULT_VENUE_ELEMENTS;
     });
 
     useEffect(() => {
-        if (venueElements && venueElements.length > 0) {
+        if (Array.isArray(venueElements) && !venueTimeoutRef.current) {
             setVenueList(venueElements);
         }
     }, [venueElements]);
+
+    // Helper para calcular posiciones de mesas evitando encimar elementos en (150, 150)
+    const buildResolvedTablePositions = (
+        tableItems: TableItem[],
+        zones: VenueElement[],
+        existingMap: Record<number, { x: number; y: number }> = {},
+        preserveDraggedId: number | null = null,
+    ): Record<number, { x: number; y: number }> => {
+        const map: Record<number, { x: number; y: number }> = {};
+        const occupiedBoxes: Array<{ left: number; top: number; right: number; bottom: number }> = zones.map(z => ({
+            left: z.x - 18,
+            top: z.y - 18,
+            right: z.x + z.width + 18,
+            bottom: z.y + z.height + 18,
+        }));
+
+        const seenDefault150 = { count: 0 };
+
+        tableItems.forEach((t) => {
+            const w = t.width || (t.shape === 'rectangular' ? 210 : t.shape === 'head' ? 240 : 150);
+            const h = t.height || (t.shape === 'rectangular' ? 100 : t.shape === 'head' ? 110 : 150);
+            const halfW = Math.round(w / 2);
+            const halfH = Math.round(h / 2);
+
+            if (preserveDraggedId === t.id && existingMap[t.id]) {
+                const dragged = existingMap[t.id];
+                map[t.id] = dragged;
+                occupiedBoxes.push({
+                    left: dragged.x - halfW - 16,
+                    top: dragged.y - halfH - 16,
+                    right: dragged.x + halfW + 16,
+                    bottom: dragged.y + halfH + 16,
+                });
+                return;
+            }
+
+            const hasValidCoords = typeof t.pos_x === 'number' && t.pos_x > 0 && typeof t.pos_y === 'number' && t.pos_y > 0;
+            const isLegacy150 = t.pos_x === 150 && t.pos_y === 150;
+            if (isLegacy150) {
+                seenDefault150.count += 1;
+            }
+
+            // Si tiene coordenadas explícitas y no es un duplicado apilado en (150, 150), respetarla
+            if (hasValidCoords && (!isLegacy150 || seenDefault150.count === 1)) {
+                const chosen = { x: t.pos_x as number, y: t.pos_y as number };
+                map[t.id] = chosen;
+                occupiedBoxes.push({
+                    left: chosen.x - halfW - 16,
+                    top: chosen.y - halfH - 16,
+                    right: chosen.x + halfW + 16,
+                    bottom: chosen.y + halfH + 16,
+                });
+                return;
+            }
+
+            // Buscar el primer espacio libre en una cuadrícula ordenada del salón
+            let chosen = { x: 200, y: 220 };
+            let found = false;
+            const candidateYs = [220, 460, 680, 920, 1140];
+            const candidateXs = [200, 420, 640, 860, 1080, 1300, 1520, 1740];
+
+            for (const cy of candidateYs) {
+                for (const cx of candidateXs) {
+                    const box = {
+                        left: cx - halfW - 16,
+                        top: cy - halfH - 16,
+                        right: cx + halfW + 16,
+                        bottom: cy + halfH + 16,
+                    };
+                    const collides = occupiedBoxes.some(
+                        ob => !(box.right < ob.left || box.left > ob.right || box.bottom < ob.top || box.top > ob.bottom),
+                    );
+                    if (!collides) {
+                        chosen = { x: cx, y: cy };
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+
+            map[t.id] = chosen;
+            occupiedBoxes.push({
+                left: chosen.x - halfW - 16,
+                top: chosen.y - halfH - 16,
+                right: chosen.x + halfW + 16,
+                bottom: chosen.y + halfH + 16,
+            });
+        });
+
+        return map;
+    };
+
+    // Estado local optimista de posiciones de mesas
+    const [localPositions, setLocalPositions] = useState<Record<number, { x: number; y: number }>>(() =>
+        buildResolvedTablePositions(tables, Array.isArray(venueElements) ? venueElements : DEFAULT_VENUE_ELEMENTS),
+    );
+
+    // Rastreo de IDs previos para seleccionar y enfocar automáticamente una mesa recién creada
+    const prevTableIdsRef = useRef<Set<number>>(new Set(tables.map(t => t.id)));
+
+    // Arrastre de mesas en el canvas (Pointer Events)
+    const [draggingTableId, setDraggingTableId] = useState<number | null>(null);
+
+    useEffect(() => {
+        const resolved = buildResolvedTablePositions(tables, venueList, localPositions, draggingTableId);
+        setLocalPositions(resolved);
+
+        // Si no hay un debounce activo de edición en el inspector, sincronizar dimensiones desde el servidor
+        if (!dimTimeoutRef.current) {
+            setLocalDimensions({});
+        }
+
+        const newlyAdded = tables.find(t => !prevTableIdsRef.current.has(t.id));
+        if (newlyAdded) {
+            setSelectedTableId(newlyAdded.id);
+            setSelectedVenueElemId(null);
+            setSidebarTab('table');
+            setShowUnassignedSidebar(true);
+            const targetPos = resolved[newlyAdded.id];
+            if (targetPos) {
+                scrollCanvasToCenter(targetPos.x, targetPos.y);
+            }
+        }
+        prevTableIdsRef.current = new Set(tables.map(t => t.id));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tables]);
 
     // Modal para Crear / Editar Zona del Salón
     const [showVenueModal, setShowVenueModal] = useState(false);
@@ -341,17 +444,67 @@ export default function InteractiveSeatingCanvas({
         setShowVenueModal(true);
     };
 
-    const openEditVenueModal = (elem: VenueElement) => {
-        setEditingVenueElem(elem);
-        setVenueFormData({
-            type: elem.type,
-            title: elem.title,
-            subtitle: elem.subtitle || '',
-            width: elem.width,
-            height: elem.height,
-            shape: elem.shape || 'rectangle'
-        });
-        setShowVenueModal(true);
+    const findFreeVenuePosition = (w: number, h: number): { x: number; y: number } => {
+        const occupiedBoxes: Array<{ left: number; top: number; right: number; bottom: number }> = [
+            ...venueList.map(z => ({
+                left: z.x - 20,
+                top: z.y - 20,
+                right: z.x + z.width + 20,
+                bottom: z.y + z.height + 20,
+            })),
+            ...tables.map(t => {
+                const pos = localPositions[t.id] || { x: t.pos_x || 150, y: t.pos_y || 150 };
+                const tw = getTableWidth(t);
+                const th = getTableHeight(t);
+                return {
+                    left: pos.x - tw / 2 - 20,
+                    top: pos.y - th / 2 - 20,
+                    right: pos.x + tw / 2 + 20,
+                    bottom: pos.y + th / 2 + 20,
+                };
+            }),
+        ];
+
+        const candidates: Array<{ x: number; y: number }> = [];
+        if (canvasRef.current) {
+            const c = canvasRef.current;
+            const centerX = Math.round((c.scrollLeft + c.clientWidth / 2) / zoom - w / 2);
+            const centerY = Math.round((c.scrollTop + c.clientHeight / 2) / zoom - h / 2);
+            candidates.push({
+                x: Math.max(40, Math.min(CANVAS_WIDTH - 40 - w, centerX)),
+                y: Math.max(40, Math.min(CANVAS_HEIGHT - 40 - h, centerY)),
+            });
+        }
+
+        const gridYs = [120, 280, 440, 600, 760, 920, 1080];
+        const gridXs = [100, 360, 620, 880, 1140, 1400];
+        for (const gy of gridYs) {
+            for (const gx of gridXs) {
+                if (gx + w <= CANVAS_WIDTH - 30 && gy + h <= CANVAS_HEIGHT - 30) {
+                    candidates.push({ x: gx, y: gy });
+                }
+            }
+        }
+
+        for (const cand of candidates) {
+            const box = {
+                left: cand.x,
+                top: cand.y,
+                right: cand.x + w,
+                bottom: cand.y + h,
+            };
+            const collides = occupiedBoxes.some(
+                ob => !(box.right < ob.left || box.left > ob.right || box.bottom < ob.top || box.top > ob.bottom),
+            );
+            if (!collides) {
+                return cand;
+            }
+        }
+
+        return {
+            x: Math.min(CANVAS_WIDTH - 40 - w, 120 + (venueList.length % 5) * 240),
+            y: Math.min(CANVAS_HEIGHT - 40 - h, 420 + Math.floor(venueList.length / 5) * 160),
+        };
     };
 
     const handlePresetChange = (type: VenueElement['type']) => {
@@ -475,28 +628,37 @@ export default function InteractiveSeatingCanvas({
                 }
                 return elem;
             });
+            setVenueList(nextList);
+            setShowVenueModal(false);
+            setEditingVenueElem(null);
         } else {
+            const freeSpot = findFreeVenuePosition(venueFormData.width, venueFormData.height);
             const newElem: VenueElement = {
                 id: `venue-${Date.now()}`,
                 type: venueFormData.type,
                 title: venueFormData.title,
                 subtitle: venueFormData.subtitle,
-                x: 480,
-                y: 350,
+                x: freeSpot.x,
+                y: freeSpot.y,
                 width: venueFormData.width,
                 height: venueFormData.height,
                 shape: venueFormData.shape,
             };
             nextList = [...venueList, newElem];
+            setVenueList(nextList);
+            setShowVenueModal(false);
+            setSelectedVenueElemId(newElem.id);
+            setSelectedTableId(null);
+            setSidebarTab('venue');
+            setShowUnassignedSidebar(true);
+            scrollCanvasToCenter(newElem.x + newElem.width / 2, newElem.y + newElem.height / 2);
         }
-
-        setVenueList(nextList);
-        setShowVenueModal(false);
 
         // Guardar en servidor
         router.put('/admin/venue-elements', { elements: nextList as any }, {
             preserveScroll: true,
             preserveState: true,
+            only: ['wedding'],
         });
     };
 
@@ -603,7 +765,6 @@ export default function InteractiveSeatingCanvas({
     };
 
     // Arrastre de mesas en el canvas (Pointer Events)
-    const [draggingTableId, setDraggingTableId] = useState<number | null>(null);
     const dragOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
     const handleTablePointerDown = (e: React.PointerEvent, tableId: number) => {
@@ -772,6 +933,10 @@ export default function InteractiveSeatingCanvas({
     const [dragOverTableId, setDragOverTableId] = useState<number | null>(null);
 
     const handleGuestDragStart = (e: React.DragEvent, guestId: number, guestName: string, fromTableId?: number | null) => {
+        if (isPlanner) {
+            e.preventDefault();
+            return;
+        }
         e.dataTransfer.setData('text/plain', JSON.stringify({ guestId, fromTableId }));
         e.dataTransfer.effectAllowed = 'move';
         setDraggedGuest({ id: guestId, fromTableId, name: guestName });
@@ -879,47 +1044,51 @@ export default function InteractiveSeatingCanvas({
     };
 
     return (
-        <div className={`${isExpandedMode ? 'fixed inset-0 z-50 bg-[#f7f4ec] dark:bg-stone-950 p-4 sm:p-6 flex flex-col w-screen h-screen overflow-hidden' : 'space-y-4 select-none relative'}`}>
+        <div className={`${isExpandedMode ? 'fixed inset-0 z-40 bg-[#f7f4ec] dark:bg-stone-950 p-4 sm:p-6 flex flex-col w-screen h-screen overflow-hidden' : 'space-y-4 select-none relative'}`}>
             {/* 1. BARRA SUPERIOR DE HERRAMIENTAS Y CONTROLES DEL PLANO */}
             <div className="bg-card p-3 rounded-2xl border border-[#ded8cd] shadow-xs flex flex-wrap items-center justify-between gap-3 shrink-0">
                 <div className="flex items-center gap-2 flex-wrap">
                     {/* Botón modo Mover Mesas y Zonas */}
-                    <Button
-                        type="button"
-                        onClick={() => setIsMoveTablesMode(!isMoveTablesMode)}
-                        variant={isMoveTablesMode ? 'default' : 'outline'}
-                        className={`text-xs font-bold uppercase tracking-wider h-9 px-3.5 rounded-xl cursor-pointer transition-all flex items-center gap-2 ${
-                            isMoveTablesMode
-                                ? 'bg-[#cfbe95] hover:bg-[#bfae85] text-[#2c4537] shadow-sm ring-2 ring-[#cfbe95]/50'
-                                : 'bg-[#faf8f3] dark:bg-stone-900 border-[#ded8cd] text-stone-700 dark:text-stone-300'
-                        }`}
-                        title={isMoveTablesMode ? "Bloquear posiciones de elementos" : "Activar para mover mesas y zonas libremente"}
-                    >
-                        {isMoveTablesMode ? (
-                            <>
-                                <Unlock className="w-4 h-4 text-[#2c4537] animate-pulse" />
-                                <span>Modo Edición: Mover Elementos (Activo)</span>
-                            </>
-                        ) : (
-                            <>
-                                <Lock className="w-4 h-4 text-stone-500" />
-                                <span>Posiciones Bloqueadas</span>
-                            </>
-                        )}
-                    </Button>
+                    {!isPlanner && (
+                        <>
+                            <Button
+                                type="button"
+                                onClick={() => setIsMoveTablesMode(!isMoveTablesMode)}
+                                variant={isMoveTablesMode ? 'default' : 'outline'}
+                                className={`text-xs font-bold uppercase tracking-wider h-9 px-3.5 rounded-xl cursor-pointer transition-all flex items-center gap-2 ${
+                                    isMoveTablesMode
+                                        ? 'bg-[#cfbe95] hover:bg-[#bfae85] text-[#2c4537] shadow-sm ring-2 ring-[#cfbe95]/50'
+                                        : 'bg-[#faf8f3] dark:bg-stone-900 border-[#ded8cd] text-stone-700 dark:text-stone-300'
+                                }`}
+                                title={isMoveTablesMode ? "Bloquear posiciones de elementos" : "Activar para mover mesas y zonas libremente"}
+                            >
+                                {isMoveTablesMode ? (
+                                    <>
+                                        <Unlock className="w-4 h-4 text-[#2c4537] animate-pulse" />
+                                        <span>Modo Edición: Mover Elementos (Activo)</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Lock className="w-4 h-4 text-stone-500" />
+                                        <span>Posiciones Bloqueadas</span>
+                                    </>
+                                )}
+                            </Button>
 
-                    {/* Botón para Crear / Añadir Zona al Plano */}
-                    <Button
-                        type="button"
-                        onClick={openAddVenueModal}
-                        variant="outline"
-                        className="h-9 px-3 text-xs font-bold uppercase tracking-wider rounded-xl cursor-pointer bg-[#faf8f3] dark:bg-stone-900 border-[#ded8cd] text-[#2c4537] dark:text-[#f4ecd8] hover:border-[#cfbe95] flex items-center gap-1.5"
-                    >
-                        <Plus className="w-3.5 h-3.5 text-[#cfbe95]" />
-                        <span>+ Zona (Pista, Grupo...)</span>
-                    </Button>
+                            {/* Botón para Crear / Añadir Zona al Plano */}
+                            <Button
+                                type="button"
+                                onClick={openAddVenueModal}
+                                variant="outline"
+                                className="h-9 px-3 text-xs font-bold uppercase tracking-wider rounded-xl cursor-pointer bg-[#faf8f3] dark:bg-stone-900 border-[#ded8cd] text-[#2c4537] dark:text-[#f4ecd8] hover:border-[#cfbe95] flex items-center gap-1.5"
+                            >
+                                <Plus className="w-3.5 h-3.5 text-[#cfbe95]" />
+                                <span>+ Zona (Pista, Grupo...)</span>
+                            </Button>
 
-                    <span className="h-5 w-px bg-stone-300 dark:bg-stone-700 hidden sm:block" />
+                            <span className="h-5 w-px bg-stone-300 dark:bg-stone-700 hidden sm:block" />
+                        </>
+                    )}
 
                     {/* Controles de Zoom */}
                     <div className="flex items-center bg-[#faf8f3] dark:bg-stone-900 border border-[#ded8cd] rounded-xl p-0.5">
@@ -1011,14 +1180,16 @@ export default function InteractiveSeatingCanvas({
                         )}
                     </Button>
 
-                    <Button
-                        type="button"
-                        onClick={openCreateTable}
-                        className="bg-[#2c4537] hover:bg-[#385645] text-white text-xs font-bold uppercase tracking-wider h-9 px-3.5 rounded-xl cursor-pointer flex items-center gap-1.5"
-                    >
-                        <Plus className="w-3.5 h-3.5 text-[#cfbe95]" />
-                        Crear Mesa
-                    </Button>
+                    {!isPlanner && (
+                        <Button
+                            type="button"
+                            onClick={openCreateTable}
+                            className="bg-[#2c4537] hover:bg-[#385645] text-white text-xs font-bold uppercase tracking-wider h-9 px-3.5 rounded-xl cursor-pointer flex items-center gap-1.5"
+                        >
+                            <Plus className="w-3.5 h-3.5 text-[#cfbe95]" />
+                            Crear Mesa
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -1254,49 +1425,52 @@ export default function InteractiveSeatingCanvas({
                                         </span>
                                     </div>
 
-                                    <div className="flex items-center gap-1.5 pt-0.5">
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => toggleTableShape(selectedTable)}
-                                            className="text-xs h-7.5 px-2.5 flex-1 font-semibold border-[#ded8cd] text-stone-700 hover:text-[#2c4537] hover:border-[#cfbe95] cursor-pointer"
-                                            title="Alternar entre Redonda, Rectangular y Honor"
-                                        >
-                                            <Layers className="w-3.5 h-3.5 mr-1 text-[#cfbe95]" />
-                                            Forma: {selectedTable.shape === 'rectangular' ? 'Rectangular' : selectedTable.shape === 'head' ? 'Honor' : 'Redonda'}
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => startEditTable(selectedTable)}
-                                            className="text-xs h-7.5 px-2 border-[#ded8cd] text-stone-600 hover:text-[#2c4537] cursor-pointer"
-                                            title="Editar datos de mesa"
-                                        >
-                                            <Edit className="w-3.5 h-3.5" />
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => {
-                                                showConfirmModal(
-                                                    `¿Eliminar Mesa "${selectedTable.name}"?`,
-                                                    `Se eliminará la mesa y sus ${selectedTable.guests_count || 0} comensales quedarán sin asignar.`,
-                                                    () => {
-                                                        handleDeleteTable(selectedTable.id);
-                                                        setSelectedTableId(null);
-                                                        setSidebarTab('unassigned');
-                                                    }
-                                                );
-                                            }}
-                                            className="text-xs h-7.5 px-2 border-[#ded8cd] text-stone-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
-                                            title="Eliminar mesa"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </Button>
-                                    </div>
+                                    {!isPlanner && (
+                                        <div className="flex items-center gap-1.5 pt-0.5">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => toggleTableShape(selectedTable)}
+                                                className="text-xs h-7.5 px-2.5 flex-1 font-semibold border-[#ded8cd] text-stone-700 hover:text-[#2c4537] hover:border-[#cfbe95] cursor-pointer"
+                                                title="Alternar entre Redonda, Rectangular y Honor"
+                                            >
+                                                <Layers className="w-3.5 h-3.5 mr-1 text-[#cfbe95]" />
+                                                Forma: {selectedTable.shape === 'rectangular' ? 'Rectangular' : selectedTable.shape === 'head' ? 'Honor' : 'Redonda'}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => startEditTable(selectedTable)}
+                                                className="text-xs h-7.5 px-2 border-[#ded8cd] text-stone-600 hover:text-[#2c4537] cursor-pointer"
+                                                title="Editar datos de mesa"
+                                            >
+                                                <Edit className="w-3.5 h-3.5" />
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => {
+                                                    showConfirmModal(
+                                                        `¿Eliminar Mesa "${selectedTable.name}"?`,
+                                                        `Se eliminará la mesa y sus ${selectedTable.guests_count || 0} comensales quedarán sin asignar.`,
+                                                        () => {
+                                                            handleDeleteTable(selectedTable.id);
+                                                            setSelectedTableId(null);
+                                                            setSidebarTab('unassigned');
+                                                        }
+                                                    );
+                                                }}
+                                                className="text-xs h-7.5 px-2 border-[#ded8cd] text-stone-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                                title="Eliminar mesa"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* AJUSTE DE TAMAÑO DE LA MESA */}
+                                {!isPlanner && (
                                 <div className="py-2.5 border-b border-[#ded8cd] space-y-2 shrink-0">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1">
@@ -1482,6 +1656,7 @@ export default function InteractiveSeatingCanvas({
                                         )}
                                     </div>
                                 </div>
+                                )}
 
                                 {/* Lista de comensales sentados */}
                                 <div className="flex-1 overflow-y-auto py-2.5 space-y-2 pr-1 min-h-0">
@@ -1517,15 +1692,17 @@ export default function InteractiveSeatingCanvas({
                                                         {guest.checkin_code && ` • 🎫 ${guest.checkin_code}`}
                                                     </p>
                                                 </div>
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() => assignGuestTable(guest.id, null)}
-                                                    className="h-6 w-6 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-md cursor-pointer shrink-0"
-                                                    title="Retirar de esta mesa"
-                                                >
-                                                    <X className="w-3.5 h-3.5" />
-                                                </Button>
+                                                {!isPlanner && (
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => assignGuestTable(guest.id, null)}
+                                                        className="h-6 w-6 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-md cursor-pointer shrink-0"
+                                                        title="Retirar de esta mesa"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         ))
                                     )}
@@ -1564,14 +1741,16 @@ export default function InteractiveSeatingCanvas({
                                 <p className="text-xs text-stone-400 mt-1 max-w-[220px]">
                                     Haz clic en cualquier zona del croquis (pista, escenario, barra, mesa de pastel...) para ajustar su tamaño, silueta o nombre.
                                 </p>
-                                <Button
-                                    type="button"
-                                    onClick={openAddVenueModal}
-                                    className="mt-4 bg-[#2c4537] hover:bg-[#385645] text-white text-xs font-bold uppercase tracking-wider h-8 px-3 rounded-lg cursor-pointer flex items-center gap-1.5"
-                                >
-                                    <Plus className="w-3.5 h-3.5 text-[#cfbe95]" />
-                                    Añadir Nueva Zona
-                                </Button>
+                                {!isPlanner && (
+                                    <Button
+                                        type="button"
+                                        onClick={openAddVenueModal}
+                                        className="mt-4 bg-[#2c4537] hover:bg-[#385645] text-white text-xs font-bold uppercase tracking-wider h-8 px-3 rounded-lg cursor-pointer flex items-center gap-1.5"
+                                    >
+                                        <Plus className="w-3.5 h-3.5 text-[#cfbe95]" />
+                                        Añadir Nueva Zona
+                                    </Button>
+                                )}
                             </div>
                         )}
 
@@ -1594,25 +1773,27 @@ export default function InteractiveSeatingCanvas({
                                         )}
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
-                                        <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            className="h-7 w-7 text-stone-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
-                                            onClick={() => {
-                                                showConfirmModal(
-                                                    `¿Eliminar Zona "${selectedVenueElem.title}"?`,
-                                                    `¿Deseas retirar esta zona del plano? Podrás volver a añadirla en cualquier momento si lo necesitas.`,
-                                                    () => {
-                                                        handleDeleteVenueElement(selectedVenueElem.id);
-                                                        setSelectedVenueElemId(null);
-                                                        setSidebarTab('unassigned');
-                                                    }
-                                                );
-                                            }}
-                                            title="Eliminar esta zona"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </Button>
+                                        {!isPlanner && (
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-7 w-7 text-stone-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                                onClick={() => {
+                                                    showConfirmModal(
+                                                        `¿Eliminar Zona "${selectedVenueElem.title}"?`,
+                                                        `¿Deseas retirar esta zona del plano? Podrás volver a añadirla en cualquier momento si lo necesitas.`,
+                                                        () => {
+                                                            handleDeleteVenueElement(selectedVenueElem.id);
+                                                            setSelectedVenueElemId(null);
+                                                            setSidebarTab('unassigned');
+                                                        }
+                                                    );
+                                                }}
+                                                title="Eliminar esta zona"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </Button>
+                                        )}
                                         <Button
                                             size="icon"
                                             variant="ghost"

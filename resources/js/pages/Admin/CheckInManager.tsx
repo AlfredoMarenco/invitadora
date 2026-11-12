@@ -1332,6 +1332,7 @@ export default function CheckInManager({ wedding, guests = [], invitations = [] 
 
 CheckInManager.layout = {
     breadcrumbs: [
-        { title: 'Control de Acceso', href: '/admin/checkin' }
+        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'Control de Acceso', href: '/admin/checkin' },
     ],
 };

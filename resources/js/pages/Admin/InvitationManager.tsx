@@ -20,7 +20,7 @@ import {
     ShieldAlert,
     UtensilsCrossed,
     Search,
-    LayoutGrid
+    ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import BanquetSeatingView from './Partials/BanquetSeatingView';
 import LuxuryModal from '@/components/LuxuryModal';
 
@@ -61,17 +62,37 @@ interface InvitationManagerProps {
     invitations: any[];
     tables?: TableItem[];
     initialTab?: string;
+    initialSearch?: string;
 }
 
-export default function InvitationManager({ wedding, invitations, tables = [], initialTab = 'invitations' }: InvitationManagerProps) {
+export default function InvitationManager({
+    wedding,
+    invitations,
+    tables = [],
+    initialTab = 'invitations',
+    initialSearch = '',
+}: InvitationManagerProps) {
     const { auth } = usePage().props as any;
     const isPlanner = auth?.user?.role === 'wedding_planner';
 
-    // Pestaña activa (invitaciones o mesas)
+    // Pestaña activa (invitaciones o mesas) sincronizada con navegación Inertia
     const [activeTab, setActiveTab] = useState<'invitations' | 'tables'>(
         initialTab === 'tables' ? 'tables' : 'invitations'
     );
     const [tableSearch, setTableSearch] = useState('');
+
+    useEffect(() => {
+        setActiveTab(initialTab === 'tables' ? 'tables' : 'invitations');
+    }, [initialTab]);
+
+    const switchTab = (nextTab: 'invitations' | 'tables') => {
+        setActiveTab(nextTab);
+        router.get(
+            '/admin/invitations',
+            nextTab === 'tables' ? { tab: 'tables' } : {},
+            { preserveState: true, preserveScroll: true, replace: true }
+        );
+    };
 
     // Modal de lujo para alertas y confirmaciones
     const [luxuryModalState, setLuxuryModalState] = useState<{
@@ -183,7 +204,14 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
 
     // Filtros para la lista de invitados: por Lado (Novia / Novio) y búsqueda por texto
     const [invitationFilterSide, setInvitationFilterSide] = useState<'all' | 'bride' | 'groom'>('all');
-    const [invitationSearch, setInvitationSearch] = useState('');
+    const [invitationSearch, setInvitationSearch] = useState(initialSearch || '');
+
+    useEffect(() => {
+        if (typeof initialSearch === 'string' && initialSearch.trim() !== '') {
+            setInvitationSearch(initialSearch);
+            setActiveTab('invitations');
+        }
+    }, [initialSearch]);
 
     // Reloj en vivo para ambiente de gala
     const [currentTime, setCurrentTime] = useState<string>('');
@@ -250,22 +278,17 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         });
     });
 
-    // Filtro de mesas
-    const filteredTables = tables.filter(t => {
-        if (!tableSearch.trim()) return true;
-        const q = tableSearch.toLowerCase();
-        const inName = t.name.toLowerCase().includes(q);
-        const inNotes = t.notes?.toLowerCase().includes(q) || false;
-        const inGuests = t.guests?.some((g: any) => g.full_name.toLowerCase().includes(q)) || false;
-        return inName || inNotes || inGuests;
-    });
-
     // Asignación rápida de mesa a toda la familia
     const assignFamilyTable = (invitationId: number, tableId: string) => {
         router.put(`/admin/invitations/${invitationId}/assign-table`, {
             table_id: tableId === 'none' ? null : parseInt(tableId)
         }, {
             preserveScroll: true,
+            onError: (errors: any) => {
+                if (errors?.table_id) {
+                    showAlertModal('Capacidad Insuficiente', errors.table_id, 'warning');
+                }
+            },
         });
     };
 
@@ -491,23 +514,90 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         });
     };
 
+    // Calcula una coordenada libre en el salón 2D para que las mesas nuevas no se apilen en (150, 150)
+    const findFreeTablePosition = (width = 150, height = 150): { x: number; y: number } => {
+        const halfW = Math.round(width / 2);
+        const halfH = Math.round(height / 2);
+        const zones: any[] = Array.isArray(wedding?.venue_elements_list) ? wedding.venue_elements_list : [];
+
+        const occupiedBoxes: Array<{ left: number; top: number; right: number; bottom: number }> = zones.map(z => ({
+            left: (z.x || 0) - 20,
+            top: (z.y || 0) - 20,
+            right: (z.x || 0) + (z.width || 200) + 20,
+            bottom: (z.y || 0) + (z.height || 100) + 20,
+        }));
+
+        tables.forEach((t, idx) => {
+            const tw = t.width || (t.shape === 'rectangular' ? 210 : t.shape === 'head' ? 240 : 150);
+            const th = t.height || (t.shape === 'rectangular' ? 100 : t.shape === 'head' ? 110 : 150);
+            const px = typeof t.pos_x === 'number' && t.pos_x > 0 ? t.pos_x : 200 + (idx % 5) * 220;
+            const py = typeof t.pos_y === 'number' && t.pos_y > 0 ? t.pos_y : 220 + Math.floor(idx / 5) * 230;
+            occupiedBoxes.push({
+                left: px - tw / 2 - 20,
+                top: py - th / 2 - 20,
+                right: px + tw / 2 + 20,
+                bottom: py + th / 2 + 20,
+            });
+        });
+
+        const candidateYs = [220, 460, 680, 920, 1140];
+        const candidateXs = [200, 420, 640, 860, 1080, 1300, 1520, 1740];
+
+        for (const cy of candidateYs) {
+            for (const cx of candidateXs) {
+                const box = {
+                    left: cx - halfW - 18,
+                    top: cy - halfH - 18,
+                    right: cx + halfW + 18,
+                    bottom: cy + halfH + 18,
+                };
+                const collides = occupiedBoxes.some(
+                    ob => !(box.right < ob.left || box.left > ob.right || box.bottom < ob.top || box.top > ob.bottom),
+                );
+                if (!collides) {
+                    return { x: cx, y: cy };
+                }
+            }
+        }
+
+        return {
+            x: 200 + (tables.length % 6) * 220,
+            y: 220 + Math.floor(tables.length / 6) * 220,
+        };
+    };
+
     // Métodos para gestión de mesas (CRUD)
     const handleCreateTable = (e: React.FormEvent) => {
         e.preventDefault();
         setTableSubmitting(true);
         setTableError(null);
 
-        router.post('/admin/tables', newTableData, {
+        const defaultW = newTableData.width || (newTableData.shape === 'rectangular' ? 210 : newTableData.shape === 'head' ? 240 : 150);
+        const defaultH = newTableData.shape === 'round' ? defaultW : (newTableData.height || (newTableData.shape === 'head' ? 110 : 100));
+        const freePos = findFreeTablePosition(defaultW, defaultH);
+
+        router.post('/admin/tables', {
+            ...newTableData,
+            width: defaultW,
+            height: defaultH,
+            pos_x: freePos.x,
+            pos_y: freePos.y,
+        }, {
+            preserveScroll: true,
+            preserveState: true,
             onSuccess: () => {
                 setNewTableData({ name: '', capacity: 10, notes: '', shape: 'round', width: 150, height: 150 });
-                setTableSubmitting(false);
+                setEditingTableId(null);
+                setShowTableModal(false);
             },
             onError: (err: any) => {
-                setTableSubmitting(false);
                 if (err?.name) setTableError(err.name);
                 else if (err?.capacity) setTableError(err.capacity);
                 else setTableError('Error al crear la mesa.');
-            }
+            },
+            onFinish: () => {
+                setTableSubmitting(false);
+            },
         });
     };
 
@@ -530,16 +620,20 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         setTableError(null);
 
         router.put(`/admin/tables/${tableId}`, editTableData, {
+            preserveScroll: true,
+            preserveState: true,
             onSuccess: () => {
                 setEditingTableId(null);
-                setTableSubmitting(false);
+                setShowTableModal(false);
             },
             onError: (err: any) => {
-                setTableSubmitting(false);
                 if (err?.capacity) setTableError(err.capacity);
                 else if (err?.name) setTableError(err.name);
                 else setTableError('Error al actualizar la mesa.');
-            }
+            },
+            onFinish: () => {
+                setTableSubmitting(false);
+            },
         });
     };
 
@@ -550,13 +644,23 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
             `¿Deseas eliminar la mesa "${table?.name || 'seleccionada'}"? Los invitados asignados a ella quedarán sin mesa asignada para que puedas reubicarlos libremente.`,
             () => {
                 router.delete(`/admin/tables/${tableId}`, {
+                    preserveScroll: true,
+                    preserveState: true,
                     onError: () => setTableError('Error al eliminar la mesa.')
                 });
             }
         );
     };
 
-    // Generador de texto para WhatsApp
+    // Generador de texto para WhatsApp y normalización de teléfono
+    const normalizeWaPhone = (rawPhone?: string | null): string => {
+        if (!rawPhone) return '';
+        const digits = String(rawPhone).replace(/\D/g, '');
+        if (!digits) return '';
+        if (digits.length === 10) return `52${digits}`;
+        return digits;
+    };
+
     const generateWaMessageText = (invitation: any) => {
         const url = `${window.location.origin}/public/rsvp/${invitation.token}`;
         const guestCount = invitation.guests?.length || 0;
@@ -574,7 +678,11 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
 
     const generateWaLink = (invitation: any) => {
         const text = generateWaMessageText(invitation);
-        return `https://api.whatsapp.com/send?phone=${invitation.phone}&text=${encodeURIComponent(text)}`;
+        const cleanPhone = normalizeWaPhone(invitation.phone);
+        if (!cleanPhone) {
+            return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        }
+        return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
     };
 
     const handleCopyWaMessage = (invitation: any) => {
@@ -607,7 +715,143 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
         }
     };
 
+    // Barra de acciones de invitación en una sola fila (WhatsApp primario + cápsula segmentada Champagne)
+    const renderInvitationActions = (inv: any, hasDependencies: boolean, isMobile = false) => {
+        const hasPhone = Boolean(normalizeWaPhone(inv.phone));
+        const isCopied = copiedId === inv.id;
+
+        return (
+            <div
+                className={
+                    isMobile
+                        ? 'flex items-center justify-between gap-2.5 flex-nowrap w-full'
+                        : 'flex items-center justify-end gap-2 flex-nowrap'
+                }
+            >
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <a
+                            href={generateWaLink(inv)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-sans text-xs font-semibold whitespace-nowrap shrink-0 transition-all shadow-2xs border ${
+                                isMobile ? 'h-9 px-3.5 flex-1' : 'h-8 px-3'
+                            } ${
+                                hasPhone
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700/80'
+                                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
+                            }`}
+                        >
+                            <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                            <span>WhatsApp</span>
+                        </a>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        {hasPhone
+                            ? `Enviar por WhatsApp (${inv.phone})`
+                            : 'Abrir WhatsApp y elegir contacto con el mensaje listo'}
+                    </TooltipContent>
+                </Tooltip>
+
+                {/* Cápsula segmentada Champagne de utilidades */}
+                <div
+                    className={`inline-flex items-center rounded-lg border border-[#dfd5c2] dark:border-stone-700 bg-[#faf8f3] dark:bg-stone-900 divide-x divide-[#e5dec9] dark:divide-stone-800 overflow-hidden shadow-2xs shrink-0 ${
+                        isMobile ? 'h-9' : 'h-8'
+                    }`}
+                >
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button
+                                type="button"
+                                onClick={() => handleCopyWaMessage(inv)}
+                                aria-label="Copiar mensaje para WhatsApp"
+                                className={`h-full flex items-center justify-center transition-colors cursor-pointer ${
+                                    isMobile ? 'w-9' : 'w-8'
+                                } ${
+                                    isCopied
+                                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                                        : 'text-[#8f6d28] hover:bg-[#f2ede1] hover:text-[#2c4537] dark:text-[#dfc588] dark:hover:bg-stone-800'
+                                }`}
+                            >
+                                {isCopied ? (
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                )}
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            {isCopied ? '¡Mensaje copiado al portapapeles!' : 'Copiar mensaje con enlace'}
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <a
+                                href={`/public/rsvp/${inv.token}?preview=1`}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label="Ver invitación"
+                                className={`h-full flex items-center justify-center text-stone-600 hover:bg-[#f2ede1] hover:text-[#2c4537] dark:text-stone-300 dark:hover:bg-stone-800 transition-colors ${
+                                    isMobile ? 'w-9' : 'w-8'
+                                }`}
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                        </TooltipTrigger>
+                        <TooltipContent>Ver invitación personalizada (vista previa)</TooltipContent>
+                    </Tooltip>
+
+                    {!isPlanner && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    type="button"
+                                    onClick={() => openEditInvitation(inv)}
+                                    aria-label="Editar invitación"
+                                    className={`h-full flex items-center justify-center text-stone-600 hover:bg-[#f2ede1] hover:text-[#2c4537] dark:text-stone-300 dark:hover:bg-stone-800 transition-colors cursor-pointer ${
+                                        isMobile ? 'w-9' : 'w-8'
+                                    }`}
+                                >
+                                    <Edit className="w-3.5 h-3.5" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Editar familia e integrantes</TooltipContent>
+                        </Tooltip>
+                    )}
+
+                    {!isPlanner && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    type="button"
+                                    onClick={() => setDeleteConfirmId(inv.id)}
+                                    aria-label="Eliminar invitación"
+                                    className={`h-full flex items-center justify-center transition-colors cursor-pointer ${
+                                        isMobile ? 'w-9' : 'w-8'
+                                    } ${
+                                        hasDependencies
+                                            ? 'text-stone-300 hover:text-stone-500 hover:bg-stone-100 dark:text-stone-600 dark:hover:bg-stone-800'
+                                            : 'text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                                    }`}
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {hasDependencies
+                                    ? 'Invitación protegida (con RSVP o check-in)'
+                                    : 'Eliminar invitación'}
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     return (
+        <TooltipProvider delayDuration={150}>
         <div className="flex-1 space-y-6 px-4 md:px-8 py-6 w-full">
             <Head title={`Invitaciones - ${wedding.bride_name} & ${wedding.groom_name}`} />
             
@@ -636,14 +880,16 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                     </div>
 
                     <h1 className="text-2xl sm:text-3xl font-sans font-bold tracking-tight text-[#fcf8ed]">
-                        Lista de Invitados • Control de Asistencia
+                        {activeTab === 'tables'
+                            ? 'Mesas del Banquete • Plano & Distribución'
+                            : 'Lista de Invitados • Control de Asistencia'}
                     </h1>
                     <p className="text-xs sm:text-sm text-[#dfd4c0] font-sans font-medium max-w-xl">
                         {wedding ? `${wedding.bride_name} & ${wedding.groom_name} — ` : ''}Administra las familias, asignación de mesas y confirmaciones RSVP de su evento.
                     </p>
                 </div>
 
-                {/* Métricas y Acciones Rápidas */}
+                {/* Métricas y Acciones Rápidas (sin botones duplicados) */}
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end z-10">
                     {/* Tarjeta de Métricas */}
                     <div className="bg-[#16271e]/75 backdrop-blur-md px-4 py-2.5 rounded-xl border border-[#cfbe95]/30 shadow-md flex flex-col items-end min-w-[150px]">
@@ -669,21 +915,8 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                         </span>
                     </div>
 
-                    {/* Botones de Acción */}
+                    {/* Botones de Acción Contextuales */}
                     <div className="flex items-center gap-2 flex-wrap">
-                        {/* Botón Gestionar Mesas */}
-                        <Button 
-                            variant="outline"
-                            onClick={() => setShowTableModal(true)} 
-                            className="bg-white/10 hover:bg-white/15 text-[#fcf8ee] border border-[#cfbe95]/60 font-sans font-semibold text-xs uppercase tracking-wider px-3.5 py-2.5 h-11 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-2"
-                        >
-                            <Utensils className="w-4 h-4 text-[#cfbe95]" /> 
-                            Gestionar Mesas
-                            <span className="bg-[#cfbe95] text-[#1b2b22] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                {tables.length}
-                            </span>
-                        </Button>
-
                         <Button 
                             variant="outline" 
                             asChild 
@@ -696,13 +929,26 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                         </Button>
 
                         {!isPlanner && (
-                            <Button 
-                                onClick={() => setShowModal(true)} 
-                                className="bg-[#fcf8ee] hover:bg-[#f3ebd9] text-[#24352a] font-sans font-bold text-xs uppercase tracking-wider px-4 py-2.5 h-11 rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 border border-[#e6dbc5]"
-                            >
-                                <Plus className="w-4 h-4 text-[#24352a]" />
-                                Nueva Invitación
-                            </Button>
+                            activeTab === 'tables' ? (
+                                <Button 
+                                    onClick={() => {
+                                        setEditingTableId(null);
+                                        setShowTableModal(true);
+                                    }} 
+                                    className="bg-[#fcf8ee] hover:bg-[#f3ebd9] text-[#24352a] font-sans font-bold text-xs uppercase tracking-wider px-4 py-2.5 h-11 rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 border border-[#e6dbc5]"
+                                >
+                                    <Plus className="w-4 h-4 text-[#24352a]" />
+                                    Nueva Mesa
+                                </Button>
+                            ) : (
+                                <Button 
+                                    onClick={() => setShowModal(true)} 
+                                    className="bg-[#fcf8ee] hover:bg-[#f3ebd9] text-[#24352a] font-sans font-bold text-xs uppercase tracking-wider px-4 py-2.5 h-11 rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 border border-[#e6dbc5]"
+                                >
+                                    <Plus className="w-4 h-4 text-[#24352a]" />
+                                    Nueva Invitación
+                                </Button>
+                            )
                         )}
                     </div>
                 </div>
@@ -715,10 +961,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                 <div className="flex items-center gap-2 flex-wrap">
                     <button
                         type="button"
-                        onClick={() => {
-                            setActiveTab('invitations');
-                            window.history.replaceState(null, '', '/admin/invitations');
-                        }}
+                        onClick={() => switchTab('invitations')}
                         className={`px-4 py-2.5 rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 shadow-xs ${
                             activeTab === 'invitations'
                                 ? 'bg-[#2c4537] text-[#fcf8ed] border border-[#2c4537]'
@@ -736,10 +979,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
 
                     <button
                         type="button"
-                        onClick={() => {
-                            setActiveTab('tables');
-                            window.history.replaceState(null, '', '/admin/invitations?tab=tables');
-                        }}
+                        onClick={() => switchTab('tables')}
                         className={`px-4 py-2.5 rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 shadow-xs ${
                             activeTab === 'tables'
                                 ? 'bg-[#2c4537] text-[#fcf8ed] border border-[#2c4537]'
@@ -756,30 +996,25 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                     </button>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    {activeTab === 'tables' ? (
+                {!isPlanner && activeTab === 'invitations' && (
+                    <div className="flex items-center gap-2">
                         <Button
+                            type="button"
+                            variant="outline"
                             onClick={() => {
                                 setEditingTableId(null);
                                 setShowTableModal(true);
                             }}
-                            className="bg-[#2c4537] hover:bg-[#385645] text-white text-xs font-bold uppercase tracking-wider h-10 px-4 rounded-xl cursor-pointer flex items-center gap-1.5 shadow-xs"
+                            className="bg-[#faf8f3] hover:bg-[#f2ede1] dark:bg-stone-900 text-[#2c4537] dark:text-[#f4ecd8] border-[#ded8cd] text-xs font-semibold h-9 px-3.5 rounded-xl cursor-pointer flex items-center gap-1.5 shadow-2xs"
                         >
-                            <Plus className="w-4 h-4 text-[#cfbe95]" />
-                            Nueva Mesa
+                            <Utensils className="w-3.5 h-3.5 text-[#cfbe95]" />
+                            <span>Catálogo de Mesas</span>
+                            <span className="bg-[#2c4537] text-[#fcf8ed] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                {tables.length}
+                            </span>
                         </Button>
-                    ) : (
-                        !isPlanner && (
-                            <Button 
-                                onClick={() => setShowModal(true)} 
-                                className="bg-[#2c4537] hover:bg-[#385645] text-white text-xs font-bold uppercase tracking-wider h-10 px-4 rounded-xl cursor-pointer flex items-center gap-1.5 shadow-xs"
-                            >
-                                <Plus className="w-4 h-4 text-[#cfbe95]" />
-                                Nueva Invitación
-                            </Button>
-                        )
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
 
             {activeTab === 'invitations' ? (
@@ -864,13 +1099,213 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                         </div>
                     </div>
 
-                    <Card className="shadow-sm border-[#ded8cd] bg-card overflow-hidden">
+                    {/* ========================================================= */}
+                    {/* VISTA MÓVIL (< 768px): TARJETAS APILADAS DE LUJO          */}
+                    {/* ========================================================= */}
+                    <div className="md:hidden space-y-3">
+                        {filteredInvitations.length === 0 ? (
+                            <Card className="p-8 text-center border-[#ded8cd] bg-card">
+                                <div className="flex flex-col items-center justify-center text-gray-400">
+                                    <div className="bg-[#f5f2eb] dark:bg-stone-800 p-4 rounded-full mb-3">
+                                        <Users className="w-7 h-7 opacity-50 text-[#cfbe95]" />
+                                    </div>
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                        {invitations.length === 0 ? 'Sin invitados todavía' : 'No se encontraron invitados'}
+                                    </p>
+                                    <p className="text-xs mb-4">
+                                        {invitations.length === 0
+                                            ? 'Agrega tu primera invitación para empezar.'
+                                            : 'Prueba ajustando el filtro de Novia / Novio o el buscador.'}
+                                    </p>
+                                    {invitations.length > 0 && (invitationFilterSide !== 'all' || invitationSearch) && (
+                                        <Button
+                                            onClick={() => {
+                                                setInvitationFilterSide('all');
+                                                setInvitationSearch('');
+                                            }}
+                                            variant="outline"
+                                            size="sm"
+                                            className="cursor-pointer text-xs"
+                                        >
+                                            Limpiar Filtros
+                                        </Button>
+                                    )}
+                                </div>
+                            </Card>
+                        ) : (
+                            filteredInvitations.map((inv: any) => {
+                                const isExpanded = expandedInvIds.includes(inv.id);
+                                const hasDependencies = Boolean(
+                                    inv.status === 'responded' ||
+                                    inv.guests?.some((g: any) => g.has_entered || g.is_attending !== null)
+                                );
+
+                                return (
+                                    <Card key={inv.id} className="p-4 border-[#ded8cd] bg-card shadow-xs space-y-3">
+                                        {/* Cabecera de la tarjeta familiar */}
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0 flex-1 space-y-1">
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <span className="font-bold text-sm text-[#70531c] dark:text-[#f4ecd8] leading-tight">
+                                                        {inv.name}
+                                                    </span>
+                                                    {inv.side === 'groom' ? (
+                                                        <Badge className="text-[10px] h-5 bg-[#e8efe9] text-[#2c4537] border-[#b8d1c0] dark:bg-[#203328] dark:text-[#c4ded0] dark:border-[#385645] flex items-center gap-1 font-semibold">
+                                                            <span>🤵</span> Novio
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge className="text-[10px] h-5 bg-[#fcf0ea] text-[#934d31] border-[#f4cbbe] dark:bg-[#382017] dark:text-[#f5cac0] dark:border-[#5a3324] flex items-center gap-1 font-semibold">
+                                                            <span>👰</span> Novia
+                                                        </Badge>
+                                                    )}
+                                                    {inv.category && (
+                                                        <Badge variant="outline" className="text-[10px] h-5 border-[#cfbe95] text-[#84662d] bg-[#fbf8f0]">
+                                                            {inv.category}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-center gap-3 flex-wrap text-xs text-stone-500 dark:text-stone-400">
+                                                    {inv.phone && (
+                                                        <span className="inline-flex items-center gap-1 font-mono">
+                                                            <Phone className="w-3 h-3 text-[#cfbe95]" /> {inv.phone}
+                                                        </span>
+                                                    )}
+                                                    {inv.rsvp_deadline && (
+                                                        <span className="inline-flex items-center gap-1 text-[11px] text-stone-400">
+                                                            <Clock className="w-3 h-3" /> Límite: {inv.rsvp_deadline}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="shrink-0">
+                                                {statusBadge(inv.status)}
+                                            </div>
+                                        </div>
+
+                                        {/* Pases + Selector rápido de mesa */}
+                                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleExpand(inv.id)}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#faf8f3] dark:bg-stone-900 border border-[#dfd5c2] dark:border-stone-800 text-[#2c4537] dark:text-[#f4ecd8] cursor-pointer"
+                                            >
+                                                <Users className="w-3.5 h-3.5 text-[#cfbe95]" />
+                                                <span>
+                                                    {inv.guests?.length || 0} {inv.guests?.length === 1 ? 'pase' : 'pases'}
+                                                </span>
+                                                {isExpanded ? (
+                                                    <ChevronUp className="w-3.5 h-3.5 text-stone-400" />
+                                                ) : (
+                                                    <ChevronDown className="w-3.5 h-3.5 text-stone-400" />
+                                                )}
+                                            </button>
+
+                                            {!isPlanner && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <UtensilsCrossed className="w-3 h-3 text-[#cfbe95] shrink-0" />
+                                                    <Select
+                                                        value={(() => {
+                                                            const tableIds = inv.guests?.map((g: any) => g.table_id).filter(Boolean);
+                                                            if (tableIds && tableIds.length > 0 && tableIds.length === inv.guests?.length) {
+                                                                const firstId = tableIds[0];
+                                                                if (tableIds.every((id: any) => id === firstId)) return String(firstId);
+                                                            }
+                                                            return 'none';
+                                                        })()}
+                                                        onValueChange={(val) => assignFamilyTable(inv.id, val)}
+                                                    >
+                                                        <SelectTrigger className="h-7 text-[11px] px-2.5 bg-[#faf8f3] dark:bg-stone-900 border-dashed border-[#cfbe95]/80 text-[#2c4537] dark:text-[#f4ecd8] w-auto max-w-[190px]">
+                                                            <SelectValue placeholder="Asignar mesa..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="none" className="text-xs">
+                                                                🚫 Sin mesa familiar fija
+                                                            </SelectItem>
+                                                            {tables.map(t => {
+                                                                const occupied = t.guests_count || 0;
+                                                                const free = t.capacity - occupied;
+                                                                return (
+                                                                    <SelectItem key={t.id} value={String(t.id)} className="text-xs">
+                                                                        🍽️ {t.name} ({occupied}/{t.capacity}) {free <= 0 ? '• [LLENA]' : ''}
+                                                                    </SelectItem>
+                                                                );
+                                                            })}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {isExpanded && inv.guests && inv.guests.length > 0 && (
+                                            <div className="space-y-1.5 pt-1">
+                                                {inv.guests.map((g: any) => (
+                                                    <div
+                                                        key={g.id}
+                                                        className="flex items-center justify-between gap-2 bg-[#faf8f3]/80 dark:bg-stone-900/80 border border-[#e8dfcf] dark:border-stone-800 rounded-lg px-2.5 py-1.5"
+                                                    >
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                                <span className="text-xs font-semibold text-stone-800 dark:text-stone-200 truncate">
+                                                                    {g.full_name}
+                                                                </span>
+                                                                <span className="text-[10px] text-stone-500">
+                                                                    ({g.type === 'child' ? 'Niño' : 'Adulto'})
+                                                                </span>
+                                                                {(g.table?.name || g.table_name) && (
+                                                                    <span className="text-[10px] font-semibold bg-[#eef4f0] text-[#2c4537] border border-[#a8c5b2] px-1.5 py-0.5 rounded">
+                                                                        🍽️ {g.table?.name || g.table_name}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        {!isPlanner && (
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                className="h-6 w-6 text-stone-400 hover:text-[#2c4537] shrink-0"
+                                                                onClick={() => openEditGuest(g)}
+                                                            >
+                                                                <Edit className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {inv.message_to_couple && (
+                                            <div className="bg-[#faf8f2] dark:bg-stone-900/60 border border-[#cfbe95]/60 rounded-xl p-2.5">
+                                                <div className="flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider text-[#8f6d28] dark:text-[#dfc588] mb-0.5">
+                                                    <Sparkles className="w-3 h-3 text-[#cfbe95]" />
+                                                    Dedicatoria
+                                                </div>
+                                                <p className="text-xs text-stone-700 dark:text-stone-300 italic leading-relaxed">
+                                                    &ldquo;{inv.message_to_couple}&rdquo;
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Pie de acciones limpio en una sola barra */}
+                                        <div className="pt-2.5 border-t border-[#f0ede6] dark:border-stone-800">
+                                            {renderInvitationActions(inv, hasDependencies, true)}
+                                        </div>
+                                    </Card>
+                                );
+                            })
+                        )}
+                    </div>
+
+                    {/* ========================================================= */}
+                    {/* VISTA TABLET / DESKTOP (>= 768px): TABLA OPTIMIZADA       */}
+                    {/* ========================================================= */}
+                    <Card className="hidden md:block shadow-sm border-[#ded8cd] bg-card overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-[#f5f2eb]/75 dark:bg-muted/40 text-stone-600 dark:text-muted-foreground text-xs uppercase font-semibold border-b border-[#ded8cd]">
                                 <tr>
-                                    <th className="px-5 py-4 font-semibold tracking-wider">Familia / Titular</th>
-                                    <th className="px-5 py-4 font-semibold tracking-wider">
+                                    <th className="px-4 lg:px-5 py-4 font-semibold tracking-wider">Familia / Titular</th>
+                                    <th className="px-4 lg:px-5 py-4 font-semibold tracking-wider">
                                         <div className="flex items-center justify-between gap-3">
                                             <span>Integrantes y Pases</span>
                                             {invitations.length > 0 && (
@@ -884,9 +1319,9 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                             )}
                                         </div>
                                     </th>
-                                    <th className="px-5 py-4 font-semibold tracking-wider">Mensaje a los Novios</th>
-                                    <th className="px-5 py-4 font-semibold tracking-wider">Estado RSVP</th>
-                                    <th className="px-5 py-4 font-semibold tracking-wider text-right">Acciones</th>
+                                    <th className="hidden xl:table-cell px-5 py-4 font-semibold tracking-wider">Mensaje a los Novios</th>
+                                    <th className="px-4 lg:px-5 py-4 font-semibold tracking-wider whitespace-nowrap">Estado RSVP</th>
+                                    <th className="px-4 lg:px-5 py-4 font-semibold tracking-wider text-right whitespace-nowrap">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#f0ede6] dark:divide-border/40">
@@ -1059,13 +1494,26 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                                         )}
                                                     </div>
                                                 )}
+
+                                                {/* En tablet/laptop mediana (< xl) mostrar dedicatoria compacta aquí para no apretar columnas */}
+                                                {inv.message_to_couple && (
+                                                    <div className="xl:hidden bg-[#faf8f2] dark:bg-stone-900/60 border border-[#cfbe95]/60 rounded-xl p-2.5 mt-1.5">
+                                                        <div className="flex items-center gap-1 text-[9.5px] uppercase font-bold tracking-wider text-[#8f6d28] dark:text-[#dfc588]">
+                                                            <Sparkles className="w-2.5 h-2.5 text-[#cfbe95]" />
+                                                            Dedicatoria
+                                                        </div>
+                                                        <p className="text-xs text-stone-700 dark:text-stone-300 italic line-clamp-2">
+                                                            &ldquo;{inv.message_to_couple}&rdquo;
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
 
-                                        {/* 3. MENSAJE PARA LOS NOVIOS (CHAMPAGNE DEDICATORIA) */}
-                                        <td className="px-5 py-4 align-top">
+                                        {/* 3. MENSAJE PARA LOS NOVIOS (CHAMPAGNE DEDICATORIA EN PANTALLAS AMPLIAS) */}
+                                        <td className="hidden xl:table-cell px-5 py-4 align-top">
                                             {inv.message_to_couple ? (
-                                                <div className="bg-[#faf8f2] dark:bg-stone-900/60 border border-[#cfbe95]/60 dark:border-[#cfbe95]/30 rounded-xl p-3 shadow-xs min-w-[200px] max-w-xs sm:max-w-sm">
+                                                <div className="bg-[#faf8f2] dark:bg-stone-900/60 border border-[#cfbe95]/60 dark:border-[#cfbe95]/30 rounded-xl p-3 shadow-xs min-w-[200px] max-w-xs">
                                                     <div className="flex items-center gap-1.5 text-[10px] font-sans uppercase font-bold tracking-wider text-[#8f6d28] dark:text-[#dfc588] mb-1">
                                                         <Sparkles className="w-3 h-3 text-[#cfbe95]" />
                                                         Dedicatoria
@@ -1082,84 +1530,13 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                                         </td>
 
                                         {/* 4. ESTADO RSVP */}
-                                        <td className="px-5 py-4 align-top whitespace-nowrap">
+                                        <td className="px-4 lg:px-5 py-4 align-top whitespace-nowrap">
                                             {statusBadge(inv.status)}
                                         </td>
 
-                                        {/* 5. ACCIONES */}
-                                        <td className="px-5 py-4 align-top text-right whitespace-nowrap">
-                                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                                                {/* Botón WhatsApp directo si tiene teléfono */}
-                                                {inv.phone && (
-                                                    <Button 
-                                                        size="sm" 
-                                                        variant="outline" 
-                                                        className="h-8 border-emerald-300 text-emerald-800 hover:bg-emerald-50 hover:text-emerald-900 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/30 text-xs font-semibold cursor-pointer" 
-                                                        asChild
-                                                        title="Enviar directamente por WhatsApp"
-                                                    >
-                                                        <a href={generateWaLink(inv)} target="_blank" rel="noreferrer">
-                                                            <MessageCircle className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-                                                            WhatsApp
-                                                        </a>
-                                                    </Button>
-                                                )}
-
-                                                {/* Botón Copiar Texto Formateado para WhatsApp */}
-                                                <Button 
-                                                    size="sm" 
-                                                    variant="outline"
-                                                    onClick={() => handleCopyWaMessage(inv)}
-                                                    className={`h-8 text-xs font-semibold transition-all cursor-pointer ${
-                                                        copiedId === inv.id 
-                                                            ? 'bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-700 dark:text-emerald-300' 
-                                                            : 'border-[#dfd5c2] text-stone-700 hover:bg-[#f5f2eb] hover:text-[#2c4537] dark:border-stone-700 dark:text-stone-300'
-                                                    }`}
-                                                    title="Copiar mensaje con enlace para pegar en WhatsApp u otra red social"
-                                                >
-                                                    {copiedId === inv.id ? (
-                                                        <>
-                                                            <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-                                                            ¡Copiado!
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Copy className="w-3.5 h-3.5 mr-1 text-[#8f6d28]" />
-                                                            Copiar Texto
-                                                        </>
-                                                    )}
-                                                </Button>
-
-                                                {/* Botón Editar Invitación (para novios y admin) */}
-                                                {!isPlanner && (
-                                                    <Button 
-                                                        size="icon" 
-                                                        variant="ghost" 
-                                                        className="h-8 w-8 text-stone-600 hover:text-[#2c4537] hover:bg-[#f0ebe0] dark:hover:bg-stone-800 cursor-pointer" 
-                                                        onClick={() => openEditInvitation(inv)}
-                                                        title="Editar datos e integrantes de la invitación"
-                                                    >
-                                                        <Edit className="w-4 h-4" />
-                                                    </Button>
-                                                )}
-
-                                                {/* Botón Eliminar Invitación (con aviso de protección si tiene dependencias) */}
-                                                {!isPlanner && (
-                                                    <Button 
-                                                        size="icon" 
-                                                        variant="ghost" 
-                                                        className={`h-8 w-8 cursor-pointer ${
-                                                            hasDependencies 
-                                                                ? 'text-stone-300 hover:text-stone-500 hover:bg-stone-100 dark:text-stone-600' 
-                                                                : 'text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30'
-                                                        }`} 
-                                                        onClick={() => setDeleteConfirmId(inv.id)}
-                                                        title={hasDependencies ? "Invitación protegida (con confirmación o check-in activo)" : "Eliminar invitación"}
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
-                                                )}
-                                            </div>
+                                        {/* 5. ACCIONES EN UNA SOLA FILA SIN SALTOS */}
+                                        <td className="px-4 lg:px-5 py-4 align-top text-right whitespace-nowrap">
+                                            {renderInvitationActions(inv, hasDependencies, false)}
                                         </td>
                                     </tr>
                                 );
@@ -1222,6 +1599,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                         setShowTableModal(true);
                     }}
                     venueElements={wedding.venue_elements_list || []}
+                    isPlanner={isPlanner}
                 />
             )}
 
@@ -2226,6 +2604,7 @@ export default function InvitationManager({ wedding, invitations, tables = [], i
                 onConfirm={luxuryModalState.onConfirm}
             />
         </div>
+        </TooltipProvider>
     );
 }
 

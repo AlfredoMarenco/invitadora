@@ -265,7 +265,7 @@ export default function GalleryManager({ wedding, images: initialImages = [] }: 
                         Galería de Boda • Álbum Fotográfico
                     </h1>
                     <p className="text-xs sm:text-sm text-[#dfd4c0] font-sans font-medium max-w-xl">
-                        {wedding ? `${wedding.bride_name} & ${wedding.groom_name} — ` : ''}Sube y organiza las fotografías de su historia de amor. La primera imagen será la portada de la invitación.
+                        {wedding ? `${wedding.bride_name} & ${wedding.groom_name} — ` : ''}Sube y organiza las fotografías para la sección &ldquo;Nuestros momentos&rdquo; de la invitación digital.
                     </p>
                 </div>
 
@@ -288,10 +288,10 @@ export default function GalleryManager({ wedding, images: initialImages = [] }: 
                             {images.length > 0 ? (
                                 <>
                                     <CheckCircle2 className="w-3 h-3 text-[#cfbe95]" />
-                                    Portada activa
+                                    Carrusel activo
                                 </>
                             ) : (
-                                'Sin portada'
+                                'Sin fotos aún'
                             )}
                         </span>
                     </div>
@@ -372,10 +372,10 @@ export default function GalleryManager({ wedding, images: initialImages = [] }: 
                     </div>
                     <div>
                         <span className="font-sans font-bold text-[#70531c] dark:text-[#f4ecd8]">
-                            Secuencia visual y portada:
+                            Secuencia del carrusel:
                         </span>{' '}
                         <span>
-                            Arrastra las fotos para cambiar su orden. La <strong>primera foto</strong> (con borde dorado) será la portada principal de apertura.
+                            Arrastra las fotos para cambiar su orden en &ldquo;Nuestros momentos&rdquo;. La <strong>primera foto</strong> (con borde dorado) abrirá el carrusel.
                         </span>
                     </div>
                 </div>
@@ -450,7 +450,7 @@ export default function GalleryManager({ wedding, images: initialImages = [] }: 
                                 {isCover ? (
                                     <div className="absolute top-2.5 left-2.5 bg-[#2c4537] text-white border border-[#2c4537]/60 text-[10px] font-sans font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md flex items-center gap-1.5 backdrop-blur-xs">
                                         <Star className="w-3 h-3 fill-amber-300 text-amber-300" />
-                                        Portada Principal
+                                        Foto #1 del Carrusel
                                     </div>
                                 ) : (
                                     <div className="absolute top-2.5 left-2.5 bg-black/60 text-white/90 text-[10px] font-mono px-2 py-0.5 rounded-md backdrop-blur-xs">

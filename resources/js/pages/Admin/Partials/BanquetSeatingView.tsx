@@ -64,6 +64,7 @@ interface BanquetSeatingViewProps {
     handleDeleteTable: (tableId: number) => void;
     openCreateTable: () => void;
     venueElements?: any[];
+    isPlanner?: boolean;
 }
 
 export default function BanquetSeatingView({
@@ -78,7 +79,8 @@ export default function BanquetSeatingView({
     startEditTable,
     handleDeleteTable,
     openCreateTable,
-    venueElements = []
+    venueElements = [],
+    isPlanner = false,
 }: BanquetSeatingViewProps) {
     const [viewMode, setViewMode] = useState<'canvas' | 'grid'>('canvas');
 
@@ -202,13 +204,15 @@ export default function BanquetSeatingView({
                         </Button>
                     </div>
 
-                    <Button
-                        onClick={openCreateTable}
-                        className="bg-[#2c4537] hover:bg-[#385645] text-white text-xs font-bold uppercase tracking-wider h-9 px-3 rounded-lg cursor-pointer flex items-center gap-1.5"
-                    >
-                        <Plus className="w-3.5 h-3.5 text-[#cfbe95]" />
-                        Crear Mesa
-                    </Button>
+                    {!isPlanner && viewMode === 'grid' && (
+                        <Button
+                            onClick={openCreateTable}
+                            className="bg-[#2c4537] hover:bg-[#385645] text-white text-xs font-bold uppercase tracking-wider h-9 px-3 rounded-lg cursor-pointer flex items-center gap-1.5"
+                        >
+                            <Plus className="w-3.5 h-3.5 text-[#cfbe95]" />
+                            Crear Mesa
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -224,6 +228,7 @@ export default function BanquetSeatingView({
                     handleDeleteTable={handleDeleteTable}
                     openCreateTable={openCreateTable}
                     venueElements={venueElements}
+                    isPlanner={isPlanner}
                 />
             ) : (
                 <>
@@ -237,7 +242,7 @@ export default function BanquetSeatingView({
                             <p className="text-xs text-stone-500 max-w-md mx-auto mt-1 mb-4">
                                 {tableSearch ? 'Intenta con otro término o limpia el buscador.' : 'Crea las mesas de tu banquete (ej. "Mesa de Honor", "Mesa 1 - Familia Novia") y define cuántas personas caben en cada una.'}
                             </p>
-                            {!tableSearch && (
+                            {!tableSearch && !isPlanner && (
                                 <Button
                                     onClick={openCreateTable}
                                     className="bg-[#2c4537] hover:bg-[#385645] text-white text-xs font-bold uppercase tracking-wider h-10 px-4 rounded-xl cursor-pointer"
@@ -273,26 +278,28 @@ export default function BanquetSeatingView({
                                                             </p>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Button
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            className="h-7 w-7 text-stone-400 hover:text-[#2c4537] cursor-pointer"
-                                                            onClick={() => startEditTable(table)}
-                                                            title="Editar mesa"
-                                                        >
-                                                            <Edit className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                        <Button
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            className="h-7 w-7 text-stone-400 hover:text-rose-600 cursor-pointer"
-                                                            onClick={() => handleDeleteTable(table.id)}
-                                                            title="Eliminar mesa"
-                                                        >
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                    </div>
+                                                    {!isPlanner && (
+                                                        <div className="flex items-center gap-1">
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                className="h-7 w-7 text-stone-400 hover:text-[#2c4537] cursor-pointer"
+                                                                onClick={() => startEditTable(table)}
+                                                                title="Editar mesa"
+                                                            >
+                                                                <Edit className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                className="h-7 w-7 text-stone-400 hover:text-rose-600 cursor-pointer"
+                                                                onClick={() => handleDeleteTable(table.id)}
+                                                                title="Eliminar mesa"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 {/* Barra de capacidad */}
@@ -354,15 +361,17 @@ export default function BanquetSeatingView({
                                                                         )}
                                                                     </div>
                                                                 </div>
-                                                                <Button
-                                                                    size="icon"
-                                                                    variant="ghost"
-                                                                    className="h-6 w-6 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-md cursor-pointer shrink-0"
-                                                                    onClick={() => assignGuestTable(sg.id, null)}
-                                                                    title="Retirar de esta mesa"
-                                                                >
-                                                                    <X className="w-3.5 h-3.5" />
-                                                                </Button>
+                                                                {!isPlanner && (
+                                                                    <Button
+                                                                        size="icon"
+                                                                        variant="ghost"
+                                                                        className="h-6 w-6 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-md cursor-pointer shrink-0"
+                                                                        onClick={() => assignGuestTable(sg.id, null)}
+                                                                        title="Retirar de esta mesa"
+                                                                    >
+                                                                        <X className="w-3.5 h-3.5" />
+                                                                    </Button>
+                                                                )}
                                                             </div>
                                                         ))}
                                                     </div>
@@ -371,40 +380,42 @@ export default function BanquetSeatingView({
                                         </div>
 
                                         {/* Footer: Selector rápido para sentar comensal */}
-                                        <div className="p-3 bg-[#faf8f3]/80 dark:bg-stone-900/60 border-t border-[#ded8cd] dark:border-stone-800">
-                                            {!isFull && unassignedGuests.length > 0 ? (
-                                                <Select 
-                                                    value="placeholder" 
-                                                    onValueChange={(guestId) => {
-                                                        if (guestId && guestId !== 'placeholder') {
-                                                            assignGuestTable(parseInt(guestId), String(table.id));
-                                                        }
-                                                    }}
-                                                >
-                                                    <SelectTrigger className="h-9 text-xs bg-white dark:bg-stone-950 border-[#cfbe95] text-[#2c4537] dark:text-[#f4ecd8] font-medium cursor-pointer">
-                                                        <SelectValue placeholder={`+ Sentar a un invitado (${freeSpots} disp.)`} />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="max-h-[250px]">
-                                                        <SelectItem value="placeholder" disabled>
-                                                            Seleccionar invitado sin mesa...
-                                                        </SelectItem>
-                                                        {unassignedGuests.map(ug => (
-                                                            <SelectItem key={ug.id} value={String(ug.id)} className="cursor-pointer text-xs">
-                                                                👤 {ug.full_name} <span className="text-stone-400">({ug.invitation_name})</span>
+                                        {!isPlanner && (
+                                            <div className="p-3 bg-[#faf8f3]/80 dark:bg-stone-900/60 border-t border-[#ded8cd] dark:border-stone-800">
+                                                {!isFull && unassignedGuests.length > 0 ? (
+                                                    <Select 
+                                                        value="placeholder" 
+                                                        onValueChange={(guestId) => {
+                                                            if (guestId && guestId !== 'placeholder') {
+                                                                assignGuestTable(parseInt(guestId), String(table.id));
+                                                            }
+                                                        }}
+                                                    >
+                                                        <SelectTrigger className="h-9 text-xs bg-white dark:bg-stone-950 border-[#cfbe95] text-[#2c4537] dark:text-[#f4ecd8] font-medium cursor-pointer">
+                                                            <SelectValue placeholder={`+ Sentar a un invitado (${freeSpots} disp.)`} />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="max-h-[250px]">
+                                                            <SelectItem value="placeholder" disabled>
+                                                                Seleccionar invitado sin mesa...
                                                             </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            ) : isFull ? (
-                                                <div className="text-center text-[11px] text-stone-400 py-1 font-medium">
-                                                    ✓ Mesa al 100% de capacidad
-                                                </div>
-                                            ) : (
-                                                <div className="text-center text-[11px] text-emerald-700 dark:text-emerald-400 py-1 font-medium">
-                                                    ✓ Todos los invitados ya tienen mesa
-                                                </div>
-                                            )}
-                                        </div>
+                                                            {unassignedGuests.map(ug => (
+                                                                <SelectItem key={ug.id} value={String(ug.id)} className="cursor-pointer text-xs">
+                                                                    👤 {ug.full_name} <span className="text-stone-400">({ug.invitation_name})</span>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                ) : isFull ? (
+                                                    <div className="text-center text-[11px] text-stone-400 py-1 font-medium">
+                                                        ✓ Mesa al 100% de capacidad
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center text-[11px] text-emerald-700 dark:text-emerald-400 py-1 font-medium">
+                                                        ✓ Todos los invitados ya tienen mesa
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </Card>
                                 );
                             })}
@@ -456,34 +467,36 @@ export default function BanquetSeatingView({
                                             </p>
                                         </div>
 
-                                        <div className="w-36 shrink-0">
-                                            <Select 
-                                                value="none" 
-                                                onValueChange={(tblId) => {
-                                                    if (tblId && tblId !== 'none') {
-                                                        assignGuestTable(ug.id, tblId);
-                                                    }
-                                                }}
-                                            >
-                                                <SelectTrigger className="h-8 text-[11px] bg-white dark:bg-stone-950 border-[#cfbe95] cursor-pointer">
-                                                    <SelectValue placeholder="Asignar mesa..." />
-                                                </SelectTrigger>
-                                                <SelectContent className="max-h-[200px]">
-                                                    <SelectItem value="none" disabled>
-                                                        Elegir mesa...
-                                                    </SelectItem>
-                                                    {tables.map(t => {
-                                                        const free = t.capacity - (t.guests_count || 0);
-                                                        const full = free <= 0;
-                                                        return (
-                                                            <SelectItem key={t.id} value={String(t.id)} disabled={full} className="text-xs cursor-pointer">
-                                                                {t.name} ({free} disp.) {full ? '• LLENA' : ''}
-                                                            </SelectItem>
-                                                        );
-                                                    })}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
+                                        {!isPlanner && (
+                                            <div className="w-36 shrink-0">
+                                                <Select 
+                                                    value="none" 
+                                                    onValueChange={(tblId) => {
+                                                        if (tblId && tblId !== 'none') {
+                                                            assignGuestTable(ug.id, tblId);
+                                                        }
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="h-8 text-[11px] bg-white dark:bg-stone-950 border-[#cfbe95] cursor-pointer">
+                                                        <SelectValue placeholder="Asignar mesa..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="max-h-[200px]">
+                                                        <SelectItem value="none" disabled>
+                                                            Elegir mesa...
+                                                        </SelectItem>
+                                                        {tables.map(t => {
+                                                            const free = t.capacity - (t.guests_count || 0);
+                                                            const full = free <= 0;
+                                                            return (
+                                                                <SelectItem key={t.id} value={String(t.id)} disabled={full} className="text-xs cursor-pointer">
+                                                                    {t.name} ({free} disp.) {full ? '• LLENA' : ''}
+                                                                </SelectItem>
+                                                            );
+                                                        })}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

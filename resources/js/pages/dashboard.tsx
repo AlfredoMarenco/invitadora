@@ -513,7 +513,7 @@ export default function Dashboard({
                                             </td>
                                             <td className="px-4 py-3 text-right">
                                                 <Button variant="ghost" size="sm" asChild className="text-[#698175] hover:text-[#586e63] hover:bg-[#698175]/10">
-                                                    <Link href="/admin/invitations">
+                                                    <Link href={`/admin/invitations?search=${encodeURIComponent(inv.name)}`}>
                                                         Ver Familia
                                                     </Link>
                                                 </Button>

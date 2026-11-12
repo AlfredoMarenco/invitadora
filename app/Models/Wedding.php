@@ -14,7 +14,7 @@ class Wedding extends Model
 
     public function getVenueElementsListAttribute(): array
     {
-        if (! empty($this->venue_elements) && is_array($this->venue_elements) && count($this->venue_elements) > 0) {
+        if (is_array($this->venue_elements)) {
             return $this->venue_elements;
         }
 
@@ -146,6 +146,24 @@ class Wedding extends Model
 
     public function getGiftRegistriesListAttribute(): array
     {
+        $list = [];
+        if (! empty($this->gift_registry_url)) {
+            $list[] = [
+                'name' => $this->gift_registry_button_text ?: 'LIVERPOOL',
+                'url' => $this->gift_registry_url,
+            ];
+        }
+        if (! empty($this->gift_registry_url_2)) {
+            $list[] = [
+                'name' => $this->gift_registry_button_text_2 ?: 'AMAZON',
+                'url' => $this->gift_registry_url_2,
+            ];
+        }
+
+        if (! empty($list)) {
+            return $list;
+        }
+
         if (! empty($this->gift_registries) && is_array($this->gift_registries)) {
             $filtered = [];
             foreach ($this->gift_registries as $item) {
@@ -161,21 +179,7 @@ class Wedding extends Model
             }
         }
 
-        $list = [];
-        if (! empty($this->gift_registry_url)) {
-            $list[] = [
-                'name' => $this->gift_registry_button_text ?: 'LIVERPOOL',
-                'url' => $this->gift_registry_url,
-            ];
-        }
-        if (! empty($this->gift_registry_url_2)) {
-            $list[] = [
-                'name' => $this->gift_registry_button_text_2 ?: 'AMAZON',
-                'url' => $this->gift_registry_url_2,
-            ];
-        }
-
-        return $list;
+        return [];
     }
 
     protected function casts(): array

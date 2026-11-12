@@ -27,6 +27,7 @@ class InvitationController extends Controller
             'invitations' => $invitations,
             'tables' => $tables,
             'initialTab' => $request->query('tab', 'invitations'),
+            'initialSearch' => (string) $request->query('search', ''),
         ]);
     }
 

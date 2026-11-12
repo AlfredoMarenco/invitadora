@@ -21,14 +21,14 @@ class PublicWeddingController extends Controller
                 $q->where('is_active', true)->orderBy('order');
             },
         ])
-            ->firstOrFail();
+            ->first();
 
         $meta = ShareMeta::forInvitation($wedding, null, $request->url());
 
         return Inertia::render('invitation', [
             'wedding' => $wedding,
             'invitation' => null, // Sin invitación
-            'rsvp' => $wedding->rsvpWindow(),
+            'rsvp' => $wedding?->rsvpWindow() ?? ['deadline' => null, 'closed' => false],
             'meta' => $meta,
         ])->withViewData(['meta' => $meta]);
     }
@@ -50,7 +50,12 @@ class PublicWeddingController extends Controller
             ->with('guests')
             ->firstOrFail();
 
-        if ($invitation->status === 'pending' && ! ShareMeta::isPreviewBot($request)) {
+        if (
+            $invitation->status === 'pending'
+            && ! ShareMeta::isPreviewBot($request)
+            && ! $request->user()
+            && ! $request->boolean('preview')
+        ) {
             $invitation->update(['status' => 'viewed']);
         }
 

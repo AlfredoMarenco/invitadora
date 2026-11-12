@@ -79,7 +79,7 @@ export default function WeddingForm({ wedding }: WeddingFormProps) {
                           icon_url: '/resources_canvas/images/10.svg',
                       },
                   ],
-        timeline_mode: wedding?.timeline_mode || 'items',
+        timeline_mode: wedding?.timeline_mode === 'items' ? 'items' : 'image',
         timeline_image_path: wedding?.timeline_image_path || '',
         rsvp_deadline: wedding?.rsvp_deadline
             ? wedding.rsvp_deadline.split('T')[0]
